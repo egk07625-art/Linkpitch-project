@@ -1,0 +1,894 @@
+---
+description: LinkPitch 프로젝트 통합 개발 가이드라인 - SOLID 원칙, 선언적 프로그래밍, 불필요한 추상화 금지, LinkPitch 도메인 특화 네이밍 및 패턴
+globs: **/*.js,**/*.jsx,**/*.ts,**/*.tsx
+alwaysApply: false
+---
+
+# LinkPitch 통합 개발 가이드라인
+
+> 퍼포먼스 마케터를 위한 콜드메일·시퀀스 비서 개발 가이드라인  
+> 이 문서는 LinkPitch 프로젝트의 코드 작성 기준과 모범 사례를 정의합니다.
+
+## 관련 규칙 파일
+
+- [nextjs-convention.mdc](mdc:.cursor/rules/web/nextjs-convention.mdc) - Next.js 15 및 React 19 컨벤션
+- [toss-frontend.mdc](mdc:.cursor/rules/web/toss-frontend.mdc) - 프론트엔드 디자인 원칙
+- [playwright-test-guide.mdc](mdc:.cursor/rules/web/playwright-test-guide.mdc) - 테스트 작성 가이드
+
+## 핵심 원칙
+
+### SOLID + 선언적(Declarative) + 불필요한 추상화 금지
+
+#### 추상화 허용 기준
+
+- **로직이 포함된 경우**: 상태 관리, 데이터 변환, 이벤트 처리
+- **재사용이 명확한 경우**: 3곳 이상에서 동일한 패턴으로 사용
+- **복잡한 조건부 렌더링**: 10줄 이상의 복잡한 조건 분기
+- **외부 라이브러리 래핑**: API 호출, 서드파티 컴포넌트 통합 (Clerk, Supabase 등)
+
+#### 금지 사항
+
+- 단순 스타일링만 하는 래퍼 컴포넌트
+- 컴포넌트 2-3개만 있는 폴더의 배럴 익스포트
+- div + className만 있는 의미 없는 컨테이너 컴포넌트
+
+```tsx
+// ❌ 나쁜 예: 불필요한 추상화
+function ProspectCardWrapper({ children }: { children: React.ReactNode }) {
+  return <div className="p-6 rounded-xl bg-card">{children}</div>;
+}
+
+// ✅ 좋은 예: 직접 스타일링
+<div className="p-6 rounded-xl bg-card">
+  <ProspectCard prospect={prospect} />
+</div>
+```
+
+## 네이밍 규칙
+
+### 컴포넌트 네이밍
+
+- **형식**: PascalCase
+- **패턴**: `[Domain][Role][Variant|State]`
+- **예시**: `ProspectCard`, `SequenceList`, `StepDetailModal`, `ReportView`
+- **금지어**: `Common`, `Base`, `Util`, `Index`, `Test/Tmp`, `Styled*`
+
+### LinkPitch 도메인별 네이밍 패턴
+
+#### Prospect 도메인
+
+```typescript
+// 컴포넌트
+ProspectCard, ProspectList, ProspectForm, ProspectDetail
+
+// 훅
+useProspect, useProspectList, useCreateProspect
+
+// 타입
+Prospect, CreateProspectInput, UpdateProspectInput
+```
+
+#### Sequence 도메인
+
+```typescript
+// 컴포넌트
+SequenceList, SequenceDashboard, SequenceCard, SequenceStatusBadge
+
+// 훅
+useSequence, useSequenceList, useSequenceStatus
+
+// 타입
+Sequence, SequenceType, CreateSequenceInput, UpdateSequenceInput
+```
+
+#### Step 도메인
+
+```typescript
+// 컴포넌트
+StepCard, StepHistory, StepDetail, StepStatusBadge, StepEngagementBadge
+
+// 훅
+useStep, useStepList, useStepStatus, useStepEngagement
+
+// 타입
+Step, StepStatus, EngagementLevel, CreateStepInput, UpdateStepInput
+```
+
+#### Report 도메인
+
+```typescript
+// 컴포넌트
+ReportView, ReportEngagement, ReportEventList, ReportAnalytics
+
+// 훅
+useReport, useReportEvents, useReportEngagement
+
+// 타입
+Report, ReportEvent, EngagementLevel
+```
+
+#### Generation 도메인
+
+```typescript
+// 컴포넌트
+GenerationForm, GenerationResult, GenerationLogList, InsightCard
+
+// 훅
+useGeneration, useGenerationLogs, useGenerateStep
+
+// 타입
+GenerationResult, GenerationRequest, GenerationLog, Insight
+```
+
+### 파일 구조 네이밍
+
+```typescript
+// 컴포넌트 파일
+components/
+├── prospect-card.tsx           // 단일 컴포넌트
+├── sequence-list.tsx          // 리스트 컴포넌트
+├── step-detail-modal.tsx      // 모달 컴포넌트
+└── report-view.tsx            // 뷰 컴포넌트
+
+// 훅 파일
+hooks/
+├── use-prospect.ts            // 데이터 페칭 훅
+├── use-sequence-filter.ts     // 필터링 로직 훅
+└── use-generation.ts          // 생성 로직 훅
+
+// 유틸리티 파일
+lib/
+├── prospect-transform.ts      // 데이터 변환 함수
+├── date-format.ts            // 날짜 포맷팅
+└── validation.ts              // 유효성 검사
+```
+
+## Export 규칙
+
+### 기본 원칙
+
+- **단일 export**: 선언과 동시에 `export default` 사용
+- **다중 export**: named export 사용
+- **페이지 컴포넌트**: 항상 `export default` (Next.js 요구사항)
+- **UI 라이브러리**: Shadcn 패턴 유지 (`export { Component }`)
+
+```typescript
+// 단일 컴포넌트 → default
+export default function ProspectCard({ prospect }: ProspectCardProps) {
+  /* ... */
+}
+
+// 여러 항목 → named export
+export interface GenerationFormData { /* ... */ }
+export interface GenerationResult { /* ... */ }
+export function GenerationForm() { /* ... */ }
+
+// UI 라이브러리 → Shadcn 패턴
+export { Button, buttonVariants };
+```
+
+### Import 규칙
+
+```typescript
+// ✅ 좋은 예: 명확한 import
+import ProspectCard from "@/components/prospect-card";
+import { useProspect, useProspectList } from "@/hooks/use-prospect";
+import { formatProspectDate } from "@/lib/prospect-transform";
+
+// ❌ 나쁜 예: 불명확한 import
+import ProspectCard from "@/components/prospect";
+import { useProspect } from "@/hooks";
+import { formatProspectDate } from "@/lib";
+```
+
+## 스타일링 시스템
+
+### Tailwind CSS 원칙
+
+- **Tailwind 유틸리티 우선 사용**
+- **인라인 style 금지** (style={{ }} 사용 금지)
+- **styled-jsx 금지**
+- **예외**: `globals.css`, 디자인 토큰, 서드파티 오버라이드
+
+### Spacing-First 정책
+
+#### 핵심 규칙
+
+**외곽 여백은 최상단 래퍼의 padding, 형제 요소 간 간격은 부모의 gap으로만 관리**
+
+```tsx
+// ✅ 좋은 예: padding + gap
+<div className="p-6 md:p-8">
+  <div className="flex flex-col gap-4">
+    <ProspectCard />
+    <ProspectCard />
+    <ProspectCard />
+  </div>
+</div>
+
+// ❌ 나쁜 예: margin 사용
+<div>
+  <ProspectCard />
+  <ProspectCard className="mt-4" />
+  <ProspectCard className="mt-4" />
+</div>
+```
+
+#### 레이아웃 패턴
+
+```tsx
+// 세로 스택
+<div className="flex flex-col gap-4">
+
+// 가로 정렬
+<div className="flex gap-4">
+
+// 그리드
+<div className="grid gap-4">
+
+// 반응형 (모바일 우선)
+<div className="gap-3 md:gap-4 lg:gap-6">
+<div className="p-4 md:p-6 lg:p-8">
+```
+
+### 배경 이미지 처리 패턴
+
+```tsx
+// ❌ 나쁜 예: 인라인 스타일
+<div 
+  className="absolute inset-0 bg-cover bg-center bg-no-repeat"
+  style={{
+    backgroundImage: `linear-gradient(180deg, rgba(0, 0, 0, 0) 56%, rgba(0, 0, 0, 0.6) 100%), url('${imageUrl}')`
+  }}
+/>
+
+// ✅ 좋은 예: Image 컴포넌트 + 오버레이
+<Image src={imageUrl} alt="" fill priority className="object-cover" />
+<div className="absolute inset-0 bg-gradient-to-b from-transparent to-black/60" aria-hidden="true" />
+```
+
+### 동적 배경색 처리
+
+```tsx
+// ❌ 나쁜 예: 인라인 backgroundColor
+<div style={{ backgroundColor: step.engagementColor || '#E1DFDF' }} />
+
+// ✅ 좋은 예: Tailwind 클래스 사용
+<div className={cn(
+  "w-full h-full",
+  {
+    "bg-red-100": engagementLevel === "cold",
+    "bg-yellow-100": engagementLevel === "warm",
+    "bg-green-100": engagementLevel === "hot",
+  }
+)} />
+```
+
+### 디자인 시스템 컬러
+
+현재 프로젝트는 `globals.css`에서 CSS 변수를 사용합니다:
+
+```css
+/* globals.css에서 정의된 컬러 변수 */
+--color-primary
+--color-secondary
+--color-card
+--color-card-foreground
+--color-muted
+--color-muted-foreground
+--color-destructive
+```
+
+Tailwind에서 사용:
+
+```tsx
+// ✅ 좋은 예: 디자인 토큰 사용
+<div className="bg-card text-card-foreground">
+<div className="bg-primary text-primary-foreground">
+<div className="text-muted-foreground">
+
+// ❌ 나쁜 예: 하드코딩된 컬러
+<div className="bg-[#ffffff]">
+<div style={{ color: '#333333' }}>
+```
+
+### 타이포그래피
+
+현재 프로젝트는 기본 Tailwind 타이포그래피를 사용합니다. 필요시 확장 가능:
+
+```tsx
+// 기본 사용
+<h1 className="text-4xl font-bold">제목</h1>
+<p className="text-base">본문</p>
+
+// 반응형 타이포그래피
+<h1 className="text-2xl md:text-4xl font-bold">제목</h1>
+```
+
+### 아이콘 시스템
+
+```tsx
+// 방법 1: lucide-react 직접 import (권장)
+import { Mail, CheckCircle, Clock } from "lucide-react";
+
+<Mail size={24} className="text-muted-foreground" />
+<CheckCircle size={20} className="text-green-600" />
+```
+
+## SOLID 원칙 구현
+
+### SRP (단일 책임)
+
+```tsx
+// hooks/use-prospect.ts - 데이터 페칭만
+export function useProspect(prospectId: string) {
+  return useQuery({
+    queryKey: ['prospect', prospectId],
+    queryFn: () => fetchProspect(prospectId)
+  });
+}
+
+// lib/prospect-transform.ts - 데이터 변환만
+export function transformProspectData(prospect: Prospect): ProspectView {
+  return {
+    ...prospect,
+    formattedDate: formatDate(prospect.created_at),
+    displayName: prospect.brand_name || 'Unknown'
+  };
+}
+
+// components/prospect-dashboard.tsx - UI 조합만
+export default function ProspectDashboard() {
+  const { data: prospect } = useProspect(prospectId);
+  const view = transformProspectData(prospect);
+  
+  return <ProspectCard prospect={view} />;
+}
+```
+
+### OCP (개방-폐쇄)
+
+```typescript
+// types/step.ts
+export type StepStatus = "pending" | "sent" | "read" | "replied";
+export type EngagementLevel = "cold" | "warm" | "hot";
+
+export const stepStatusConfig: Record<StepStatus, {
+  label: string;
+  color: string;
+  icon: LucideIcon;
+}> = {
+  pending: { label: "대기", color: "gray", icon: Clock },
+  sent: { label: "발송", color: "blue", icon: Mail },
+  read: { label: "읽음", color: "green", icon: CheckCircle },
+  replied: { label: "회신", color: "purple", icon: MessageSquare }
+};
+
+// 새 상태 추가는 여기만 수정하면 됨
+```
+
+### DIP (의존 역전)
+
+```typescript
+// 추상에 의존
+export interface DataService<T> { 
+  fetch(id: string): Promise<T>;
+  create(data: Partial<T>): Promise<T>;
+}
+
+export function DataDisplay<T>({ 
+  service 
+}: { 
+  service: DataService<T> 
+}) {
+  // 구체적인 구현이 아닌 인터페이스에 의존
+}
+```
+
+## 프로젝트 구조
+
+### 디렉토리 구조
+
+```
+app/                    # 라우팅 전용 (page.tsx, layout.tsx, route.ts 등만)
+components/             # 재사용 가능한 컴포넌트
+├── layout/            # 레이아웃 컴포넌트 (app-shell, app-header, app-sidebar)
+├── ui/                # shadcn 컴포넌트 (자동 생성, 수정 금지)
+└── providers/         # React Context 프로바이더들
+lib/                    # 유틸리티 함수 및 클라이언트 설정
+├── supabase/          # Supabase 클라이언트들 (환경별로 분리)
+│   ├── clerk-client.ts      # Client Component용
+│   ├── server.ts            # Server Component/Server Action용
+│   ├── service-role.ts      # 관리자 권한 작업용
+│   └── client.ts            # 인증 불필요한 공개 데이터용
+└── utils.ts           # 공통 유틸리티 (cn 함수 등)
+hooks/                  # 커스텀 React Hook들
+types/                  # TypeScript 타입 정의
+actions/                # Server Actions (API 대신 우선 사용)
+supabase/               # 데이터베이스 마이그레이션 및 설정
+├── migrations/         # SQL 마이그레이션 파일들
+└── config.toml         # Supabase 프로젝트 설정
+```
+
+### Clerk + Supabase 통합 패턴
+
+이 프로젝트는 Clerk와 Supabase의 네이티브 통합을 사용합니다:
+
+1. **인증 흐름**:
+   - Clerk가 사용자 인증 처리
+   - `SyncUserProvider`가 로그인 시 자동으로 Clerk 사용자를 Supabase `users` 테이블에 동기화
+   - Supabase 클라이언트가 Clerk 토큰을 사용하여 인증
+
+2. **Supabase 클라이언트 사용**:
+   - `lib/supabase/clerk-client.ts`: Client Component용 (`useClerkSupabaseClient` hook)
+   - `lib/supabase/server.ts`: Server Component/Server Action용 (`createClerkSupabaseClient`)
+   - `lib/supabase/service-role.ts`: 관리자 권한 작업용 (RLS 우회)
+
+```tsx
+// Client Component에서 사용
+'use client';
+import { useClerkSupabaseClient } from "@/lib/supabase/clerk-client";
+
+export function ProspectList() {
+  const supabase = useClerkSupabaseClient();
+  // RLS 정책이 auth.jwt()->>'sub'로 Clerk user ID 확인
+}
+
+// Server Component에서 사용
+import { createClerkSupabaseClient } from "@/lib/supabase/server";
+
+export default async function ProspectPage() {
+  const supabase = await createClerkSupabaseClient();
+  // 서버 사이드에서 Clerk 인증 사용
+}
+```
+
+## Next.js 15 특화 사항
+
+### 동적 라우트 파라미터 처리
+
+```typescript
+// ✅ 올바른 예: Next.js 15
+export default async function SequencePage({ 
+  params 
+}: { 
+  params: Promise<{ id: string }> 
+}) {
+  const { id } = await params;
+  const sequence = await getSequenceById(id);
+  
+  return <SequenceDetail sequence={sequence} />;
+}
+
+// ❌ 잘못된 예: Next.js 14 이하 방식
+export default function SequencePage({ 
+  params 
+}: { 
+  params: { id: string } 
+}) {
+  const { id } = params; // 타입 에러 발생
+}
+```
+
+### Server Components 우선 사용
+
+```tsx
+// ✅ 좋은 예: Server Component (기본)
+export default async function ProspectList() {
+  const prospects = await getProspects();
+  return <ProspectListClient prospects={prospects} />;
+}
+
+// 'use client'는 필요한 경우에만
+'use client';
+export function ProspectListClient({ prospects }: { prospects: Prospect[] }) {
+  const [filter, setFilter] = useState('');
+  // 인터랙티브 로직만 여기
+}
+```
+
+### 이미지 최적화
+
+```tsx
+import Image from 'next/image';
+
+// ✅ 좋은 예: Next.js Image 컴포넌트 사용
+<Image
+  src="/logo.png"
+  alt="LinkPitch 로고"
+  width={200}
+  height={50}
+  className="rounded-lg"
+  priority={isAboveFold}
+/>
+
+// ❌ 나쁜 예: 일반 img 태그 사용
+<img src="/logo.png" alt="LinkPitch 로고" />
+```
+
+### 메타데이터 설정
+
+```typescript
+// app/sequences/[id]/page.tsx
+import { Metadata } from 'next';
+
+export async function generateMetadata({ 
+  params 
+}: { 
+  params: Promise<{ id: string }> 
+}): Promise<Metadata> {
+  const { id } = await params;
+  const sequence = await getSequenceById(id);
+  
+  return {
+    title: `${sequence.prospect.brand_name} - 시퀀스 상세`,
+    description: `시퀀스 진행 상황 및 Step 히스토리`,
+  };
+}
+```
+
+## 컴포넌트 설계 원칙
+
+### 불필요한 추상화 금지
+
+#### 단순 래퍼 컴포넌트 지양
+
+```tsx
+// ❌ 나쁜 예: 단순히 div와 className만 있는 컨테이너
+function SequenceContentWrapper({ children }: { children: ReactNode }) {
+  return <div className="flex flex-col gap-5">{children}</div>;
+}
+
+// ✅ 좋은 예: 직접 적용
+<div className="flex flex-col gap-5">{children}</div>
+```
+
+#### 불필요한 배럴 익스포트 금지
+
+```typescript
+// ❌ 나쁜 예: 컴포넌트 2-3개만 있는 폴더의 index.ts
+// components/prospect/index.ts
+export * from './ProspectCard';
+export * from './ProspectList';
+export * from './ProspectHeader';
+
+// ✅ 좋은 예: 직접 import
+import ProspectCard from "@/components/prospect-card";
+import ProspectList from "@/components/prospect-list";
+```
+
+### 추상화 허용 기준
+
+다음 경우에만 추상화를 허용합니다:
+
+1. **로직이 포함된 경우**: 상태 관리, 데이터 변환, 이벤트 처리 등
+
+```tsx
+// ✅ 좋은 추상화 예시: 로직이 있는 경우
+function useSequenceStatus(sequenceId: string) {
+  const [status, setStatus] = useState<Sequence['status']>('active');
+  const [loading, setLoading] = useState(true);
+  
+  useEffect(() => {
+    fetchSequenceStatus(sequenceId)
+      .then(setStatus)
+      .finally(() => setLoading(false));
+  }, [sequenceId]);
+  
+  return { status, loading };
+}
+```
+
+2. **복잡한 조건부 렌더링**: 10줄 이상의 복잡한 조건 분기
+
+```tsx
+// ✅ 좋은 추상화 예시: 복잡한 조건부 렌더링
+function StepStatusBadge({ 
+  status, 
+  engagementLevel 
+}: StepStatusBadgeProps) {
+  const getStatusClasses = () => {
+    if (status === 'replied') return "bg-purple-100 text-purple-800";
+    if (status === 'read') return "bg-green-100 text-green-800";
+    if (status === 'sent') return "bg-blue-100 text-blue-800";
+    if (engagementLevel === 'hot') return "bg-red-100 text-red-800";
+    return "bg-gray-100 text-gray-800";
+  };
+  
+  const getStatusText = () => {
+    if (status === 'replied') return "회신";
+    if (status === 'read') return "읽음";
+    if (status === 'sent') return "발송";
+    return "대기";
+  };
+  
+  return (
+    <span className={`px-2 py-1 rounded-full text-xs font-medium ${getStatusClasses()}`}>
+      {getStatusText()}
+    </span>
+  );
+}
+```
+
+## 개발 프로세스
+
+### 작업 시작 전 체크리스트
+
+- [ ] Development Guidelines 숙지
+- [ ] 기존 컴포넌트 라이브러리 확인 (`/components/ui/`)
+- [ ] Figma 디자인 전체 구조 파악 (필요시)
+- [ ] 재사용 가능한 컴포넌트 식별
+- [ ] 상태 관리 요구사항 분석
+- [ ] Clerk + Supabase 인증 패턴 확인
+
+### 권장 개발 플로우
+
+```
+Phase 1: 설계 (20%)
+├── 요구사항 분석
+├── 컴포넌트 구조 설계
+└── 가이드라인 준수 계획
+
+Phase 2: 구현 (60%)
+├── 컴포넌트별 순차 개발
+├── 실시간 가이드라인 적용
+└── 단위별 테스트
+
+Phase 3: 통합 (20%)
+├── 페이지 레벨 조합
+├── 전체 빌드 테스트
+└── 반응형 검증
+```
+
+## LinkPitch 특화 패턴
+
+### Prospect 생성 플로우
+
+```tsx
+// components/generation-form.tsx
+export default function GenerationForm() {
+  const { mutate: generate, isPending } = useGenerateStep();
+  
+  const handleSubmit = async (data: GenerationRequest) => {
+    // 1. Prospect 생성/업데이트
+    const prospect = await createOrUpdateProspect(data);
+    
+    // 2. Sequence 생성
+    const sequence = await createSequence({
+      prospect_id: prospect.id,
+      sequence_type: data.sequence_type
+    });
+    
+    // 3. Step 생성 (n8n 호출)
+    await generate({
+      ...data,
+      prospect_id: prospect.id,
+      sequence_id: sequence.id
+    });
+  };
+  
+  return <form onSubmit={handleSubmit}>...</form>;
+}
+```
+
+### Sequence 관리 패턴
+
+```tsx
+// hooks/use-sequence.ts
+export function useSequence(sequenceId: string) {
+  return useQuery({
+    queryKey: ['sequence', sequenceId],
+    queryFn: () => fetchSequence(sequenceId),
+    select: (data) => ({
+      ...data,
+      progress: calculateProgress(data.current_step, data.total_steps),
+      nextStepDate: calculateNextStepDate(data)
+    })
+  });
+}
+
+// components/sequence-card.tsx
+export default function SequenceCard({ sequence }: SequenceCardProps) {
+  const { data, isLoading } = useSequence(sequence.id);
+  
+  if (isLoading) return <Skeleton />;
+  
+  return (
+    <div className="p-6 rounded-xl bg-card">
+      <div className="flex flex-col gap-4">
+        <h3>{data.prospect.brand_name}</h3>
+        <ProgressBar value={data.progress} />
+        <StepStatusBadge status={data.status} />
+      </div>
+    </div>
+  );
+}
+```
+
+### Step 상태 관리 패턴
+
+```tsx
+// hooks/use-step-status.ts
+export function useStepStatus(stepId: string) {
+  const supabase = useClerkSupabaseClient();
+  
+  const updateStatus = useMutation({
+    mutationFn: async (status: StepStatus) => {
+      const { data, error } = await supabase
+        .from('steps')
+        .update({ status })
+        .eq('id', stepId)
+        .select()
+        .single();
+      
+      if (error) throw error;
+      return data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['step', stepId] });
+    }
+  });
+  
+  return { updateStatus };
+}
+
+// components/step-card.tsx
+export default function StepCard({ step }: StepCardProps) {
+  const { updateStatus } = useStepStatus(step.id);
+  
+  const handleMarkAsSent = () => {
+    updateStatus.mutate('sent');
+  };
+  
+  return (
+    <div className="p-4 border rounded-lg">
+      <StepStatusBadge status={step.status} />
+      <Button onClick={handleMarkAsSent}>발송 완료</Button>
+    </div>
+  );
+}
+```
+
+### Report 이벤트 로깅 패턴
+
+```tsx
+// hooks/use-report-events.ts
+export function useReportEvents(reportId: string) {
+  const supabase = useClerkSupabaseClient();
+  
+  const logEvent = useCallback(async (
+    eventType: 'view' | 'dwell_time' | 'scroll_depth' | 'interaction',
+    data?: Record<string, unknown>
+  ) => {
+    await supabase.from('report_events').insert({
+      report_id: reportId,
+      event_type: eventType,
+      event_data: data,
+      created_at: new Date().toISOString()
+    });
+  }, [reportId, supabase]);
+  
+  return { logEvent };
+}
+
+// app/r/[id]/page.tsx
+export default function ReportPage({ params }: { params: Promise<{ id: string }> }) {
+  const { id } = await params;
+  const { logEvent } = useReportEvents(id);
+  
+  useEffect(() => {
+    logEvent('view');
+    
+    const timer = setTimeout(() => {
+      logEvent('dwell_time', { duration: 5000 });
+    }, 5000);
+    
+    return () => clearTimeout(timer);
+  }, [logEvent]);
+  
+  return <ReportView reportId={id} onScroll={handleScroll} />;
+}
+```
+
+## 테스트 및 품질 관리
+
+### 테스트 전략
+
+- **E2E 테스트**: Playwright로 사용자 시나리오 테스트
+- **컴포넌트 테스트**: 주요 비즈니스 로직 검증
+- **타입 안전성**: TypeScript strict mode 활용
+
+### 코드 품질 체크리스트
+
+- [ ] TypeScript 타입 정의 완료
+- [ ] ESLint 규칙 준수
+- [ ] 접근성(ARIA) 속성 포함
+- [ ] 반응형 디자인 검증
+- [ ] 성능 최적화 (이미지 lazy loading 등)
+
+## 금지 사항 요약
+
+### 1. 불필요한 추상화
+
+- 단순 스타일링 래퍼
+- 의미 없는 컨테이너
+- 과도한 배럴 익스포트
+
+### 2. Spacing 안티패턴
+
+- 형제 간격을 위한 margin (mt, mb, mx, my)
+- 컴포넌트 외부 레이아웃 margin
+
+### 3. 스타일링 안티패턴
+
+- 하드코딩된 hex 컬러
+- styled-jsx 사용
+- 인라인 style 속성 사용
+- 외부 이미지 URL 직접 사용
+
+### 4. 네이밍 안티패턴
+
+- Common, Base, Util 접두사
+- 구현 디테일 포함 (색상, 라이브러리명)
+
+## Quick Reference
+
+### 컴포넌트 템플릿
+
+```tsx
+export default function ComponentName({ prop1, prop2 }: ComponentNameProps) {
+  return (
+    <div className="p-6 md:p-8"> {/* 외곽 padding */}
+      <div className="flex flex-col gap-4"> {/* 형제 간격 gap */}
+        <h2 className="text-2xl font-bold text-foreground">제목</h2>
+        <p className="text-base text-muted-foreground">내용</p>
+        <Button className="bg-primary text-primary-foreground">
+          <Mail size={16} className="mr-2" />
+          확인
+        </Button>
+      </div>
+    </div>
+  );
+}
+```
+
+### 설정 완료 (Ready to Use)
+
+- **React Query (@tanstack/react-query)** - 서버 상태 관리 (Provider 설정됨)
+- **next-themes** - 다크모드 지원 (Provider 설정됨)
+- **Supabase** - 백엔드 서비스 (클라이언트 설정됨)
+- **Clerk** - 인증 (Provider 설정됨)
+
+### 향후 사용 예정 (Installed)
+
+- **Zustand** - 글로벌 상태 관리 (필요시)
+- **React Hook Form** - 폼 상태 관리
+- **Zod** - 스키마 검증
+- **Framer Motion** - 페이지 전환, 인터랙션 애니메이션
+- **date-fns** - 날짜/시간 처리
+
+## 최종 체크리스트
+
+### 코드 구조
+
+- [ ] 불필요한 추상화가 없는가?
+- [ ] Export 규칙을 준수했는가?
+- [ ] 네이밍 규칙을 따랐는가?
+
+### 스타일링
+
+- [ ] Spacing-First 정책 준수 (gap 우선, margin 금지)
+- [ ] 디자인 시스템 컬러/타이포그래피 사용
+- [ ] lucide-react 아이콘 사용
+- [ ] Tailwind 유틸리티 우선 사용
+
+### 품질
+
+- [ ] TypeScript 타입 정의
+- [ ] SOLID 원칙 준수
+- [ ] 컴포넌트 독립성 보장
+- [ ] 반응형 대응 완료
+
+---
+
+이 가이드라인을 따라 일관되고 유지보수 가능한 코드를 작성하세요.
