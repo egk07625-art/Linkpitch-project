@@ -32,8 +32,9 @@
     - `server.ts`: Server Component/Server Action용 (createClerkSupabaseClient)
     - `service-role.ts`: 관리자 권한 작업용 (RLS 우회)
     - `client.ts`: 인증 불필요한 공개 데이터용
-  - [ ] `.env.example`에 Supabase 관련 키 정의  
+  - [x] `.env.example`에 Supabase 관련 키 정의 (N8N_WEBHOOK_URL, OPENAI_API_KEY 포함)
   - [ ] 로컬에서 단순 health-check용 쿼리 코드 초안 작성 (나중에 사용)
+  - [x] RLS 비활성화 (개발 편의성, 출시 전 활성화 예정)
 
 ---
 
