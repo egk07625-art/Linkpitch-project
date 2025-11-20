@@ -11,8 +11,6 @@
 import { createClerkSupabaseClient } from '@/lib/supabase/server';
 import { auth } from '@clerk/nextjs/server';
 import type { Sequence } from '@/types/sequence';
-import type { Step } from '@/types/step';
-import type { Prospect } from '@/types/prospect';
 
 /**
  * 시퀀스 생성
@@ -130,4 +128,5 @@ export async function generateSequenceAction(
 
   return sequence as Sequence;
 }
+
 

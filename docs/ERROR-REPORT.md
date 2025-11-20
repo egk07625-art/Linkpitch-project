@@ -54,3 +54,35 @@ getComputedStyle(document.documentElement).getPropertyValue("--bg-primary")
 ### 수정 완료 날짜
 2025-01-XX
 
+---
+
+## 2025-01-XX - Vercel 배포 실패 (두 번째)
+
+### 에러 원인
+**빌드 실패: `@typescript-eslint/no-unused-vars` 에러**
+
+#### 실제 에러 (빌드 실패 원인)
+- **파일**: `app/actions/generate-sequence.ts`
+- **라인**: 14-15
+- **에러**: 
+  - `'Step' is defined but never used`
+  - `'Prospect' is defined but never used`
+- **원인**: 타입을 import했지만 실제로 사용하지 않음
+- **해결**: 미사용 import 제거
+
+```typescript
+// 에러 발생 코드
+import type { Step } from '@/types/step';
+import type { Prospect } from '@/types/prospect';
+
+// 수정 후
+// 위 두 줄 제거 (실제로 사용되지 않음)
+```
+
+### 해결 상태
+- [x] ERROR-REPORT 파일에 새 에러 기록
+- [x] 실제 에러 수정 (generate-sequence.ts) - 미사용 Step, Prospect import 제거
+
+### 수정 완료 날짜
+2025-01-XX
+
