@@ -7,13 +7,13 @@ const Navbar = () => {
   return (
     <header className="flex justify-between items-center p-4 gap-4 h-16 max-w-7xl mx-auto">
       <Link href="/" className="text-2xl font-bold">
-        SaaS Template
+        Linkpitch
       </Link>
       <div className="flex gap-4 items-center">
         <SignedOut>
-          <SignInButton mode="modal">
+          <Link href="/sign-in">
             <Button>로그인</Button>
-          </SignInButton>
+          </Link>
         </SignedOut>
         <SignedIn>
           <UserButton />

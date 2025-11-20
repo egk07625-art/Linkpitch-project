@@ -3,12 +3,10 @@
  * @description Linkpitch 랜딩 페이지
  *
  * Hero 섹션, 3단계 섹션, CTA 버튼을 포함하는 랜딩 페이지
- * (내용은 Week 2에서 구현 예정)
  */
 
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
-import { SignedIn, SignedOut } from "@clerk/nextjs";
 
 export default function Home() {
   return (
@@ -24,20 +22,11 @@ export default function Home() {
             퍼포먼스 마케터를 위한 AI 수주 비서 Linkpitch
           </p>
           <div className="flex gap-4 justify-center">
-            <SignedOut>
-              <Link href="/sign-in">
-                <Button size="lg" className="text-lg px-8">
-                  시작하기
-                </Button>
-              </Link>
-            </SignedOut>
-            <SignedIn>
-              <Link href="/app">
-                <Button size="lg" className="text-lg px-8">
-                  대시보드로 이동
-                </Button>
-              </Link>
-            </SignedIn>
+            <Link href="/sign-in">
+              <Button size="lg" className="text-lg px-8">
+                시작하기
+              </Button>
+            </Link>
           </div>
         </div>
       </section>
@@ -83,20 +72,11 @@ export default function Home() {
           <p className="text-xl text-muted-foreground">
             Linkpitch로 콜드메일 작성 시간을 단축하세요
           </p>
-          <SignedOut>
-            <Link href="/sign-in">
-              <Button size="lg" className="text-lg px-8">
-                무료로 시작하기
-              </Button>
-            </Link>
-          </SignedOut>
-          <SignedIn>
-            <Link href="/app">
-              <Button size="lg" className="text-lg px-8">
-                대시보드로 이동
-              </Button>
-            </Link>
-          </SignedIn>
+          <Link href="/sign-in">
+            <Button size="lg" className="text-lg px-8">
+              무료로 시작하기
+            </Button>
+          </Link>
         </div>
       </section>
     </main>

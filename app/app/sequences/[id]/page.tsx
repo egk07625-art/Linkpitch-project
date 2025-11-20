@@ -34,3 +34,16 @@ export default async function SequenceDetailPage({
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+

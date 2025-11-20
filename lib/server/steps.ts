@@ -114,11 +114,25 @@ export async function updateStep(
 /**
  * Step 상태 업데이트
  */
-export async function updateStepStatus(
-  userId: string,
-  stepId: string,
-  status: Step["status"]
-): Promise<Step> {
-  return updateStep(userId, stepId, { status });
-}
+// export async function updateStepStatus(
+//   userId: string,
+//   stepId: string,
+// //   status: Step["status"]
+// // ): Promise<Step> {
+// //   return updateStep(userId, stepId, { status });
+// // }
 
+
+/**
+ * Step 발송 완료 처리 (PRD.md 기반)
+ * 새로운 타입 정의에 맞춰 is_sent를 사용
+ */
+export async function markStepAsSent(
+  userId: string,
+  stepId: string
+): Promise<Step> {
+  return updateStep(userId, stepId, { 
+    is_sent: true,
+    sent_at: new Date().toISOString(),
+  });
+}
