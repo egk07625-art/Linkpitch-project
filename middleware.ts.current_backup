@@ -1,0 +1,89 @@
+/**
+ * @file middleware.ts
+ * @description Next.js middleware with Clerk authentication
+ * 
+ * Clerk Middleware 설정
+ * 
+ * Clerk의 최신 버전에서는 clerkMiddleware에 콜백 함수를 전달해야
+ * auth() 함수가 제대로 작동합니다.
+ * 
+ * 공개 라우트 목록:
+ * - 홈 페이지 (/)
+ * - 인증 관련 페이지 (sign-in, sign-up)
+ * - 리포트 뷰 페이지 (/r/[id]) - 공개 접근 가능
+ * - API/webhook 라우트 중 일부
+ * 
+ * 보호된 라우트:
+ * - /app/* 경로는 인증 필수
+ * - 인증되지 않은 사용자는 sign-in으로 리다이렉트
+ * 
+ * Edge Runtime 호환성:
+ * - console.group은 Edge Runtime에서 지원되지 않으므로
+ *   일반 로그로 대체합니다.
+ */
+
+import {
+  clerkMiddleware,
+  createRouteMatcher,
+} from "@clerk/nextjs/server";
+import { NextResponse } from "next/server";
+
+// 공개 라우트 정의 (인증 불필요)
+const isPublicRoute = createRouteMatcher([
+  "/",
+  "/sign-in(.*)",
+  "/sign-up(.*)",
+  "/r(.*)", // 리포트 뷰는 공개 접근 가능
+  "/api/webhooks(.*)",
+  "/api/public(.*)",
+]);
+
+// 보호된 라우트 정의 (인증 필수)
+const isProtectedRoute = createRouteMatcher([
+  "/app(.*)",
+  "/api/protected(.*)",
+]);
+
+export default clerkMiddleware(async (auth, request) => {
+  try {
+    // 공개 라우트는 인증 없이 접근 가능
+    if (isPublicRoute(request)) {
+      return NextResponse.next();
+    }
+
+    // 보호된 라우트는 인증 필요
+    if (isProtectedRoute(request)) {
+      // auth.protect()는 자동으로 인증되지 않은 사용자를 리다이렉트합니다
+      await auth.protect();
+      return NextResponse.next();
+    }
+
+    // 공개 라우트도 아니고 보호된 라우트도 아닌 경우
+    // auth() 컨텍스트 설정 (페이지 레벨에서 auth() 사용 가능하도록)
+    try {
+      await auth();
+    } catch {
+      // auth() 실패 시 무시하고 계속 진행
+      // (일부 라우트는 인증이 선택적일 수 있음)
+    }
+
+    return NextResponse.next();
+  } catch (error) {
+    // 최상위 에러: 모든 요청은 계속 진행
+    console.error("[Middleware] 최상위 에러:", error);
+    return NextResponse.next();
+  }
+});
+
+export const config = {
+  matcher: [
+    // Skip Next.js internals and all static files
+    // Include all routes except:
+    // - Next.js internals (_next)
+    // - Static files (images, fonts, etc.)
+    // - Favicon
+    "/((?!_next|[^?]*\\.(?:html?|css|js(?!on)|jpe?g|webp|png|gif|svg|ttf|woff2?|ico|csv|docx?|xlsx?|zip|webmanifest)).*)",
+    // Always run for API routes
+    "/(api|trpc)(.*)",
+  ],
+};

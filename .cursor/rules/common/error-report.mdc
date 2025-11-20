@@ -1,0 +1,112 @@
+---
+description: Error report system for tracking resolved errors. Only errors that have been pushed to Git are recorded.
+globs: docs/reference/ERROR_REPORT/errors.json
+alwaysApply: true
+---
+
+# Error Report System
+
+## 핵심 원칙
+
+- **Git 푸시 완료가 에러 해결의 최종 확인 기준**
+- Git 푸시 전에는 에러 리포트에 추가하지 않음 (수정만으로는 해결 확인 불가)
+- 해결된 에러만 기록 (status는 항상 "resolved")
+- **"푸쉬" 명령 시 자동으로 에러 리포트 업데이트**
+
+## 에러 발생 시 워크플로우
+
+### 1. 에러 발생 시
+
+**반드시 먼저 `docs/reference/ERROR_REPORT/errors.json` 파일을 확인하세요.**
+
+- 유사한 에러가 이미 해결되었는지 검색
+- 기존 해결 방법을 참조하여 적용
+- 에러 메시지, 카테고리, 관련 파일로 검색 가능
+
+### 2. 에러 해결 중
+
+- Git 푸시 전에는 에러 리포트에 추가하지 않음
+- 코드 수정 및 테스트 완료 후 Git 커밋
+- 커밋 메시지에 에러 해결 내용 포함 권장 (예: "fix: resolve middleware authMiddleware error")
+
+### 3. Git 푸시 시 자동 업데이트
+
+사용자가 **"푸쉬"** 명령을 실행할 때:
+
+**기존 "푸쉬" 명령 워크플로우 확장:**
+
+1. commit file을 영어로 작성하고 git commit -F commit_msg.txt로 커밋
+2. todo 파일과 prd 파일 수정 내용 업데이트 후 커밋
+3. **에러 리포트 자동 업데이트** (새로 추가):
+   - 최근 커밋 메시지 분석
+     - 에러 해결 관련 키워드 감지: `fix`, `error`, `bug`, `resolve`, `해결`, `에러`
+     - 커밋 메시지에서 에러 정보 추출
+   - 커밋 변경사항 분석
+     - `git show HEAD --stat`으로 변경된 파일 목록 확인
+     - 에러 관련 파일 식별 (middleware.ts, API routes 등)
+   - 에러 해결 관련 키워드가 감지되면:
+     - 사용자에게 에러 정보 확인 요청:
+       * 에러 메시지 (원본)
+       * 에러 카테고리 (middleware, database, api, build, runtime)
+       * 해결 방법 (상세 설명)
+       * 재현 단계 (선택)
+       * 참고 링크 (선택)
+     - `docs/reference/ERROR_REPORT/errors.json` 파일 읽기
+     - 새로운 에러 항목 생성:
+       * `id`: 현재 날짜-카테고리-설명 형식
+       * `resolved_commit_hash`: `git rev-parse HEAD`로 현재 커밋 해시
+       * `pushed_at`: 현재 시간 (ISO 8601)
+       * `status`: "resolved"
+     - errors.json에 항목 추가 (배열의 맨 앞에 추가하여 최신순 유지)
+     - errors.json 변경사항 커밋: `git add docs/reference/ERROR_REPORT/errors.json && git commit -m "docs: update error report"`
+4. GitHub 푸시: `git push origin main`
+
+**중요**: 에러 해결 관련 키워드가 없으면 에러 리포트 업데이트 단계를 건너뜀
+
+## 에러 리포트 JSON 스키마
+
+```json
+{
+  "errors": [
+    {
+      "id": "YYYY-MM-DD-category-description",
+      "error_message": "원본 에러 메시지",
+      "error_category": "middleware|database|api|build|runtime",
+      "related_files": ["file1.ts", "file2.ts"],
+      "occurred_at": "ISO 8601 형식",
+      "occurred_commit_hash": "발생 시점 커밋 해시",
+      "resolution": "해결 방법 상세 설명",
+      "reproduction_steps": ["단계1", "단계2"],
+      "references": ["URL1", "URL2"],
+      "issue_number": "선택사항",
+      "status": "resolved",
+      "resolved_at": "ISO 8601 형식",
+      "resolved_commit_hash": "해결 커밋 해시",
+      "pushed_at": "ISO 8601 형식"
+    }
+  ]
+}
+```
+
+## 에러 카테고리
+
+- `middleware`: Next.js middleware 관련 에러
+- `database`: Supabase/PostgreSQL 관련 에러
+- `api`: API 라우트 관련 에러
+- `build`: 빌드 과정 관련 에러
+- `runtime`: 런타임 에러
+
+## 검색 방법
+
+에러 발생 시 errors.json에서 다음으로 검색:
+
+1. **에러 메시지 키워드**: 에러 메시지의 핵심 단어로 검색
+2. **카테고리**: error_category로 필터링
+3. **관련 파일**: related_files에서 파일명으로 검색
+4. **커밋 해시**: occurred_commit_hash 또는 resolved_commit_hash로 검색
+
+## 주의사항
+
+- Git 푸시 전에는 절대 에러 리포트에 추가하지 않음
+- 해결되지 않은 에러는 기록하지 않음
+- 중복 에러는 하나의 항목으로 통합 (같은 에러 메시지와 해결 방법인 경우)

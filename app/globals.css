@@ -42,6 +42,24 @@
   --radius-md: calc(var(--radius) - 2px);
   --radius-lg: var(--radius);
   --radius-xl: calc(var(--radius) + 4px);
+  
+  /* DESIGN_PLAN.md 컬러 시스템 - Tailwind 색상으로 등록 */
+  --color-bg-primary: var(--bg-primary);
+  --color-bg-secondary: var(--bg-secondary);
+  --color-bg-tertiary: var(--bg-tertiary);
+  --color-border-default: var(--border-default);
+  --color-border-subtle: var(--border-subtle);
+  --color-text-primary: var(--text-primary);
+  --color-text-secondary: var(--text-secondary);
+  --color-text-tertiary: var(--text-tertiary);
+  --color-interactive: var(--interactive);
+  --color-interactive-hover: var(--interactive-hover);
+  --color-destructive-color: var(--destructive-color);
+  
+  /* DESIGN_PLAN.md 애니메이션 타이밍 - Tailwind duration/easing으로 등록 */
+  --duration-snap: 150ms;
+  --duration-standard: 200ms;
+  --ease-sharp: cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 :root {
@@ -146,7 +164,9 @@
   }
   body {
     @apply bg-background text-foreground;
-    font-family: var(--font-pretendard), var(--font-sans), sans-serif;
+    /* DESIGN_PLAN.md: Inter 폰트 우선순위 (next/font로 로드됨) */
+    font-family: var(--font-inter), var(--font-pretendard), var(--font-geist-sans), -apple-system, BlinkMacSystemFont, sans-serif;
+    -webkit-font-smoothing: antialiased;
   }
   main {
     @apply max-w-7xl mx-auto pt-16 px-4;
@@ -156,4 +176,51 @@
 /* Pretendard 폰트 변수 설정 */
 :root {
   --font-pretendard: 'Pretendard', -apple-system, BlinkMacSystemFont, system-ui, Roboto, 'Helvetica Neue', 'Segoe UI', 'Apple SD Gothic Neo', 'Noto Sans KR', 'Malgun Gothic', 'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol', sans-serif;
+}
+
+/* ================================================
+   LinkPitch Design System Variables
+   DESIGN_PLAN.md의 색상 시스템 및 애니메이션 설정
+   ================================================ */
+
+:root {
+  /* DESIGN_PLAN.md 색상 시스템 (Dark Mode 기본) */
+  /* Background Layers */
+  --bg-primary: #09090b;      /* zinc-950 */
+  --bg-secondary: #18181b;    /* zinc-900 */
+  --bg-tertiary: #27272a;     /* zinc-800 */
+  
+  /* Borders */
+  --border-default: #27272a;  /* zinc-800 */
+  --border-subtle: #3f3f46;   /* zinc-700 */
+  
+  /* Text */
+  --text-primary: #fafafa;    /* zinc-50 */
+  --text-secondary: #a1a1aa;  /* zinc-400 */
+  --text-tertiary: #71717a;   /* zinc-500 */
+  
+  /* Interactive */
+  --interactive: #6366f1;    /* indigo-500 */
+  --interactive-hover: #818cf8; /* indigo-400 */
+  --destructive-color: #f43f5e; /* rose-500 */
+}
+
+.dark {
+  /* DESIGN_PLAN.md 색상 시스템 (다크 모드에서도 동일한 값 사용) */
+  --bg-primary: #09090b;
+  --bg-secondary: #18181b;
+  --bg-tertiary: #27272a;
+  --border-default: #27272a;
+  --border-subtle: #3f3f46;
+  --text-primary: #fafafa;
+  --text-secondary: #a1a1aa;
+  --text-tertiary: #71717a;
+  --interactive: #6366f1;
+  --interactive-hover: #818cf8;
+  --destructive-color: #f43f5e;
+}
+
+/* Terminal용 모노스페이스 폰트 설정 - DESIGN_PLAN.md 기준 (next/font로 로드됨) */
+.font-mono {
+  font-family: var(--font-jetbrains-mono), 'Fira Code', 'Consolas', 'Monaco', 'Courier New', monospace;
 }

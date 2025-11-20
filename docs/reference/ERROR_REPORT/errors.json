@@ -1,0 +1,48 @@
+{
+  "errors": [
+    {
+      "id": "2024-11-18-middleware-authmiddleware",
+      "error_message": "Export authMiddleware doesn't exist in target module",
+      "error_category": "middleware",
+      "related_files": ["middleware.ts"],
+      "occurred_at": "2024-11-18T11:00:00Z",
+      "occurred_commit_hash": "3970b67",
+      "resolution": "authMiddleware는 Clerk v5에서만 사용 가능. @clerk/nextjs v6.35.1에서는 clerkMiddleware를 사용해야 함. middleware.ts를 clerkMiddleware로 마이그레이션 완료. createRouteMatcher를 사용하여 공개 라우트 정의.",
+      "reproduction_steps": [
+        "middleware.ts에서 authMiddleware import 시도",
+        "Next.js 빌드 또는 개발 서버 실행",
+        "Export authMiddleware doesn't exist in target module 에러 발생"
+      ],
+      "references": [
+        "https://clerk.com/docs/references/nextjs/overview"
+      ],
+      "status": "resolved",
+      "resolved_at": "2024-11-18T13:27:10+09:00",
+      "resolved_commit_hash": "33101b3",
+      "pushed_at": "2024-11-18T13:27:14+09:00"
+    },
+    {
+      "id": "2024-11-18-middleware-internal-server-error",
+      "error_message": "Internal Server Error: Unable to add filesystem: <illegal path>",
+      "error_category": "middleware",
+      "related_files": ["middleware.ts"],
+      "occurred_at": "2024-11-18T12:00:00Z",
+      "occurred_commit_hash": "3970b67",
+      "resolution": "Edge Runtime에서 파일 시스템 접근 시도로 인한 에러. auth.protect() 사용 시 NextResponse를 명시적으로 반환하지 않아 발생. clerkMiddleware의 async 함수에서 auth.protect() 호출 후 명시적 반환 제거하고, 환경 변수 체크 로직 제거하여 Edge Runtime 호환성 개선.",
+      "reproduction_steps": [
+        "middleware.ts에서 복잡한 에러 처리 로직 사용",
+        "NextResponse.redirect() 및 환경 변수 체크 포함",
+        "Next.js 개발 서버 실행",
+        "Internal Server Error 발생"
+      ],
+      "references": [
+        "Next.js Edge Runtime documentation"
+      ],
+      "status": "resolved",
+      "resolved_at": "2024-11-18T13:27:10+09:00",
+      "resolved_commit_hash": "33101b3",
+      "pushed_at": "2024-11-18T13:27:14+09:00"
+    }
+  ]
+}
+

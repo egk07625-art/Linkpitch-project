@@ -1,20 +1,14 @@
-feat: setup LinkPitch MVP v3 boilerplate with Linear-style dark mode
+feat: complete design system integration from DESIGN_PLAN.md
 
-- Install dependencies: framer-motion, lucide-react, shadcn/ui components (badge, card, skeleton)
-- Configure Linear-style dark mode theme (Zinc-950 background, Indigo-500 primary, Rose-500 action)
-- Add Pretendard font for Korean text support
-- Create TypeScript type definitions based on PRD.md:
-  - Update Prospect type with VisionAnalysis interface
-  - Update Step type to match PRD schema (prospect_id, email_content, is_sent)
-  - Create ReportEvent type for report tracking
-- Setup server actions structure (app/actions/):
-  - prospects.ts: Prospect CRUD actions
-  - steps.ts: Step creation/update actions
-  - reports.ts: Report event logging actions
-  - generation.ts: n8n webhook integration actions
-- Create utility functions:
-  - crm-utils.ts: CRM status color/label mapping
-  - date-utils.ts: Date formatting and send date calculation
-  - glassmorphism.ts: Glassmorphism style utilities
-- Prepare component folder structure (prospects, mixer, dashboard)
-- Create route folders (dashboard, prospects/new, prospects/[id]/mix)
+- Integrate color system (zinc-950/900/800, indigo-500, rose-500) into Tailwind v4 @theme
+- Configure typography with Inter font priority and JetBrains Mono for monospace
+- Add animation timing variables (duration-snap: 150ms, duration-standard: 200ms, ease-sharp)
+- Fix Google Fonts @import CSS parsing error by using next/font instead
+- Configure ClerkProvider routing to prevent auto modal display
+- Update TODO.md to mark design system tasks as completed
+
+Changes:
+- app/globals.css: Add custom colors and animation timing to @theme inline block
+- app/layout.tsx: Use next/font for Inter and JetBrains Mono fonts
+- app/sign-in: Configure Clerk SignIn appearance
+- middleware.ts: Ensure public routes are accessible without auto modal
