@@ -66,7 +66,6 @@ export default function RootLayout({
     <ClerkProvider
       localization={customKoKR}
       appearance={{
-        baseTheme: "dark",
         variables: {
           colorPrimary: "#6366f1",
         },
