@@ -54,7 +54,10 @@ export function AppSidebar() {
       <nav className="flex flex-col gap-2">
         {navigationItems.map((item) => {
           const Icon = item.icon;
-          const isActive = pathname === item.href || pathname.startsWith(item.href + "/");
+          const isRootDashboard = item.href === "/app";
+          const isActive = isRootDashboard
+            ? pathname === item.href
+            : pathname === item.href || pathname.startsWith(item.href + "/");
 
           return (
             <Link

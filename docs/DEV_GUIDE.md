@@ -804,4 +804,15 @@ export async function logReportEventAction(
 
 ---
 
+## 6. DashboardCard 사용 규칙
+
+- 위치: `components/dashboard/dashboard-card.tsx`, 타입 정의는 `types/dashboard.ts`
+- Props: `title`, `value`, `trend`, `trendLabel`, `description`, `icon`, `variant`, `href`를 기본으로 하여 `DashboardCardData` 배열을 map 렌더링
+- Variant: `default | success | warning | danger`는 `lib/dashboard-card-variants.ts`에서 Tailwind 클래스를 일괄 관리
+- 디자인: DESIGN_PLAN의 Sharp & Technical 원칙 준수 (border 기반, 그림자 금지, 150ms transition, text scale `text-sm`/`text-xs`)
+- 관측성: 렌더 시 `console.info('[DashboardCard] render', { title, variant })` 로그 유지, `data-card-variant`로 테스트 포인트 제공
+- 사용 범위: KPI/CRM 메트릭 카드 전용, 화면당 12개 이하 유지. 확장 시 variant 토큰과 로그 포맷을 재사용
+
+---
+
 **이 가이드를 따르면 Cursor가 LinkPitch의 모든 핵심 기능을 구현할 수 있습니다.**
