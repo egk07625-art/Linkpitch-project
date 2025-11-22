@@ -1,168 +1,30 @@
-/**
- * @file analyze-url.ts
- * @description Vision 분석 Server Action
- *
- * URL을 입력받아 Vision AI로 분석하고 Prospect를 생성합니다.
- * PRD.md의 /webhook/analyze-url 명세를 따릅니다.
- */
+"use server";
 
-'use server';
 
-import { createClerkSupabaseClient } from '@/lib/supabase/server';
-import { auth } from '@clerk/nextjs/server';
-import type { Prospect, VisionData } from '@/types/prospect';
 
-/**
- * URL에서 도메인 추출 헬퍼 함수
- */
-function extractDomain(url: string): string {
-  try {
-    const urlObj = new URL(url);
-    return urlObj.hostname.replace(/^www\./, '');
-  } catch {
-    // URL 파싱 실패 시 원본 반환
-    return url;
+export async function analyzeUrl(formData: FormData) {
+  const url = formData.get("url");
+
+  if (!url) {
+    return { success: false, error: "URL is required" };
   }
-}
 
-/**
- * 도메인 기반 기본 contact_email 생성
- */
-function generateDefaultContactEmail(domain: string): string {
-  return `contact@${domain}`;
-}
+  // Simulate analysis delay (3 seconds)
+  await new Promise((resolve) => setTimeout(resolve, 3000));
 
-/**
- * Vision 분석 및 Prospect 생성
- * 
- * @param url 분석할 URL
- * @returns 생성된 Prospect 객체
- * @throws 에러 발생 시 예외 던짐
- */
-export async function analyzeUrlAction(url: string): Promise<Prospect> {
-  const { userId } = await auth();
+  // Mock result
+  const mockId = "mock-id-123";
   
-  if (!userId) {
-    throw new Error('Unauthorized: 사용자 인증이 필요합니다.');
-  }
-
-  const n8nWebhookUrl = process.env.N8N_WEBHOOK_ANALYZE_URL;
+  // In a real server action called from a form, we might redirect here or return data.
+  // The user request says: "Post-Action: Redirect the user to /prospects/[id]/mix after the terminal animation finishes."
+  // Since the terminal animation happens on the client *while* this is running (or waiting), 
+  // we should probably return the ID and let the client handle the redirect after the animation + data is ready.
+  // However, the user constraint says "Redirect the user ... after the terminal animation finishes".
+  // If we redirect here, the client animation might be cut short or the page will just change.
+  // So we will return the ID.
   
-  if (!n8nWebhookUrl) {
-    throw new Error('N8N_WEBHOOK_ANALYZE_URL 환경 변수가 설정되지 않았습니다.');
-  }
-
-  // 1. n8n Webhook 호출
-  const response = await fetch(n8nWebhookUrl, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify({
-      url,
-      user_id: userId,
-    }),
-  });
-
-  if (!response.ok) {
-    const errorText = await response.text();
-    throw new Error(`Vision 분석 실패: ${response.status} ${errorText}`);
-  }
-
-  const result = await response.json();
-  const visionData: VisionData = result.vision_data;
-
-  // 2. Supabase 클라이언트 생성
-  const supabase = await createClerkSupabaseClient();
-
-  // 3. 도메인 추출 및 기본 contact_email 생성
-  const domain = extractDomain(url);
-  const defaultContactEmail = generateDefaultContactEmail(domain);
-
-  // 4. Prospect 생성
-  const { data: prospect, error } = await supabase
-    .from('prospects')
-    .insert({
-      user_id: userId,
-      name: domain,
-      contact_email: defaultContactEmail,
-      url,
-      vision_data: visionData,
-      crm_status: 'cold',
-      visit_count: 0,
-    })
-    .select()
-    .single();
-
-  if (error) {
-    console.error('Prospect 생성 실패:', error);
-    throw new Error(`Prospect 생성 실패: ${error.message}`);
-  }
-
-  if (!prospect) {
-    throw new Error('Prospect 생성 실패: 데이터가 반환되지 않았습니다.');
-  }
-
-  return prospect as Prospect;
+  return {
+    success: true,
+    prospectId: mockId,
+  };
 }
-
-/**
- * n8n 연결 테스트용 서버 액션
- * 
- * @param testData 테스트용 데이터 (선택적)
- * @returns n8n 응답 결과
- * @throws 에러 발생 시 예외 던짐
- */
-export async function testN8nConnection(testData?: Record<string, unknown>): Promise<unknown> {
-  const n8nWebhookUrl = process.env.N8N_WEBHOOK_URL;
-  
-  if (!n8nWebhookUrl) {
-    throw new Error('N8N_WEBHOOK_URL 환경 변수가 설정되지 않았습니다.');
-  }
-
-  console.log('[testN8nConnection] n8n 웹훅 URL:', n8nWebhookUrl);
-  console.log('[testN8nConnection] 전송 데이터:', testData);
-
-  try {
-    const response = await fetch(n8nWebhookUrl, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        test: true,
-        timestamp: new Date().toISOString(),
-        ...testData,
-      }),
-    });
-
-    console.log('[testN8nConnection] 응답 상태:', response.status, response.statusText);
-
-    if (!response.ok) {
-      const errorText = await response.text();
-      console.error('[testN8nConnection] 에러 응답:', errorText);
-      throw new Error(`n8n 연결 실패: ${response.status} ${response.statusText} - ${errorText}`);
-    }
-
-    const contentType = response.headers.get('content-type');
-    let result: unknown;
-
-    if (contentType?.includes('application/json')) {
-      result = await response.json();
-    } else {
-      const text = await response.text();
-      result = { raw_response: text };
-    }
-
-    console.log('[testN8nConnection] 성공 응답:', result);
-    return result;
-  } catch (error) {
-    console.error('[testN8nConnection] 예외 발생:', error);
-    if (error instanceof Error) {
-      throw error;
-    }
-    throw new Error(`n8n 연결 중 예외 발생: ${String(error)}`);
-  }
-}
-
-

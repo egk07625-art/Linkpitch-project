@@ -1,122 +1,73 @@
 # LinkPitch MVP Project - Cursor Rules
 
-이 프로젝트는 Next.js 15.5.6, React 19, Clerk 인증, Supabase 데이터베이스를 사용하는 SaaS 애플리케이션입니다.
+You are a Senior Full Stack Engineer building "LinkPitch MVP v5.1".
+Your goal is to build a high-density, professional SaaS using the specific stack below.
+
+## 🚨 CORE WORKFLOW (Must Read)
+
+Before implementing any feature or UI, **YOU MUST READ** the corresponding documentation in the `docs/` folder:
+- **Business Logic**: Read `docs/1_PRD.md`
+- **Implementation details**: Read `docs/2_DEV_GUIDE.md`
+- **UI/Design Specs**: Read `docs/3_DESIGN_GUIDE.md`
 
 ## Tech Stack
 
-- **Next.js 15.5.6** with React 19 and App Router
-- **Authentication**: Clerk (with Korean localization)
+- **Framework**: Next.js 15.5.6 (App Router, React 19)
+- **Language**: TypeScript (Strict Mode)
+- **Auth**: Clerk (Korean localization)
 - **Database**: Supabase (PostgreSQL)
-- **Styling**: Tailwind CSS v4 (uses `globals.css`, no config file)
-- **UI Components**: shadcn/ui (based on Radix UI)
+- **Styling**: Tailwind CSS v4 (No config file, use `app/globals.css`)
+- **UI Components**: shadcn/ui
 - **Icons**: lucide-react
-- **Forms**: react-hook-form + Zod
+- **State Management**: Zustand (Global), React Query (Server State)
+- **Interaction**: Framer Motion, dnd-kit (Drag & Drop)
 - **Package Manager**: pnpm
-- **Language**: TypeScript (strict typing required)
 
-## 프로젝트 구조
+## Project Structure & Naming
 
-### 디렉토리 규칙
+### Directory Rules
+- `app/`: Routing only (`page.tsx`, `layout.tsx`, `route.ts`)
+- `components/`: Reusable components
+  - `components/ui/`: shadcn components (Do not modify unless necessary)
+  - `components/providers/`: Context providers
+- `lib/supabase/`: Supabase clients (`server.ts`, `client.ts`, etc.)
+- `actions/`: Server Actions (Primary backend logic)
+- `types/`: TypeScript interfaces mirroring DB schema
+- `hooks/`: Custom React hooks
 
-- `app/`: 라우팅 전용 (page.tsx, layout.tsx, route.ts 등만)
-- `components/`: 재사용 가능한 컴포넌트
-  - `components/ui/`: shadcn 컴포넌트 (자동 생성, 수정 금지)
-  - `components/providers/`: React Context 프로바이더들
-- `lib/`: 유틸리티 함수 및 클라이언트 설정
-  - `lib/supabase/`: Supabase 클라이언트들 (환경별로 분리)
-- `hooks/`: 커스텀 React Hook들
-- `actions/`: Server Actions (API 대신 우선 사용)
-- `types/`: TypeScript 타입 정의
-- `supabase/migrations/`: SQL 마이그레이션 파일들
+### Naming Conventions
+- **Files**: kebab-case (e.g., `use-sync-user.ts`)
+- **Components**: PascalCase
+- **Functions/Vars**: camelCase
+- **Interfaces**: PascalCase
 
-### 명명 규칙
+## Development Guidelines
 
-- **파일명**: kebab-case (예: `use-sync-user.ts`, `sync-user-provider.tsx`)
-- **컴포넌트**: PascalCase (파일명은 여전히 kebab-case)
-- **함수/변수**: camelCase
-- **타입/인터페이스**: PascalCase
+### 1. Server Actions vs API Routes
+- **Priority**: Server Actions (`actions/`) > API Routes
+- Only use API Routes for Webhooks (e.g., n8n, Clerk webhooks).
 
-## Clerk + Supabase 통합
+### 2. React 19 & Next.js 15 Patterns
+- Use `async/await` for Request APIs (`cookies()`, `headers()`, `params`).
+- Default to **Server Components**. Use `'use client'` only for interactivity.
+- Use `satisfies` for type validation.
 
-이 프로젝트는 Clerk와 Supabase의 네이티브 통합을 사용합니다:
+### 3. Database (Supabase)
+- **Migrations**: `YYYYMMDDHHmmss_description.sql`
+- **RLS**: Policies must be written in comments for now, but enabled before production.
+- **Auth**: Sync Clerk users to Supabase `users` table via `SyncUserProvider`.
 
-1. **인증 흐름**:
-   - Clerk가 사용자 인증 처리
-   - `SyncUserProvider`가 로그인 시 자동으로 Clerk 사용자를 Supabase `users` 테이블에 동기화
-   - Supabase 클라이언트가 Clerk 토큰을 사용하여 인증
+### 4. Design System (Silent Luxury)
+- **Theme**: Linear-style Dark Mode (`zinc-950` background, `indigo-500` primary).
+- **Layout**: High density, subtle borders (`white/5`), no heavy shadows.
+- **Ref**: Check `docs/3_DESIGN_GUIDE.md` for specific color tokens.
 
-2. **Supabase 클라이언트 파일들** (`lib/supabase/`):
-   - `clerk-client.ts`: Client Component용 (useClerkSupabaseClient hook)
-   - `server.ts`: Server Component/Server Action용 (createClerkSupabaseClient)
-   - `service-role.ts`: 관리자 권한 작업용 (SUPABASE_SERVICE_ROLE_KEY 사용)
-   - `client.ts`: 인증 불필요한 공개 데이터용
+## Coding Principles
+1. **Type Safety**: No `any`. Define exact types in `types/`.
+2. **Error Handling**: Log critical errors, provide user feedback via `sonner` (toast).
+3. **Language**: Respond to the user in **Korean** (한국어).
 
-## 개발 가이드라인
-
-### Server Actions vs API Routes
-
-**우선순위**: Server Actions > API Routes
-
-- 가능하면 항상 Server Actions 사용 (`actions/` 디렉토리)
-- API Routes는 불가피한 경우에만 사용 (웹훅, 외부 API 등)
-
-### TypeScript
-
-- 모든 코드에 타입 정의 필수
-- 인터페이스 우선, 타입은 필요시만
-- enum 대신 const 객체 사용
-- `satisfies` 연산자로 타입 검증
-
-### React 19 & Next.js 15 Patterns
-
-```typescript
-// Async Request APIs (항상 await 사용)
-const cookieStore = await cookies();
-const headersList = await headers();
-const params = await props.params;
-const searchParams = await props.searchParams;
-
-// Server Component 우선
-// 'use client'는 필요한 경우에만
-```
-
-### Styling
-
-- Tailwind CSS v4 사용 (설정은 `app/globals.css`에만)
-- `tailwind.config.js` 파일은 사용하지 않음
-- 다크/라이트 모드 지원 고려
-
-### UI Components
-
-1. **shadcn/ui 설치 확인**: 사용 전 `/components/ui/` 디렉토리 체크
-2. **설치 명령어**: `pnpx shadcn@latest add [component-name]`
-3. **아이콘**: lucide-react 사용 (`import { Icon } from 'lucide-react'`)
-
-## 데이터베이스
-
-### Supabase Migrations
-
-마이그레이션 파일 명명 규칙: `YYYYMMDDHHmmss_description.sql`
-
-**중요**:
-- **현재 상태**: RLS는 비활성화되어 있음 (출시 전 활성화 예정)
-- 새 테이블 생성 시 RLS 정책은 주석으로 작성해두고, 출시 전에 활성화
-- 프로덕션에서는 반드시 RLS 활성화 필수
-- RLS 정책은 세분화: select, insert, update, delete별로 각각 작성
-- Clerk JWT의 `sub` claim을 `user_id`로 매칭하여 사용자별 데이터 접근 제어
-
-## 코드 작성 원칙
-
-1. **확장성**: 확장 가능한 구조로 설계
-2. **안정성**: 최우선으로 최대한 모듈화
-3. **타입 안정성**: TypeScript strict mode 준수
-4. **에러 처리**: 핵심 기능에 로그 남기기
-5. **한국어 응답**: 사용자에게 한국어로 응답
-
-## 참고 파일
-
-- `AGENTS.md`: 상세한 프로젝트 가이드라인
-- `docs/PRD.md`: 제품 요구사항 문서
-- `docs/TODO.md`: 작업 목록
-- `docs/ERROR-REPORT.md`: 에러 리포트
-
+## Reference Files
+- `docs/1_PRD.md`: Product Requirements
+- `docs/2_DEV_GUIDE.md`: Development Guide
+- `docs/3_DESIGN_GUIDE.md`: Design System
