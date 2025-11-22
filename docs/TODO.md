@@ -350,7 +350,7 @@
 ### 필수 패키지 설치 확인
 
 - [ ] framer-motion
-- [ ] lucide-react
+- [x] lucide-react
 - [ ] clsx, tailwind-merge
 - [ ] @dnd-kit/core, @dnd-kit/utilities, @dnd-kit/sortable
 - [ ] zustand
