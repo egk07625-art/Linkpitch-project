@@ -56,6 +56,38 @@ getComputedStyle(document.documentElement).getPropertyValue("--bg-primary")
 
 ---
 
+## 2025-11-22 - WSL 환경 개발 경고 확인
+
+### 확인 사항
+**WSL 환경에서 발생하는 브라우저 콘솔 경고**
+
+#### 경고 내용
+- **에러 메시지**: "Unable to add filesystem: <illegal path>"
+- **발생 위치**: 브라우저 개발자 도구 콘솔
+- **원인**: WSL 환경에서 Turbopack의 파일 감시 시스템이 WSL 경로(`/Ubuntu/home/...`)를 브라우저가 Windows 경로로 해석하려다 발생하는 경고
+- **영향**: 실제 애플리케이션 기능에는 전혀 영향 없음 (무해한 경고)
+
+#### 확인된 정상 동작
+- ✅ 로그인/인증 정상 작동
+- ✅ Fast Refresh 정상 동작 (콘솔에 "done in 448ms" 표시)
+- ✅ 핵심 기능 모두 정상 작동
+
+#### 해결 방법
+- 현재 설정(`WATCHPACK_POLLING=true`)으로 충분
+- 추가 조치 불필요 (기능에 영향 없음)
+- 프로덕션 빌드에서는 보통 나타나지 않음
+
+### 해결 상태
+- [x] ERROR-REPORT 파일에 경고 기록
+- [x] 기능 영향 없음 확인
+- [x] lucide-react 설치 확인 완료 (v0.511.0)
+- [x] middleware.ts 라우트 보호 설정 정상 작동 확인
+
+### 확인 완료 날짜
+2025-11-22
+
+---
+
 ## 2025-01-XX - Vercel 배포 실패 (두 번째)
 
 ### 에러 원인
@@ -85,6 +117,38 @@ import type { Prospect } from '@/types/prospect';
 
 ### 수정 완료 날짜
 2025-01-XX
+
+---
+
+## 2025-11-22 - WSL 환경 개발 경고 확인
+
+### 확인 사항
+**WSL 환경에서 발생하는 브라우저 콘솔 경고**
+
+#### 경고 내용
+- **에러 메시지**: "Unable to add filesystem: <illegal path>"
+- **발생 위치**: 브라우저 개발자 도구 콘솔
+- **원인**: WSL 환경에서 Turbopack의 파일 감시 시스템이 WSL 경로(`/Ubuntu/home/...`)를 브라우저가 Windows 경로로 해석하려다 발생하는 경고
+- **영향**: 실제 애플리케이션 기능에는 전혀 영향 없음 (무해한 경고)
+
+#### 확인된 정상 동작
+- ✅ 로그인/인증 정상 작동
+- ✅ Fast Refresh 정상 동작 (콘솔에 "done in 448ms" 표시)
+- ✅ 핵심 기능 모두 정상 작동
+
+#### 해결 방법
+- 현재 설정(`WATCHPACK_POLLING=true`)으로 충분
+- 추가 조치 불필요 (기능에 영향 없음)
+- 프로덕션 빌드에서는 보통 나타나지 않음
+
+### 해결 상태
+- [x] ERROR-REPORT 파일에 경고 기록
+- [x] 기능 영향 없음 확인
+- [x] lucide-react 설치 확인 완료 (v0.511.0)
+- [x] middleware.ts 라우트 보호 설정 정상 작동 확인
+
+### 확인 완료 날짜
+2025-11-22
 
 
 ---
@@ -149,3 +213,35 @@ import type { Prospect } from '@/types/prospect';
 
 ### 수정 완료 날짜
 2025-01-XX
+
+---
+
+## 2025-11-22 - WSL 환경 개발 경고 확인
+
+### 확인 사항
+**WSL 환경에서 발생하는 브라우저 콘솔 경고**
+
+#### 경고 내용
+- **에러 메시지**: "Unable to add filesystem: <illegal path>"
+- **발생 위치**: 브라우저 개발자 도구 콘솔
+- **원인**: WSL 환경에서 Turbopack의 파일 감시 시스템이 WSL 경로(`/Ubuntu/home/...`)를 브라우저가 Windows 경로로 해석하려다 발생하는 경고
+- **영향**: 실제 애플리케이션 기능에는 전혀 영향 없음 (무해한 경고)
+
+#### 확인된 정상 동작
+- ✅ 로그인/인증 정상 작동
+- ✅ Fast Refresh 정상 동작 (콘솔에 "done in 448ms" 표시)
+- ✅ 핵심 기능 모두 정상 작동
+
+#### 해결 방법
+- 현재 설정(`WATCHPACK_POLLING=true`)으로 충분
+- 추가 조치 불필요 (기능에 영향 없음)
+- 프로덕션 빌드에서는 보통 나타나지 않음
+
+### 해결 상태
+- [x] ERROR-REPORT 파일에 경고 기록
+- [x] 기능 영향 없음 확인
+- [x] lucide-react 설치 확인 완료 (v0.511.0)
+- [x] middleware.ts 라우트 보호 설정 정상 작동 확인
+
+### 확인 완료 날짜
+2025-11-22
