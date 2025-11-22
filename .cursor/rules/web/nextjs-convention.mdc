@@ -1,0 +1,83 @@
+# Next.js 15.5.6 Convention Rules
+
+## App Router 패턴
+
+### Server Component 우선 원칙
+- 기본적으로 모든 컴포넌트는 Server Component
+- `'use client'`는 필요한 경우에만 사용 (상호작용, 상태 관리, 브라우저 API)
+
+### Async Request APIs
+Next.js 15에서는 모든 Request API가 async입니다:
+
+```typescript
+// ✅ 올바른 사용
+const cookieStore = await cookies();
+const headersList = await headers();
+const params = await props.params;
+const searchParams = await props.searchParams;
+
+// ❌ 잘못된 사용
+const params = props.params; // Promise를 await하지 않음
+```
+
+### Server Actions 우선
+- API Routes 대신 Server Actions 사용 (`actions/` 디렉토리)
+- `'use server'` 지시어 필수
+- 클라이언트에서 직접 호출 가능
+
+```typescript
+'use server'
+
+import { createClerkSupabaseClient } from '@/lib/supabase/server'
+
+export async function myAction() {
+  const supabase = createClerkSupabaseClient()
+  // ...
+}
+```
+
+### 라우팅 구조
+- `app/`: 라우팅 전용 (page.tsx, layout.tsx, route.ts만)
+- 동적 라우트: `[id]`, `[...slug]` 등
+- Route Groups: `(auth)`, `(dashboard)` 등
+
+## 파일 구조 규칙
+
+### 디렉토리 분리
+- `app/`: 라우팅 파일만
+- `components/`: 재사용 가능한 컴포넌트
+- `lib/`: 유틸리티 및 클라이언트 설정
+- `actions/`: Server Actions
+- `hooks/`: 커스텀 React Hooks
+- `types/`: TypeScript 타입 정의
+
+### 명명 규칙
+- 파일명: kebab-case (`my-component.tsx`)
+- 컴포넌트: PascalCase (`MyComponent`)
+- 함수/변수: camelCase (`myFunction`)
+- 타입/인터페이스: PascalCase (`MyType`)
+
+## TypeScript 규칙
+
+### 타입 정의 필수
+- 모든 함수, 컴포넌트에 타입 정의
+- 인터페이스 우선, 타입은 필요시만
+- enum 대신 const 객체 사용
+
+### 타입 검증
+- `satisfies` 연산자로 타입 검증
+- Strict mode 활성화
+
+## 성능 최적화
+
+### 이미지 최적화
+- `next/image` 사용
+- 적절한 크기 및 포맷 설정
+
+### 코드 분할
+- 동적 import 사용 (`next/dynamic`)
+- 큰 라이브러리는 필요시에만 로드
+
+### 캐싱 전략
+- Server Components는 기본적으로 캐시됨
+- `revalidate` 옵션으로 재검증 주기 설정

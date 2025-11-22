@@ -4,28 +4,33 @@ interface VariantStyle {
   container: string;
   value: string;
   badge: string;
+  icon: string;
 }
 
 export const dashboardCardVariantMap: Record<DashboardCardVariant, VariantStyle> = {
   default: {
-    container: "border-zinc-800 hover:border-zinc-700",
+    container: "border-indigo-500/50 hover:border-indigo-500/70 bg-indigo-500/5",
     value: "text-zinc-50",
     badge: "bg-zinc-800 text-zinc-400",
+    icon: "text-indigo-500",
   },
   success: {
-    container: "border-emerald-500/40 hover:border-emerald-500/60",
-    value: "text-emerald-400",
-    badge: "bg-emerald-500/10 text-emerald-400",
+    container: "border-emerald-500/50 hover:border-emerald-500/70 bg-emerald-500/5",
+    value: "text-zinc-50",
+    badge: "bg-zinc-800 text-zinc-400",
+    icon: "text-emerald-500",
   },
   warning: {
-    container: "border-amber-500/40 hover:border-amber-500/60",
-    value: "text-amber-400",
-    badge: "bg-amber-500/10 text-amber-400",
+    container: "border-amber-500/50 hover:border-amber-500/70 bg-amber-500/5",
+    value: "text-zinc-50",
+    badge: "bg-zinc-800 text-zinc-400",
+    icon: "text-amber-500",
   },
   danger: {
-    container: "border-rose-500/40 hover:border-rose-500/60",
-    value: "text-rose-400",
-    badge: "bg-rose-500/10 text-rose-400",
+    container: "border-rose-500/50 hover:border-rose-500/70 bg-rose-500/5",
+    value: "text-zinc-50",
+    badge: "bg-zinc-800 text-zinc-400",
+    icon: "text-rose-500",
   },
 };
 
@@ -38,4 +43,3 @@ export const getDashboardCardVariant = (
 
   return dashboardCardVariantMap[variant];
 };
-

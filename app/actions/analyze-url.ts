@@ -106,4 +106,63 @@ export async function analyzeUrlAction(url: string): Promise<Prospect> {
   return prospect as Prospect;
 }
 
+/**
+ * n8n 연결 테스트용 서버 액션
+ * 
+ * @param testData 테스트용 데이터 (선택적)
+ * @returns n8n 응답 결과
+ * @throws 에러 발생 시 예외 던짐
+ */
+export async function testN8nConnection(testData?: Record<string, unknown>): Promise<unknown> {
+  const n8nWebhookUrl = process.env.N8N_WEBHOOK_URL;
+  
+  if (!n8nWebhookUrl) {
+    throw new Error('N8N_WEBHOOK_URL 환경 변수가 설정되지 않았습니다.');
+  }
+
+  console.log('[testN8nConnection] n8n 웹훅 URL:', n8nWebhookUrl);
+  console.log('[testN8nConnection] 전송 데이터:', testData);
+
+  try {
+    const response = await fetch(n8nWebhookUrl, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        test: true,
+        timestamp: new Date().toISOString(),
+        ...testData,
+      }),
+    });
+
+    console.log('[testN8nConnection] 응답 상태:', response.status, response.statusText);
+
+    if (!response.ok) {
+      const errorText = await response.text();
+      console.error('[testN8nConnection] 에러 응답:', errorText);
+      throw new Error(`n8n 연결 실패: ${response.status} ${response.statusText} - ${errorText}`);
+    }
+
+    const contentType = response.headers.get('content-type');
+    let result: unknown;
+
+    if (contentType?.includes('application/json')) {
+      result = await response.json();
+    } else {
+      const text = await response.text();
+      result = { raw_response: text };
+    }
+
+    console.log('[testN8nConnection] 성공 응답:', result);
+    return result;
+  } catch (error) {
+    console.error('[testN8nConnection] 예외 발생:', error);
+    if (error instanceof Error) {
+      throw error;
+    }
+    throw new Error(`n8n 연결 중 예외 발생: ${String(error)}`);
+  }
+}
+
 

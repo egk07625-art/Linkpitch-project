@@ -3,12 +3,11 @@ import { NextResponse } from "next/server";
 
 // 공개 라우트 정의
 const isPublicRoute = createRouteMatcher([
-  "/",
-  "/sign-in(.*)",
-  "/sign-up(.*)",
-  "/r(.*)", // 리포트 뷰 페이지 공개 접근
-  "/api/webhooks(.*)",
-  "/api/test-supabase(.*)", // 테스트용 API 공개
+  "/",                        // 랜딩 페이지
+  "/sign-in(.*)",            // 로그인 페이지
+  "/sign-up(.*)",            // 회원가입 페이지
+  "/r(.*)",                  // 리포트 뷰 (수신자가 인증 없이 조회 가능)
+  "/api/webhooks(.*)",       // 외부 웹훅 (n8n 등)
 ]);
 
 export default clerkMiddleware(async (auth, req) => {

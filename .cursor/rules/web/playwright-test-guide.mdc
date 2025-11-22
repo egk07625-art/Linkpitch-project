@@ -1,0 +1,54 @@
+# Playwright Test Guide
+
+## 테스트 구조
+
+### 파일 위치
+- `tests/` 또는 `__tests__/` 디렉토리
+- 파일명: `*.spec.ts` 또는 `*.test.ts`
+
+### 기본 설정
+```typescript
+import { test, expect } from '@playwright/test'
+
+test('should load homepage', async ({ page }) => {
+  await page.goto('/')
+  await expect(page).toHaveTitle(/LinkPitch/)
+})
+```
+
+## 테스트 전략
+
+### E2E 테스트
+- 주요 사용자 플로우 테스트
+- 인증 플로우
+- 데이터 생성 및 수정
+
+### 컴포넌트 테스트
+- 핵심 컴포넌트 동작 검증
+- 사용자 상호작용 테스트
+
+## 테스트 작성 원칙
+
+### 명확한 테스트 이름
+- 무엇을 테스트하는지 명확히
+- Given-When-Then 패턴 사용
+
+### 독립적인 테스트
+- 각 테스트는 독립적으로 실행 가능
+- 테스트 간 의존성 제거
+
+### 안정적인 선택자
+- `data-testid` 사용 권장
+- CSS 선택자보다 우선
+
+## 테스트 실행
+
+### 로컬 실행
+```bash
+pnpm test
+pnpm test:ui  # UI 모드
+```
+
+### CI/CD 통합
+- GitHub Actions 등에서 자동 실행
+- 병렬 실행으로 속도 향상

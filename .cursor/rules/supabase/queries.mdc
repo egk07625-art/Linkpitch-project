@@ -1,0 +1,108 @@
+# Supabase Query Patterns
+
+## 기본 쿼리 패턴
+
+### SELECT
+```typescript
+const { data, error } = await supabase
+  .from('table_name')
+  .select('*')
+  .eq('column', 'value')
+  .single()
+```
+
+### INSERT
+```typescript
+const { data, error } = await supabase
+  .from('table_name')
+  .insert({ column: 'value' })
+  .select()
+  .single()
+```
+
+### UPDATE
+```typescript
+const { data, error } = await supabase
+  .from('table_name')
+  .update({ column: 'new_value' })
+  .eq('id', id)
+```
+
+### DELETE
+```typescript
+const { error } = await supabase
+  .from('table_name')
+  .delete()
+  .eq('id', id)
+```
+
+## 에러 처리
+
+### 항상 에러 체크
+```typescript
+const { data, error } = await supabase.from('users').select()
+
+if (error) {
+  console.error('Supabase error:', error)
+  throw error
+}
+```
+
+## 조인 쿼리
+
+### Foreign Key 조인
+```typescript
+const { data } = await supabase
+  .from('sequences')
+  .select(`
+    *,
+    prospect:prospects(*),
+    steps:step(*)
+  `)
+```
+
+## JSONB 쿼리
+
+### JSONB 필드 접근
+```typescript
+// JSONB 필드 선택
+.select('id, vision_data')
+
+// JSONB 필터링
+.filter('vision_data->mood', 'eq', 'luxury')
+```
+
+## 실시간 구독
+
+### Realtime 사용
+```typescript
+const channel = supabase
+  .channel('table-changes')
+  .on('postgres_changes', {
+    event: 'INSERT',
+    schema: 'public',
+    table: 'table_name'
+  }, (payload) => {
+    console.log('New row:', payload.new)
+  })
+  .subscribe()
+```
+
+## 성능 최적화
+
+### 필요한 컬럼만 선택
+```typescript
+// ❌ 모든 컬럼 선택
+.select('*')
+
+// ✅ 필요한 컬럼만 선택
+.select('id, name, email')
+```
+
+### 페이지네이션
+```typescript
+const { data } = await supabase
+  .from('table_name')
+  .select('*')
+  .range(0, 9) // 첫 10개
+```

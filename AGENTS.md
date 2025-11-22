@@ -28,7 +28,18 @@ pnpm start
 
 # Linting
 pnpm lint
+
+# Environment check (우분투 환경)
+bash scripts/check-environment.sh
 ```
+
+## Environment Setup
+
+**우분투/WSL 환경 사용자**: [docs/UBUNTU_SETUP.md](./docs/UBUNTU_SETUP.md)를 참고하여 환경을 설정하세요.
+
+- Node.js 20 이상 필수 (Supabase 요구사항)
+- nvm을 사용한 Node.js 버전 관리 권장
+- 프로젝트 루트의 `.nvmrc` 파일로 자동 버전 전환
 
 ## Project Architecture
 

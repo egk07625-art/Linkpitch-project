@@ -1,12 +1,10 @@
 /**
  * @file app-shell.tsx
  * @description App Shell 래퍼 컴포넌트
- *
- * Header + Sidebar + MainContent를 포함하는 App Shell 레이아웃
  */
 
-import { AppHeader } from "./app-header";
-import { AppSidebar } from "./app-sidebar";
+import { Sidebar } from "./sidebar";
+import { MobileNav } from "./mobile-nav";
 
 interface AppShellProps {
   children: React.ReactNode;
@@ -14,28 +12,22 @@ interface AppShellProps {
 
 export function AppShell({ children }: AppShellProps) {
   return (
-    <div className="flex flex-col min-h-screen">
-      <AppHeader />
-      <div className="flex flex-1">
-        <AppSidebar />
-        <main className="flex-1 p-6">{children}</main>
+    <div className="relative min-h-screen bg-zinc-950">
+      {/* Sidebar (Desktop) */}
+      <Sidebar />
+
+      {/* Top Bar (Mobile) */}
+      <div className="fixed top-0 left-0 right-0 z-30 h-14 border-b border-zinc-800 flex items-center px-4 bg-zinc-950/80 backdrop-blur-md md:hidden">
+        <MobileNav />
+        <div className="flex-1 text-center">
+          <span className="text-lg font-semibold text-zinc-50">LinkPitch</span>
+        </div>
       </div>
+
+      {/* Main Content */}
+      <main className="md:pl-64 pt-14 md:pt-0 min-h-screen">
+        <div className="p-6">{children}</div>
+      </main>
     </div>
   );
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

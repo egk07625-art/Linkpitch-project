@@ -1,4 +1,3 @@
-import Link from "next/link";
 import { CircleAlert } from "lucide-react";
 
 import { getDashboardCardVariant } from "@/lib/dashboard-card-variants";
@@ -14,23 +13,20 @@ export function DashboardCard({
   trendLabel,
   icon: IconOverride,
   variant = "default",
-  href,
   headingLevel = "h3",
   "aria-live": ariaLive = "off",
   "data-testid": dataTestId,
 }: DashboardCardProps) {
-  console.info("[DashboardCard] render", { title, variant });
-
   const variantStyle = getDashboardCardVariant(variant);
   const Icon = IconOverride ?? CircleAlert;
   const HeadingTag = headingLevel;
   const formattedValue = value ?? "—";
   const normalizedTrend = typeof trend === "number" ? trend : null;
 
-  const cardContent = (
+  return (
     <div
       className={cn(
-        "bg-zinc-900 border rounded-sm p-4 transition-colors duration-150 focus-within:ring-2 focus-within:ring-indigo-500/40 focus-within:ring-offset-0",
+        "bg-zinc-900 border rounded-sm p-4 transition-colors duration-150",
         "flex flex-col gap-4",
         variantStyle.container,
       )}
@@ -48,14 +44,14 @@ export function DashboardCard({
           ) : null}
         </div>
         <div className="flex h-10 w-10 items-center justify-center rounded-sm border border-zinc-800 bg-zinc-950">
-          <Icon className="h-5 w-5 text-zinc-400" aria-hidden />
+          <Icon className={cn("h-5 w-5", variantStyle.icon)} aria-hidden />
         </div>
       </div>
 
       <div className="flex items-end justify-between gap-4">
         <p
           className={cn(
-            "text-2xl font-semibold tracking-tight leading-none",
+            "text-3xl font-bold tracking-tight leading-none",
             variantStyle.value,
           )}
         >
@@ -75,28 +71,6 @@ export function DashboardCard({
           </span>
         ) : null}
       </div>
-
-      {href ? (
-        <p className="text-xs text-indigo-400 underline-offset-4 hover:underline">
-          자세히 보기 →
-        </p>
-      ) : null}
     </div>
   );
-
-  if (href) {
-    return (
-      <Link
-        href={href}
-        className="focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500/60 focus-visible:ring-offset-0"
-        prefetch={false}
-        aria-label={`${title} 카드 상세 보기`}
-      >
-        {cardContent}
-      </Link>
-    );
-  }
-
-  return cardContent;
 }
-

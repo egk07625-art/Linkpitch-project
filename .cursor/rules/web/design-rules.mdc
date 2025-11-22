@@ -1,0 +1,69 @@
+# UI/UX Design Rules
+
+## 디자인 시스템
+
+### Linear-style Dark Mode
+- 배경: Zinc-950 (#09090b)
+- 전경: Zinc-50 (#fafafa)
+- Primary: Indigo-500 (#6366f1)
+- Border: Zinc-800
+
+### Tailwind CSS v4
+- 설정은 `app/globals.css`에만
+- `tailwind.config.js` 파일 사용하지 않음
+- CSS 변수로 테마 관리
+
+## 컴포넌트 원칙
+
+### shadcn/ui 사용
+- 설치 확인: `/components/ui/` 디렉토리 체크
+- 설치 명령: `pnpx shadcn@latest add [component-name]`
+- 자동 생성된 파일 수정 금지
+
+### 아이콘
+- `lucide-react` 사용
+- 일관된 크기 및 스타일 유지
+
+### 애니메이션
+- `framer-motion` 사용
+- 부드러운 전환 효과 (150ms transition)
+- 과도한 애니메이션 지양
+
+## 레이아웃 규칙
+
+### 반응형 디자인
+- Mobile-first 접근
+- Tailwind breakpoints 활용
+
+### 접근성
+- 적절한 색상 대비
+- 키보드 네비게이션 지원
+- ARIA 레이블 사용
+
+## 스타일링 가이드
+
+### Border 기반 디자인
+- 그림자 대신 border 사용
+- Sharp & Technical 원칙 준수
+
+### Typography
+- `text-sm`, `text-xs` 등 일관된 크기
+- 모노스페이스 폰트는 터미널/코드 전용
+
+### Spacing
+- Tailwind spacing scale 사용
+- 일관된 간격 유지
+
+## 상태 표시
+
+### 로딩 상태
+- Skeleton UI 사용
+- 명확한 로딩 메시지
+
+### 에러 상태
+- 사용자 친화적인 에러 메시지
+- 복구 가능한 액션 제공
+
+### 성공 상태
+- Toast 알림 (`sonner` 사용)
+- 명확한 피드백
