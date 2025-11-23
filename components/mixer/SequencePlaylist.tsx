@@ -2,10 +2,10 @@
 
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
-import { Mail, Bot, Sparkles, Copy, Download } from 'lucide-react';
+import { Mail, Bot, Sparkles } from 'lucide-react';
 import { VisionItem } from '@/types/vision';
+import { SCENARIO_STEPS } from '@/lib/constants/scenario-steps';
 import { cn } from '@/lib/utils';
-import { Button } from '@/components/ui/button';
 
 interface SequencePlaylistProps {
   droppedInsights: VisionItem[];
@@ -70,43 +70,6 @@ function ViewToggle({
   );
 }
 
-// EmailEditorCard Component
-function EmailEditorCard() {
-  const [subject, setSubject] = useState('');
-  const [body, setBody] = useState('');
-
-  return (
-    <div className="w-full max-w-5xl mx-auto p-8">
-      {/* Subject */}
-      <div className="mb-8">
-        <label className="block text-xs font-semibold text-zinc-500 mb-3 uppercase tracking-wide">
-          제목
-        </label>
-        <input
-          type="text"
-          value={subject}
-          onChange={(e) => setSubject(e.target.value)}
-          placeholder="이메일 제목을 입력하세요..."
-          className="w-full bg-transparent border-b border-zinc-800 text-2xl font-semibold text-white placeholder:text-zinc-700 outline-none pb-4 focus:border-indigo-500 transition-colors"
-        />
-      </div>
-
-      {/* Body */}
-      <div className="flex-1">
-        <label className="block text-xs font-semibold text-zinc-500 mb-3 uppercase tracking-wide">
-          본문
-        </label>
-        <textarea
-          value={body}
-          onChange={(e) => setBody(e.target.value)}
-          placeholder="이메일 내용을 작성하세요...&#10;&#10;안녕하세요,&#10;&#10;최근 귀사의 성과를 보고..."
-          className="w-full h-[600px] bg-transparent text-base text-zinc-200 placeholder:text-zinc-700 outline-none resize-none leading-relaxed"
-        />
-      </div>
-    </div>
-  );
-}
-
 // Main Component
 export default function SequencePlaylist({ 
   droppedInsights, 
@@ -114,7 +77,10 @@ export default function SequencePlaylist({
   currentStep = 1 
 }: SequencePlaylistProps) {
   const [viewMode, setViewMode] = useState<'email' | 'report'>('report');
+  const [emailBody, setEmailBody] = useState('');
   const [reportContent, setReportContent] = useState('');
+
+  const currentScenario = SCENARIO_STEPS.find(s => s.step === currentStep) || SCENARIO_STEPS[0];
 
   return (
     // Root: Full height container
@@ -132,45 +98,60 @@ export default function SequencePlaylist({
           // REPORT MODE - 넓게 펼쳐진 레이아웃
           <div className="w-full max-w-5xl mx-auto p-8">
             
-            {/* Toolbar */}
-            <div className="flex items-center justify-between mb-6">
-              <h3 className="text-xl font-semibold text-zinc-100 flex items-center gap-2">
-                <Sparkles className="size-5 text-indigo-400" />
-                AI 생성 리포트
-              </h3>
-              <div className="flex gap-2">
-                <Button 
-                  variant="ghost" 
-                  size="sm"
-                  className="h-9 text-xs text-zinc-400 hover:text-zinc-200"
-                >
-                  <Copy className="size-3 mr-2" />
-                  복사
-                </Button>
-                <Button 
-                  variant="ghost" 
-                  size="sm"
-                  className="h-9 text-xs text-zinc-400 hover:text-zinc-200"
-                >
-                  <Download className="size-3 mr-2" />
-                  다운로드
-                </Button>
+            {/* Container Box */}
+            <div className="bg-zinc-900 border border-white/10 rounded-xl p-6 min-h-[700px] flex flex-col">
+              
+              {/* Toolbar */}
+              <div className="mb-6 pb-4 border-b border-white/10">
+                <h3 className="text-lg font-semibold text-zinc-100 flex items-center gap-2">
+                  <Sparkles className="size-5 text-indigo-400" />
+                  AI 생성 리포트
+                </h3>
+                <p className="text-xs text-zinc-500 mt-1">
+                  Step {currentStep}. {currentScenario.subtitle} - {currentScenario.title}
+                </p>
               </div>
-            </div>
 
-            {/* Textarea Container */}
-            <div className="w-full">
-              <textarea 
-                value={reportContent}
-                onChange={(e) => setReportContent(e.target.value)}
-                className="w-full h-[700px] bg-transparent border border-zinc-800/50 rounded-xl p-6 resize-none outline-none text-zinc-300 leading-relaxed placeholder:text-zinc-700 focus:border-indigo-500/50 transition-colors"
-                placeholder="좌측에서 인사이트 칩을 드래그하여 놓으면, AI가 이곳에 리포트 초안을 작성합니다..."
-              />
+              {/* Textarea Container */}
+              <div className="flex-1">
+                <textarea 
+                  value={reportContent}
+                  onChange={(e) => setReportContent(e.target.value)}
+                  className="w-full h-full bg-transparent resize-none outline-none text-zinc-300 leading-relaxed placeholder:text-zinc-700"
+                  placeholder="좌측에서 인사이트 칩을 드래그하여 놓으면, AI가 이곳에 리포트 초안을 작성합니다..."
+                />
+              </div>
             </div>
           </div>
         ) : (
-          // EMAIL MODE
-          <EmailEditorCard />
+          // EMAIL MODE - 리포트와 동일한 디자인
+          <div className="w-full max-w-5xl mx-auto p-8">
+            
+            {/* Container Box */}
+            <div className="bg-zinc-900 border border-white/10 rounded-xl p-6 min-h-[700px] flex flex-col">
+              
+              {/* Toolbar */}
+              <div className="mb-6 pb-4 border-b border-white/10">
+                <h3 className="text-lg font-semibold text-zinc-100 flex items-center gap-2">
+                  <Mail className="size-5 text-indigo-400" />
+                  메일 초안
+                </h3>
+                <p className="text-xs text-zinc-500 mt-1">
+                  Step {currentStep}. {currentScenario.subtitle} - {currentScenario.title}
+                </p>
+              </div>
+
+              {/* Email Content */}
+              <div className="flex-1">
+                <textarea
+                  value={emailBody}
+                  onChange={(e) => setEmailBody(e.target.value)}
+                  placeholder="AI가 분석한 내용을 바탕으로 메일 초안이 자동 생성됩니다..."
+                  className="w-full h-full bg-transparent resize-none outline-none text-zinc-300 leading-relaxed placeholder:text-zinc-700"
+                />
+              </div>
+            </div>
+          </div>
         )}
 
       </div>

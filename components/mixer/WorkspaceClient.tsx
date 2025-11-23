@@ -231,6 +231,7 @@ export default function WorkspaceClient() {
   const [draggedItem, setDraggedItem] = useState<VisionItem | null>(null);
   const [droppedInsights, setDroppedInsights] = useState<VisionItem[]>([]);
   const [mounted, setMounted] = useState(false);
+  const [activeStep, setActiveStep] = useState(1);
 
   useEffect(() => {
     setMounted(true);
@@ -357,13 +358,16 @@ export default function WorkspaceClient() {
           <SequencePlaylist 
             droppedInsights={droppedInsights}
             onRemove={removeFromDropZone}
-            currentStep={1}
+            currentStep={activeStep}
           />
         </main>
 
         {/* Right Sidebar: Fixed Width */}
         <aside className="w-[300px] flex-none border-l border-zinc-800/50 bg-zinc-900/20 overflow-y-auto custom-scrollbar">
-          <StrategySidebar currentStep={1} />
+          <StrategySidebar 
+            currentStep={activeStep} 
+            onStepChange={setActiveStep}
+          />
         </aside>
 
       </div>
