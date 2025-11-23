@@ -3,7 +3,7 @@
 import { FloatingNavbar } from "@/components/landing/FloatingNavbar";
 import { Footer } from "@/components/landing/Footer";
 import { motion } from "framer-motion";
-import { Check, ArrowRight, Sparkles, Zap, BarChart3, Mail, Search, MousePointer2, Flame, ScanLine, Brain, Target, Bell, LayoutTemplate, Palette, Type } from "lucide-react";
+import { Check, ArrowRight, BarChart3, ScanLine, Brain, Target, Bell, LayoutTemplate } from "lucide-react";
 import Link from "next/link";
 
 // --- High-Fidelity Static UI Cards ---
@@ -356,7 +356,7 @@ export default function LandingPage() {
               </div>
               <h2 className="text-4xl md:text-5xl font-bold tracking-tighter text-white mb-6 leading-relaxed">
                 경쟁사가 보지 못하는<br />
-                <span className="text-transparent bg-clip-text bg-gradient-to-r from-indigo-400 to-cyan-400 font-extrabold"> '시각적 빈틈'</span>을 찾아냅니다.
+                <span className="text-transparent bg-clip-text bg-gradient-to-r from-indigo-400 to-cyan-400 font-extrabold">&lsquo;시각적 빈틈&rsquo;</span>을 찾아냅니다.
               </h2>
               <p className="text-zinc-400 text-lg leading-relaxed max-w-lg">
                 단순 텍스트 분석이 아닙니다. <span className="text-zinc-50 font-semibold">폰트, 여백, 레이아웃, 이미지 무드</span>까지.<br className="hidden md:block" /> <span className="text-zinc-50 font-semibold">10년 차 디자이너의 눈</span>으로 상세페이지를 해부하고, <span className="text-indigo-400 font-semibold">이길 수밖에 없는 제안 포인트</span>를 추출합니다.
@@ -378,7 +378,7 @@ export default function LandingPage() {
               </div>
               <h2 className="text-4xl md:text-5xl font-bold tracking-normal text-white mb-6 leading-relaxed">
                 설명하지 마세요.<br />
-                <span className="text-transparent bg-clip-text bg-gradient-to-r from-indigo-400 to-cyan-400 font-extrabold">'예고'</span>하세요.
+                <span className="text-transparent bg-clip-text bg-gradient-to-r from-indigo-400 to-cyan-400 font-extrabold">&lsquo;예고&rsquo;</span>하세요.
               </h2>
               <p className="text-zinc-400 text-xl leading-relaxed max-w-lg">
                 메일 본문은 철저히 <span className="text-zinc-100 font-semibold">후킹</span>에만 집중하세요. 결정적인 한 방은 <span className="text-zinc-100 font-semibold">링크</span> 속에 숨겨져 있습니다. 고객이 링크를 타고 들어오는 순간, AI 분석과 당신의 인사이트가 결합된 리포트가 확실한 <span className="text-zinc-100 font-semibold">결과</span>를 만들어냅니다.

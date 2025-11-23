@@ -8,7 +8,7 @@ export default async function InsightMixerPage({
   params: Promise<{ id: string }>;
 }) {
   // We await params to ensure we can access the ID if needed in the future
-  const { id } = await params;
+  const { id: _id } = await params;
 
   return (
     <div className="flex h-screen bg-zinc-950 overflow-hidden">

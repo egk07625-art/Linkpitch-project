@@ -6,7 +6,6 @@ import { ArrowRight, Gift } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { AnalysisTerminal } from '@/components/mixer/AnalysisTerminal';
 import { analyzeUrl } from '@/app/actions/analyze-url';
-import { createClerkSupabaseClient } from '@/lib/supabase/server';
 import { toast } from 'sonner';
 import { useAuth } from '@clerk/nextjs';
 
@@ -63,11 +62,6 @@ export default function VisionAnalysisPage() {
 
       // Success case
       if (result.success && result.redirectUrl) {
-        // Update credits display
-        if (result.remainingCredits !== undefined) {
-          setCredits(result.remainingCredits);
-        }
-        
         // Store the redirect URL to use it later
         if (typeof window !== 'undefined') {
           window.sessionStorage.setItem('redirectUrl', result.redirectUrl);
