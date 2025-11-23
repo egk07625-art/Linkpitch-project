@@ -203,7 +203,10 @@ export default function Workspace() {
 
           {/* === RIGHT COLUMN: Strategy Inspector === */}
           <div className="h-full">
-            <StrategySidebar currentStep={1} />
+            <StrategySidebar 
+              currentStep={1} 
+              onStepChange={() => {}} 
+            />
           </div>
 
         </div>

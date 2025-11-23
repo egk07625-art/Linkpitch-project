@@ -72,8 +72,8 @@ function ViewToggle({
 
 // Main Component
 export default function SequencePlaylist({ 
-  droppedInsights, 
-  onRemove,
+  droppedInsights: _droppedInsights, 
+  onRemove: _onRemove,
   currentStep = 1 
 }: SequencePlaylistProps) {
   const [viewMode, setViewMode] = useState<'email' | 'report'>('report');
