@@ -1,10 +1,11 @@
 'use server';
 
-import { createClerkSupabaseClient } from '@/lib/supabase/server';
+import { getServiceRoleClient } from '@/lib/supabase/service-role';
 import { auth } from '@clerk/nextjs/server';
 
 export async function analyzeUrl(url: string) {
-  const supabase = createClerkSupabaseClient();
+  // Use Service Role client to bypass RLS (no RLS policies needed)
+  const supabase = getServiceRoleClient();
   
   // 1. Get current user from Clerk
   const { userId: clerkId } = await auth();
@@ -17,53 +18,87 @@ export async function analyzeUrl(url: string) {
     };
   }
 
-  // 2. Fetch user from database
-  const { data: user, error: userError } = await supabase
+  // 2. Fetch user's UUID from database (or create if missing)
+  let userUuid: string;
+  
+  const { data: userData, error: userError } = await supabase
     .from('users')
-    .select('id, credits')
+    .select('id')
     .eq('clerk_id', clerkId)
     .single();
 
-  if (userError || !user) {
-    return {
-      success: false,
-      error: 'USER_NOT_FOUND',
-      message: '사용자 정보를 찾을 수 없습니다.',
-    };
+  if (userError || !userData) {
+    console.log('User not found in Supabase. Creating new user...');
+    // Fetch user details from Clerk to insert
+    const { clerkClient } = await import('@clerk/nextjs/server');
+    const client = await clerkClient();
+    const clerkUser = await client.users.getUser(clerkId);
+    const email = clerkUser.emailAddresses[0]?.emailAddress;
+
+    if (!email) {
+      return { success: false, error: 'NO_EMAIL', message: '이메일 정보를 찾을 수 없습니다.' };
+    }
+
+    // Use existing Service Role client (already bypasses RLS)
+    const { data: newUser, error: createError } = await supabase
+      .from('users')
+      .insert({
+        clerk_id: clerkId,
+        email: email,
+        name: clerkUser.fullName || clerkUser.username || email,
+      })
+      .select('id')
+      .single();
+
+    if (createError || !newUser) {
+      console.error('Failed to create user:', createError);
+      return { success: false, error: 'USER_CREATION_FAILED', message: '사용자 생성에 실패했습니다.' };
+    }
+    userUuid = newUser.id;
+  } else {
+    userUuid = userData.id;
   }
 
-  // 3. Check if user has credits
-  if (user.credits <= 0) {
-    return {
-      success: false,
-      error: 'NO_CREDITS',
-      message: '무료 횟수가 모두 소진되었습니다. 더 많은 분석을 위해 플랜을 업그레이드하세요.',
-    };
-  }
-
-  // 4. Proceed with analysis (simulate network delay)
+  // 3. Simulate Analysis (Mock)
   await new Promise((resolve) => setTimeout(resolve, 3500));
 
-  // Mock ID generation
-  const mockId = 'mock-id-' + Math.random().toString(36).substring(7);
+  // Mock data
+  const MOCK_VISION_DATA = {
+    summary: "This is a mock summary of the URL analysis.",
+    keywords: ["mock", "analysis", "data"],
+  };
 
-  // 5. Deduct 1 credit after successful analysis
-  const { error: updateError } = await supabase
-    .from('users')
-    .update({ credits: user.credits - 1 })
-    .eq('id', user.id);
+  const extractDomain = (url: string) => {
+    try {
+      const hostname = new URL(url).hostname;
+      return hostname.startsWith('www.') ? hostname.substring(4) : hostname;
+    } catch (e) { return url; }
+  };
 
-  if (updateError) {
-    console.error('Failed to deduct credit:', updateError);
-    // Continue anyway - don't block the user
+  // 4. Create Prospect (Real Insert)
+  const { data: prospect, error: prospectError } = await supabase
+    .from('prospects')
+    .insert({
+      user_id: userUuid,
+      name: extractDomain(url),
+      contact_email: 'info@' + extractDomain(url), // Placeholder
+      url,
+      vision_data: MOCK_VISION_DATA,
+    })
+    .select()
+    .single();
+
+  if (prospectError) {
+    console.error('Failed to create prospect:', prospectError);
+    return {
+      success: false,
+      error: 'DATABASE_ERROR',
+      message: '프로스펙트 생성에 실패했습니다.',
+    };
   }
-
-  // In a real implementation, this would trigger the AI analysis pipeline
-  // and store the initial results in the database.
 
   return {
     success: true,
-    redirectUrl: `/prospects/${mockId}/mix`,
-    remainingCredits: user.credits - 1,
+    redirectUrl: `/prospects/${prospect.id}/mix`,
   };
 }

@@ -114,11 +114,13 @@ supabase/migrations/20241030014800_create_users_table.sql
 
 **중요**:
 
-- **현재 상태**: RLS는 비활성화되어 있음 (출시 전 활성화 예정)
-- 새 테이블 생성 시 RLS 정책은 주석으로 작성해두고, 출시 전에 활성화
-- 프로덕션에서는 반드시 RLS 활성화 필수
+- **RLS 정책**: `supabase/migrations/20251123012300_enable_rls_policies.sql`에 정의됨
+- 모든 사용자 데이터 테이블에 RLS 활성화 (users, prospects, sequences, step, report_events, generation_logs)
+- 정책 원칙: 사용자는 자신의 데이터만 접근 가능 (user_id 기반)
+- Clerk JWT의 `sub` claim을 통해 사용자 인증 (`auth.jwt()->>'sub'`)
+- Helper 함수: `auth.user_id()` - Clerk ID로 Supabase users 테이블의 UUID 반환
 - RLS 정책은 세분화: select, insert, update, delete별로 각각 작성
-- Clerk JWT의 `sub` claim을 `user_id`로 매칭하여 사용자별 데이터 접근 제어
+- 관리자 전용 테이블(plans, user_plans, step_templates)은 RLS 불필요
 
 ### 현재 스키마
 

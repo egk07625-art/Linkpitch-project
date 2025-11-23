@@ -1,0 +1,171 @@
+-- ================================================
+-- Enable Row Level Security (RLS) Policies
+-- LinkPitch MVP - Security Layer
+-- ================================================
+
+-- ================================================
+-- 1. Enable RLS on all tables
+-- ================================================
+
+ALTER TABLE users ENABLE ROW LEVEL SECURITY;
+ALTER TABLE prospects ENABLE ROW LEVEL SECURITY;
+ALTER TABLE sequences ENABLE ROW LEVEL SECURITY;
+ALTER TABLE step ENABLE ROW LEVEL SECURITY;
+ALTER TABLE report_events ENABLE ROW LEVEL SECURITY;
+ALTER TABLE generation_logs ENABLE ROW LEVEL SECURITY;
+
+-- plans, user_plans, step_templates는 관리자 전용이므로 RLS 불필요
+
+-- ================================================
+-- 2. Helper Function: Get Current User's UUID
+-- ================================================
+
+-- Clerk JWT에서 clerk_id를 추출하여 users 테이블의 UUID를 반환
+CREATE OR REPLACE FUNCTION auth.user_id()
+RETURNS UUID AS $$
+  SELECT id FROM users
+  WHERE clerk_id = auth.jwt()->>'sub'
+  LIMIT 1;
+$$ LANGUAGE SQL STABLE;
+
+-- ================================================
+-- 3. Users Table Policies
+-- ================================================
+
+-- 사용자는 자신의 레코드만 조회 가능
+CREATE POLICY "users_select_own"
+  ON users
+  FOR SELECT
+  USING (clerk_id = auth.jwt()->>'sub');
+
+-- 새 사용자 생성 허용 (회원가입 시)
+CREATE POLICY "users_insert_own"
+  ON users
+  FOR INSERT
+  WITH CHECK (clerk_id = auth.jwt()->>'sub');
+
+-- 사용자는 자신의 레코드만 업데이트 가능 (크레딧 차감 등)
+CREATE POLICY "users_update_own"
+  ON users
+  FOR UPDATE
+  USING (clerk_id = auth.jwt()->>'sub')
+  WITH CHECK (clerk_id = auth.jwt()->>'sub');
+
+-- ================================================
+-- 4. Prospects Table Policies
+-- ================================================
+
+-- 사용자는 자신이 생성한 프로스펙트만 조회
+CREATE POLICY "prospects_select_own"
+  ON prospects
+  FOR SELECT
+  USING (user_id = auth.user_id());
+
+-- 사용자는 자신의 프로스펙트만 생성 가능
+CREATE POLICY "prospects_insert_own"
+  ON prospects
+  FOR INSERT
+  WITH CHECK (user_id = auth.user_id());
+
+-- 사용자는 자신의 프로스펙트만 업데이트
+CREATE POLICY "prospects_update_own"
+  ON prospects
+  FOR UPDATE
+  USING (user_id = auth.user_id())
+  WITH CHECK (user_id = auth.user_id());
+
+-- 사용자는 자신의 프로스펙트만 삭제
+CREATE POLICY "prospects_delete_own"
+  ON prospects
+  FOR DELETE
+  USING (user_id = auth.user_id());
+
+-- ================================================
+-- 5. Sequences Table Policies
+-- ================================================
+
+CREATE POLICY "sequences_select_own"
+  ON sequences
+  FOR SELECT
+  USING (user_id = auth.user_id());
+
+CREATE POLICY "sequences_insert_own"
+  ON sequences
+  FOR INSERT
+  WITH CHECK (user_id = auth.user_id());
+
+CREATE POLICY "sequences_update_own"
+  ON sequences
+  FOR UPDATE
+  USING (user_id = auth.user_id())
+  WITH CHECK (user_id = auth.user_id());
+
+CREATE POLICY "sequences_delete_own"
+  ON sequences
+  FOR DELETE
+  USING (user_id = auth.user_id());
+
+-- ================================================
+-- 6. Step Table Policies
+-- ================================================
+
+CREATE POLICY "step_select_own"
+  ON step
+  FOR SELECT
+  USING (user_id = auth.user_id());
+
+CREATE POLICY "step_insert_own"
+  ON step
+  FOR INSERT
+  WITH CHECK (user_id = auth.user_id());
+
+CREATE POLICY "step_update_own"
+  ON step
+  FOR UPDATE
+  USING (user_id = auth.user_id())
+  WITH CHECK (user_id = auth.user_id());
+
+CREATE POLICY "step_delete_own"
+  ON step
+  FOR DELETE
+  USING (user_id = auth.user_id());
+
+-- ================================================
+-- 7. Report Events Table Policies
+-- ================================================
+
+CREATE POLICY "report_events_select_own"
+  ON report_events
+  FOR SELECT
+  USING (user_id = auth.user_id());
+
+CREATE POLICY "report_events_insert_own"
+  ON report_events
+  FOR INSERT
+  WITH CHECK (user_id = auth.user_id());
+
+-- ================================================
+-- 8. Generation Logs Table Policies
+-- ================================================
+
+CREATE POLICY "generation_logs_select_own"
+  ON generation_logs
+  FOR SELECT
+  USING (user_id = auth.user_id());
+
+CREATE POLICY "generation_logs_insert_own"
+  ON generation_logs
+  FOR INSERT
+  WITH CHECK (user_id = auth.user_id());
+
+-- ================================================
+-- Completion Message
+-- ================================================
+
+DO $$
+BEGIN
+    RAISE NOTICE '✅ RLS Policies enabled successfully!';
+    RAISE NOTICE '🔒 Tables protected: users, prospects, sequences, step, report_events, generation_logs';
+    RAISE NOTICE '👤 Policy type: User owns their own data (user_id based)';
+    RAISE NOTICE '🔑 Authentication: Clerk JWT integration via auth.user_id()';
+END $$;
