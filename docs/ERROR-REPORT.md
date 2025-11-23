@@ -7,9 +7,12 @@
 
 #### 1. 실제 에러 (빌드 실패 원인)
 - **파일**: `app/test-design-system/page.tsx`
-- **라인**: 154
-- **에러**: `'` can be escaped with `&apos;`, `&lsquo;`, `&#39;`, `&rsquo;`
-- **원인**: JSX 내부 문자열에서 작은따옴표(`'`)가 이스케이프되지 않음
+## 2025-11-23 Build Fixes (Resolved)
+- **Issue**: `react/no-unescaped-entities` in `components/mixer/Workspace.tsx`.
+- **Fix**: Escaped single quotes (`'`) with `&apos;`.
+- **Issue**: Unused variables in `app/prospects/[id]/mix/page.tsx` and `app/actions/analyze-url.ts`.
+- **Fix**: Prefixed unused variables with `_` or removed them.
+- **Status**: Build successful. **원인**: JSX 내부 문자열에서 작은따옴표(`'`)가 이스케이프되지 않음
 - **해결**: 작은따옴표를 큰따옴표로 변경 또는 HTML 엔티티로 이스케이프
 
 ```typescript

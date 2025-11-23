@@ -6,7 +6,7 @@ export default async function InsightMixerPage({
 }: {
   params: Promise<{ id: string }>;
 }) {
-  const { id } = await params;
+  const { id: _id } = await params;
 
   return (
     <Workspace />

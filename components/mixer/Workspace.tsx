@@ -476,7 +476,7 @@ function DropZone({ droppedInsights, onRemove }: { droppedInsights: VisionItem[]
         {droppedInsights.length === 0 ? (
           <div className="h-full bg-gradient-to-b from-zinc-900/50 to-transparent rounded-xl flex flex-col items-center justify-center text-zinc-500">
             <Sparkles className="w-12 h-12 mb-4 text-indigo-500/50 animate-pulse" />
-            <p className="text-base font-medium text-zinc-500">이곳에 칩을 놓고 "제안서 작성" 버튼을 누르면 AI가 조합하여 작성합니다.</p>
+            <p className="text-base font-medium text-zinc-500">이곳에 칩을 놓고 &quot;제안서 작성&quot; 버튼을 누르면 AI가 조합하여 작성합니다.</p>
           </div>
         ) : (
           <div className="space-y-3">
@@ -571,7 +571,7 @@ function AIEmailPreview({
           </p>
           <p className="text-xs text-zinc-400 leading-relaxed">
             좌측에서 선택한 인사이트들이 AI 제안서에 자동으로 반영됩니다. 
-            '인사이트 합치기'를 클릭하여 최종 제안서를 생성하세요.
+            &apos;인사이트 합치기&apos;를 클릭하여 최종 제안서를 생성하세요.
           </p>
         </div>
       </div>

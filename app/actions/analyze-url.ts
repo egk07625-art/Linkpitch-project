@@ -72,7 +72,7 @@ export async function analyzeUrl(url: string) {
     try {
       const hostname = new URL(url).hostname;
       return hostname.startsWith('www.') ? hostname.substring(4) : hostname;
-    } catch (_e) { return url; }
+    } catch { return url; }
   };
 
   // 4. Create Prospect (Real Insert)
