@@ -33,13 +33,9 @@ import { Badge } from '@/components/ui/badge'
 import { cn } from '@/lib/utils'
 
 // --- Mock Data Types ---
-type VisionItem = {
-  id: string
-  label: string
-  content: string
-  type: 'text' | 'image' | 'file'
-  isUserAsset?: boolean
-}
+import { VisionItem } from '@/types/vision'
+import SequencePlaylist from './SequencePlaylist'
+import StrategySidebar from './StrategySidebar'
 
 const INITIAL_VISION_DATA: VisionItem[] = [
   { id: 'v1', label: '크리에이티브 무드', content: '럭셔리, 미니멀리스트, 하이엔드 패션', type: 'text', isUserAsset: false },
@@ -49,13 +45,9 @@ const INITIAL_VISION_DATA: VisionItem[] = [
 ]
 
 export default function Workspace() {
-  const [activeTab, setActiveTab] = useState<'email' | 'report'>('report')
   const [visionItems, setVisionItems] = useState(INITIAL_VISION_DATA)
-  const [editorContent, setEditorContent] = useState('')
   const [draggedItem, setDraggedItem] = useState<VisionItem | null>(null)
-  const [isSidebarOpen, setIsSidebarOpen] = useState(true)
   const [droppedInsights, setDroppedInsights] = useState<VisionItem[]>([])
-  const [aiEmailContent, setAiEmailContent] = useState('')
   const [showMergeModal, setShowMergeModal] = useState(false)
   const [isAiBarOpen, setIsAiBarOpen] = useState(false)
   const [mounted, setMounted] = useState(false)
@@ -137,138 +129,83 @@ export default function Workspace() {
       <div className="h-screen w-full bg-zinc-950 text-zinc-100 flex flex-col font-sans selection:bg-blue-500/30">
         
         {/* 1. Header: Minimalist & Functional */}
-        <Header isSidebarOpen={isSidebarOpen} onToggleSidebar={() => setIsSidebarOpen(!isSidebarOpen)} />
+        <Header />
 
-        {/* 2. Main Workspace: 3-Column Layout */}
-        <div className="flex-1 overflow-hidden relative flex">
+        {/* 2. Main Workspace: Fixed 3-Column Grid Layout */}
+        <div className="flex-1 grid grid-cols-[320px_1fr_300px] overflow-hidden">
           
-          {/* === LEFT PANE: Collapsible Sidebar === */}
-          <AnimatePresence mode="wait">
-            {isSidebarOpen && (
-              <motion.div
-                initial={{ width: 0, opacity: 0 }}
-                animate={{ width: 320, opacity: 1 }}
-                exit={{ width: 0, opacity: 0 }}
-                transition={{ duration: 0.3, ease: "easeInOut" }}
-                className="flex-shrink-0 bg-zinc-900/30 backdrop-blur-sm z-10 border-r border-zinc-800/50 overflow-hidden"
-              >
-                <div className="h-full flex flex-col w-80">
-                  
-                  {/* Pane Header */}
-                  <div className="px-5 py-4 border-b border-zinc-800/50 flex justify-between items-center bg-zinc-900/50">
-                    <div className="flex items-center gap-2">
-                      <LayoutTemplate className="w-4 h-4 text-zinc-400" />
-                      <span className="text-sm font-medium text-zinc-200">소재 라이브러리</span>
-                    </div>
-                    <Badge variant="outline" className="text-xs border-zinc-700 text-zinc-400 font-mono">
-                      AI 분석완료
-                    </Badge>
-                  </div>
-
-                  {/* Scrollable Area for Assets */}
-                  <ScrollArea className="flex-1 px-5 py-6">
-                    <div className="space-y-8">
-                      {/* Section: Vision Analysis */}
-                      <section>
-                        <h3 className="text-sm font-bold text-zinc-400 tracking-wider mb-4 pl-1 uppercase">
-                          크리에이티브 인사이트
-                        </h3>
-                        <div className="space-y-3">
-                          {visionItems.filter(i => !i.isUserAsset).map((item) => (
-                            <DraggableStrategyChip 
-                              key={item.id} 
-                              item={item} 
-                              onUpdate={updateVisionItem} 
-                            />
-                          ))}
-                        </div>
-                      </section>
-
-                      {/* Section: User Assets */}
-                      <section>
-                        <h3 className="text-sm font-bold text-zinc-400 tracking-wider mb-4 pl-1 uppercase">
-                          내 소재
-                        </h3>
-                        <div className="space-y-3">
-                          {/* Uploaded User Assets */}
-                          {visionItems.filter(i => i.isUserAsset).map((item) => (
-                            <DraggableStrategyChip 
-                              key={item.id} 
-                              item={item} 
-                              onUpdate={updateVisionItem} 
-                            />
-                          ))}
-
-                          {/* Upload Box */}
-                          <FileUploader onFileUpload={handleFileUpload} />
-                        </div>
-                      </section>
-                    </div>
-                  </ScrollArea>
-                </div>
-              </motion.div>
-            )}
-          </AnimatePresence>
-
-          {/* === CENTER: Drop Zone (only for report tab) === */}
-          {/* === CENTER: Drop Zone (only for report tab) === */}
-          <AnimatePresence mode="wait">
-            {activeTab === 'report' && (
-              <motion.div
-                initial={{ width: 0, opacity: 0 }}
-                animate={{ width: 384, opacity: 1 }}
-                exit={{ width: 0, opacity: 0 }}
-                transition={{ duration: 0.3, ease: "easeInOut" }}
-                className="flex-shrink-0 border-r border-zinc-800/50 bg-zinc-950 overflow-hidden"
-              >
-                <div className="w-96 h-full">
-                  <DropZone 
-                    droppedInsights={droppedInsights}
-                    onRemove={removeFromDropZone}
-                  />
-                </div>
-              </motion.div>
-            )}
-          </AnimatePresence>
-
-          {/* === RIGHT PANE: Content Area === */}
-          <div className="flex-1 flex flex-col bg-zinc-950 relative h-full overflow-hidden">
+          {/* === LEFT COLUMN: Asset Library === */}
+          <div className="h-full bg-zinc-900/30 backdrop-blur-sm border-r border-white/5 overflow-hidden">
+            <div className="h-full flex flex-col">
               
-              {/* Tab Switcher */}
-              <div className="flex justify-center pt-6 pb-2 z-20">
-                <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as any)} className="w-[320px]">
-                  <TabsList className="grid w-full grid-cols-2 bg-zinc-800/50 rounded-full p-1">
-                    <TabsTrigger value="email" className="rounded-full text-xs font-medium text-zinc-400 data-[state=active]:bg-zinc-600 data-[state=active]:text-white data-[state=active]:shadow-md transition-all duration-300">
-                      <Mail className="w-3 h-3 mr-2" /> 메일 본문
-                    </TabsTrigger>
-                    <TabsTrigger value="report" className="rounded-full text-xs font-medium text-zinc-400 data-[state=active]:bg-zinc-600 data-[state=active]:text-white data-[state=active]:shadow-md transition-all duration-300">
-                      <FileText className="w-3 h-3 mr-2" /> AI 드래프팅
-                    </TabsTrigger>
-                  </TabsList>
-                </Tabs>
+              {/* Pane Header */}
+              <div className="px-5 py-4 border-b border-zinc-800/50 flex justify-between items-center bg-zinc-900/50">
+                <div className="flex items-center gap-2">
+                  <LayoutTemplate className="w-4 h-4 text-zinc-400" />
+                  <span className="text-sm font-medium text-zinc-200">소재 라이브러리</span>
+                </div>
+                <Badge variant="outline" className="text-xs border-zinc-700 text-zinc-400 font-mono">
+                  AI 분석완료
+                </Badge>
               </div>
 
-              {/* Content Area */}
-              <ScrollArea className="flex-1 w-full min-h-0 pb-6">
-                {activeTab === 'email' ? (
-                  <SimpleEmailEditor 
-                    content={editorContent}
-                    setContent={setEditorContent}
-                  />
-                ) : (
-                  <AIEmailPreview
-                    aiContent={aiEmailContent}
-                    setAiContent={setAiEmailContent}
-                    droppedInsights={droppedInsights}
-                    onMerge={handleMerge}
-                  />
-                )}
+              {/* Scrollable Area for Assets */}
+              <ScrollArea className="flex-1 px-5 py-6">
+                <div className="space-y-8">
+                  {/* Section: Vision Analysis */}
+                  <section>
+                    <h3 className="text-sm font-bold text-zinc-400 tracking-wider mb-4 pl-1 uppercase">
+                      크리에이티브 인사이트
+                    </h3>
+                    <div className="space-y-3">
+                      {visionItems.filter(i => !i.isUserAsset).map((item) => (
+                        <DraggableStrategyChip 
+                          key={item.id} 
+                          item={item} 
+                          onUpdate={updateVisionItem} 
+                        />
+                      ))}
+                    </div>
+                  </section>
+
+                  {/* Section: User Assets */}
+                  <section>
+                    <h3 className="text-sm font-bold text-zinc-400 tracking-wider mb-4 pl-1 uppercase">
+                      내 소재
+                    </h3>
+                    <div className="space-y-3">
+                      {/* Uploaded User Assets */}
+                      {visionItems.filter(i => i.isUserAsset).map((item) => (
+                        <DraggableStrategyChip 
+                          key={item.id} 
+                          item={item} 
+                          onUpdate={updateVisionItem} 
+                        />
+                      ))}
+
+                      {/* Upload Box */}
+                      <FileUploader onFileUpload={handleFileUpload} />
+                    </div>
+                  </section>
+                </div>
               </ScrollArea>
-
-              {/* AI Command Bar (Fixed at bottom of Right Pane) */}
-              {/* AI Command Bar (Toggleable) */}
-
             </div>
+          </div>
+
+          {/* === CENTER COLUMN: The Workbench === */}
+          <div className="h-full bg-zinc-950">
+            <SequencePlaylist 
+              droppedInsights={droppedInsights}
+              onRemove={removeFromDropZone}
+              currentStep={1}
+            />
+          </div>
+
+          {/* === RIGHT COLUMN: Strategy Inspector === */}
+          <div className="h-full">
+            <StrategySidebar currentStep={1} />
+          </div>
+
         </div>
         
         {/* Fixed AI Command Bar (Always at bottom of viewport) */}
@@ -354,18 +291,10 @@ export default function Workspace() {
 /**
  * 1. Header Component
  */
-function Header({ isSidebarOpen, onToggleSidebar }: { isSidebarOpen: boolean, onToggleSidebar: () => void }) {
+function Header() {
   return (
     <header className="h-12 flex-none border-b border-zinc-800/50 bg-zinc-950/95 backdrop-blur-md px-6 flex items-center justify-between z-50">
       <div className="flex items-center gap-3">
-        <Button 
-          variant="ghost" 
-          size="icon" 
-          onClick={onToggleSidebar}
-          className="h-8 w-8 text-zinc-400 hover:text-zinc-100 hover:bg-zinc-800"
-        >
-          {isSidebarOpen ? <PanelLeftClose className="w-4 h-4" /> : <PanelLeftOpen className="w-4 h-4" />}
-        </Button>
         <h1 className="text-sm font-semibold text-zinc-100 tracking-tight">GlowUp 프로젝트 #1</h1>
         <span className="text-[10px] text-zinc-500 font-mono">· 2분 전 자동저장</span>
       </div>
@@ -449,58 +378,7 @@ function DraggableStrategyChip({ item, onUpdate }: DraggableStrategyChipProps) {
   )
 }
 
-/**
- * 3. Drop Zone Component
- */
-function DropZone({ droppedInsights, onRemove }: { droppedInsights: VisionItem[], onRemove: (id: string) => void }) {
-  const { setNodeRef, isOver } = useDroppable({
-    id: 'drop-zone',
-  })
 
-  return (
-    <div className="h-full flex flex-col">
-      {/* Header */}
-      <div className="px-5 py-4 border-b border-zinc-800/50 bg-zinc-900/50">
-        <h3 className="text-base font-semibold text-zinc-200">선택한 인사이트</h3>
-        <p className="text-sm text-zinc-500 mt-1">{droppedInsights.length}개 선택됨</p>
-      </div>
-
-      {/* Drop Area */}
-      <div
-        ref={setNodeRef}
-        className={cn(
-          "flex-1 p-5 transition-colors",
-          isOver && "bg-indigo-500/10"
-        )}
-      >
-        {droppedInsights.length === 0 ? (
-          <div className="h-full bg-gradient-to-b from-zinc-900/50 to-transparent rounded-xl flex flex-col items-center justify-center text-zinc-500">
-            <Sparkles className="w-12 h-12 mb-4 text-indigo-500/50 animate-pulse" />
-            <p className="text-base font-medium text-zinc-500">이곳에 칩을 놓고 &quot;제안서 작성&quot; 버튼을 누르면 AI가 조합하여 작성합니다.</p>
-          </div>
-        ) : (
-          <div className="space-y-3">
-            {droppedInsights.map((item) => (
-              <div 
-                key={item.id}
-                className="relative group bg-zinc-800/60 border border-indigo-500/30 rounded-lg p-4"
-              >
-                <button
-                  onClick={() => onRemove(item.id)}
-                  className="absolute top-2 right-2 p-1 text-zinc-500 hover:text-zinc-300 hover:bg-zinc-700 rounded opacity-0 group-hover:opacity-100 transition-all"
-                >
-                  <ChevronLeft className="w-4 h-4" />
-                </button>
-                <p className="text-xs font-bold text-indigo-400 mb-1">{item.label}</p>
-                <p className="text-sm text-zinc-200">{item.content}</p>
-              </div>
-            ))}
-          </div>
-        )}
-      </div>
-    </div>
-  )
-}
 
 /**
  * 4. Simple Email Editor Component
@@ -642,7 +520,7 @@ function MergeModal({ isOpen, onClose, mergedContent }: { isOpen: boolean, onClo
       </motion.div>
     </div>
   )
-}
+  }
 
 /**
  * 7. File Uploader Component

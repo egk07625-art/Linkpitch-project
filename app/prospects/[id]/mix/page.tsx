@@ -1,5 +1,5 @@
 import React from 'react';
-import Workspace from '@/components/mixer/Workspace';
+import WorkspaceClient from '@/components/mixer/WorkspaceClient';
 
 export default async function InsightMixerPage({
   params,
@@ -8,7 +8,5 @@ export default async function InsightMixerPage({
 }) {
   const { id: _id } = await params;
 
-  return (
-    <Workspace />
-  );
+  return <WorkspaceClient />;
 }
