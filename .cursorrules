@@ -10,6 +10,11 @@ Before implementing any feature or UI, **YOU MUST READ** the corresponding docum
 - **Implementation details**: Read `docs/2_DEV_GUIDE.md`
 - **UI/Design Specs**: Read `docs/3_DESIGN_GUIDE.md`
 
+# LANGUAGE PROTOCOL (MUST FOLLOW)
+1. **Output Language:** You must ALWAYS answer in **Korean (한국어)**.
+2. **Input Independence:** Even if the user's prompt is in English, your explanation, questions, and comments must be in **Korean**.
+3. **Exception:** Keep code, variable names, and technical terms in English.
+
 ## Tech Stack
 
 - **Framework**: Next.js 15.5.6 (App Router, React 19)
