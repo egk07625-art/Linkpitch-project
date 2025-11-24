@@ -10,7 +10,7 @@ import { UserButton } from "@clerk/nextjs";
 
 export function AppHeader() {
   return (
-    <header className="flex justify-between items-center p-4 gap-4 h-16 border-b">
+    <header className="flex justify-between items-center px-6 h-16 border-b border-white/5 bg-zinc-950/80 backdrop-blur-md sticky top-0 z-50">
       <Link href="/app" className="text-2xl font-bold">
         Linkpitch
       </Link>

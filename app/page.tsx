@@ -1,5 +1,6 @@
 "use client";
 
+import Navbar from "@/components/Navbar";
 import { FloatingNavbar } from "@/components/landing/FloatingNavbar";
 import { Footer } from "@/components/landing/Footer";
 import { motion } from "framer-motion";
@@ -283,6 +284,7 @@ const NoPixelCRMCard = () => {
 export default function LandingPage() {
   return (
     <div className="min-h-screen bg-zinc-950 text-white selection:bg-indigo-500/30 relative overflow-hidden font-sans">
+      <Navbar />
       <FloatingNavbar />
 
       {/* --- Background Effects --- */}
