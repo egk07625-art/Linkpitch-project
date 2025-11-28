@@ -59,8 +59,7 @@ export async function analyzeUrl(url: string) {
     userUuid = userData.id;
   }
 
-  // 3. Simulate Analysis (Mock)
-  await new Promise((resolve) => setTimeout(resolve, 3500));
+
 
   // Mock data
   const MOCK_VISION_DATA = {
