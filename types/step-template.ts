@@ -8,23 +8,19 @@
 
 /**
  * Step Template 타입
- * PRD.md의 step_templates 테이블 스키마를 기반으로 작성
+ * Supabase step_templates 테이블 스키마를 기반으로 작성
  */
 export interface StepTemplate {
   /** 고유 ID (UUID) */
   id: string;
-  /** 스텝 순서 (1-9) */
+  /** 스텝 순서 (1 이상) */
   step_number: number;
-  /** 스텝 이름 (Hook, Problem, Value 등) */
+  /** 스텝 이름 */
   step_name: string;
-  /** 이메일 제목 템플릿 */
-  subject_template: string;
-  /** 이메일 본문 템플릿 */
-  body_template: string;
   /** 템플릿 설명 */
   description?: string;
-  /** AI가 채울 변수 목록 (JSONB) */
-  variables?: string[];
+  /** 타임라인 일수 */
+  timeline_day?: number;
   /** 생성 일시 */
   created_at: string;
 }

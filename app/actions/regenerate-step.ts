@@ -32,12 +32,12 @@ export async function regenerateStepAction(
   const supabase = await createClerkSupabaseClient();
 
   // 1. Step 데이터 조회 (sequence, prospect 포함)
+  // TODO: custom_context 필드는 DB에 없으므로 제거 필요
   const { data: step, error: stepError } = await supabase
     .from('step')
     .select(`
       *,
       sequence:sequences!inner(
-        custom_context,
         prospect:prospects!inner(*)
       )
     `)
@@ -73,10 +73,11 @@ export async function regenerateStepAction(
       step_id: stepId,
       step_number: step.step_number,
       brand_name: prospect.name,
-      current_body: step.email_body,
+      // TODO: step.email_body는 step_generations에서 조회해야 함
+      current_body: '',
       source_material: {
         vision_data: prospect.vision_data,
-        custom_context: sequence.custom_context || '',
+        // TODO: custom_context 필드는 DB에 없음
       },
       strategy_chip: chipText,
     }),
@@ -95,10 +96,11 @@ export async function regenerateStepAction(
   }
 
   // 3. Step 업데이트
+  // TODO: email_body는 step_generations 테이블에 저장해야 함
+  // 현재는 step 테이블에 email_body 필드가 없으므로 step_generations 생성/업데이트 로직 필요
   const { error: updateError } = await supabase
     .from('step')
     .update({ 
-      email_body: emailBody,
       updated_at: new Date().toISOString(),
     })
     .eq('id', stepId)

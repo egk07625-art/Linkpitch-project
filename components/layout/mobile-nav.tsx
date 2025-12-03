@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { UserButton } from "@clerk/nextjs";
-import { Menu, LayoutGrid, Users, Sparkles, Settings } from "lucide-react";
+import { Menu, LayoutGrid, Users, UserPlus, Sparkles, Mail, FileText, Settings } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import {
@@ -27,9 +27,24 @@ const navigationItems = [
     icon: Users,
   },
   {
-    name: "메일 시나리오",
+    name: "고객사 등록",
+    href: "/prospects/new",
+    icon: UserPlus,
+  },
+  {
+    name: "시퀀스",
     href: "/app/sequences",
     icon: Sparkles,
+  },
+  {
+    name: "보낸 메일",
+    href: "/app/sent",
+    icon: Mail,
+  },
+  {
+    name: "로그",
+    href: "/app/logs",
+    icon: FileText,
   },
   {
     name: "설정",

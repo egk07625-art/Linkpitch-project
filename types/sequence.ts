@@ -7,18 +7,24 @@
 
 /**
  * 시퀀스 타입
- * PRD 기준: '9_steps'로 고정
+ * DB 기본값: '5_steps'
  */
-export type SequenceType = "9_steps";
+export type SequenceType = "5_steps" | "9_steps" | string;
+
+/**
+ * Persona 타입
+ */
+export type PersonaType = "researcher" | string;
 
 /**
  * 시퀀스 상태 타입
+ * DB CHECK 제약조건: 'draft', 'active', 'completed'만 허용
  */
-export type SequenceStatus = "draft" | "active" | "completed" | "paused";
+export type SequenceStatus = "draft" | "active" | "completed";
 
 /**
  * Sequence 타입
- * PRD.md의 sequences 테이블 스키마를 기반으로 작성
+ * Supabase sequences 테이블 스키마를 기반으로 작성
  */
 export interface Sequence {
   /** 고유 ID (UUID) */
@@ -29,14 +35,12 @@ export interface Sequence {
   prospect_id: string;
   /** 시퀀스명 */
   name: string;
-  /** 시퀀스 타입 (PRD 기준: '9_steps') */
+  /** Persona 타입 (기본값: 'researcher') */
+  persona_type: PersonaType;
+  /** 시퀀스 타입 (기본값: '5_steps') */
   sequence_type: SequenceType;
-  /** 총 스텝 수 */
+  /** 총 스텝 수 (1-10) */
   total_steps: number;
-  /** 현재 스텝 */
-  current_step: number;
-  /** 나만의 무기 (Custom Context) */
-  custom_context?: string;
   /** 상태 */
   status: SequenceStatus;
   /** 생성 일시 */
@@ -51,9 +55,9 @@ export interface Sequence {
 export interface CreateSequenceInput {
   prospect_id: string;
   name?: string;
+  persona_type?: PersonaType;
   sequence_type?: SequenceType;
   total_steps?: number;
-  custom_context?: string;
 }
 
 /**
@@ -61,9 +65,10 @@ export interface CreateSequenceInput {
  */
 export interface UpdateSequenceInput {
   name?: string;
-  current_step?: number;
+  persona_type?: PersonaType;
+  sequence_type?: SequenceType;
+  total_steps?: number;
   status?: SequenceStatus;
-  custom_context?: string;
 }
 
 

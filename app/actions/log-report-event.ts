@@ -39,7 +39,7 @@ export async function logReportEventAction(
   // Prospect가 현재 사용자의 것인지 확인
   const { data: prospect, error: prospectError } = await supabase
     .from('prospects')
-    .select('id, user_id, crm_status, visit_count, last_viewed_at')
+    .select('id, user_id, crm_status, visit_count, last_activity_at')
     .eq('id', prospectId)
     .single();
 
@@ -115,16 +115,16 @@ export async function logReportEventAction(
   const now = new Date().toISOString();
   const updateData: {
     crm_status: CRMStatus;
-    last_viewed_at: string;
+    last_activity_at: string;
     visit_count?: number;
   } = {
     crm_status: newStatus,
-    last_viewed_at: now,
+    last_activity_at: now,
   };
 
   // 4. 재방문 체크 (1시간 경과)
-  if (prospect.last_viewed_at) {
-    const lastView = new Date(prospect.last_viewed_at);
+  if (prospect.last_activity_at) {
+    const lastView = new Date(prospect.last_activity_at);
     const timeDiff = new Date().getTime() - lastView.getTime();
     const oneHour = 3600000; // 1시간 (밀리초)
 

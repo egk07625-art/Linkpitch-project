@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { ExternalLink, MoreHorizontal } from "lucide-react";
 
 import { Badge } from "@/components/ui/badge";
@@ -67,6 +68,8 @@ function getInitial(name: string): string {
 }
 
 export function ProspectsTable() {
+  const router = useRouter();
+
   if (DUMMY_PROSPECTS.length === 0) {
     return (
       <section className="rounded-lg border border-white/[0.03] bg-zinc-900/30 backdrop-blur-md overflow-hidden">
@@ -105,13 +108,25 @@ export function ProspectsTable() {
                 key={prospect.id}
                 className="border-zinc-800/50 hover:bg-zinc-800/30"
               >
-                <TableCell className="font-medium text-zinc-50">
-                  <div className="flex items-center gap-3">
+                <TableCell 
+                  className="font-medium text-zinc-50 cursor-pointer"
+                  onClick={() => {
+                    console.log('[ProspectsTable] Navigating to:', `/prospects/${prospect.id}/mix`);
+                    router.push(`/prospects/${prospect.id}/mix`);
+                  }}
+                >
+                  <Link 
+                    href={`/prospects/${prospect.id}/mix`}
+                    className="flex items-center gap-3 hover:text-indigo-400 transition-colors"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                    }}
+                  >
                     <div className="flex items-center justify-center size-8 rounded-full bg-zinc-800/80 text-zinc-300 text-sm font-semibold">
                       {getInitial(prospect.company)}
                     </div>
                     <span>{prospect.company}</span>
-                  </div>
+                  </Link>
                 </TableCell>
                 <TableCell>
                   <Badge
@@ -127,6 +142,7 @@ export function ProspectsTable() {
                     target="_blank"
                     rel="noopener noreferrer"
                     className="inline-flex items-center gap-1.5 text-sm text-zinc-400 hover:text-zinc-300 transition-colors"
+                    onClick={(e) => e.stopPropagation()}
                   >
                     <ExternalLink className="h-3.5 w-3.5" />
                     <span className="max-w-[200px] truncate">
@@ -138,7 +154,15 @@ export function ProspectsTable() {
                   {prospect.lastActive}
                 </TableCell>
                 <TableCell>
-                  <Button variant="ghost" size="sm">
+                  <Button 
+                    variant="ghost" 
+                    size="sm"
+                    onClick={(e) => {
+                      e.preventDefault();
+                      e.stopPropagation();
+                      // TODO: 드롭다운 메뉴 구현
+                    }}
+                  >
                     <MoreHorizontal className="h-4 w-4" />
                   </Button>
                 </TableCell>

@@ -82,6 +82,7 @@ export async function generateSequenceAction(
   }
 
   // 3. Sequence 생성
+  // TODO: custom_context 필드는 DB에 없으므로 제거 필요 (현재는 무시됨)
   const { data: sequence, error: sequenceError } = await supabase
     .from('sequences')
     .insert({
@@ -90,9 +91,8 @@ export async function generateSequenceAction(
       name: `${prospect.name} 시퀀스`,
       sequence_type: '9_steps',
       total_steps: 9,
-      current_step: 0,
       status: 'draft',
-      custom_context: customContext || null,
+      persona_type: 'researcher',
     })
     .select()
     .single();
@@ -102,6 +102,8 @@ export async function generateSequenceAction(
   }
 
   // 4. Steps 일괄 INSERT (제약 조건 검증 포함)
+  // TODO: step 테이블 구조 변경됨 - step_type, email_subject, email_body는 step_generations 테이블로 이동
+  // 현재 코드는 타입 오류가 발생하므로 임시로 주석 처리하고 step_generations 생성 로직 추가 필요
   const stepsToInsert = steps.map((s, index) => {
     // step_number 범위 검증 (1-9)
     const stepNumber = s.step_number || index + 1;
@@ -113,11 +115,8 @@ export async function generateSequenceAction(
       user_id: userId,
       sequence_id: sequence.id,
       step_number: stepNumber,
-      step_type: s.step_type,
-      email_subject: s.email_subject,
-      email_body: s.email_body,
       status: 'pending' as const,
-      is_core_step: [1, 3, 6, 9].includes(stepNumber),
+      // TODO: step_generations 테이블에 email_subject, email_body 저장 필요
     };
   });
 
