@@ -24,8 +24,6 @@ import {
   Edit,
   Trash2,
 } from "lucide-react";
-import { formatDistanceToNow } from "date-fns";
-import { ko } from "date-fns/locale";
 import { cn } from "@/lib/utils";
 import type { Prospect, CRMStatus } from "@/types/prospect";
 import type { GeneratedEmail } from "@/types/generated-email";

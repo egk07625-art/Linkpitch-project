@@ -4,8 +4,6 @@ import { useState, useEffect } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { MoreHorizontal, Edit, Mail, FileText, Trash2, ChevronRight, ChevronLeft, Clock, MousePointer2, Eye, X } from "lucide-react";
-import { formatDistanceToNow } from "date-fns";
-import { ko } from "date-fns/locale";
 
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";

@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -69,7 +69,7 @@ function getInitial(name: string): string {
   return name.charAt(0).toUpperCase();
 }
 
-export default function ClientsPage() {
+function ClientsPageContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
 
@@ -745,5 +745,17 @@ export default function ClientsPage() {
         </div>
       </div>
     </div>
+  );
+}
+
+export default function ClientsPage() {
+  return (
+    <Suspense fallback={
+      <div className="h-full w-full bg-[#050505] text-zinc-100 font-sans overflow-hidden flex flex-col items-center justify-center">
+        <div className="text-zinc-500">로딩 중...</div>
+      </div>
+    }>
+      <ClientsPageContent />
+    </Suspense>
   );
 }

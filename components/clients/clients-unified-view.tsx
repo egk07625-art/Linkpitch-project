@@ -144,9 +144,9 @@ export default function ClientsUnifiedView({
 
   // 통계 계산 (현재 페이지의 데이터만 사용)
   // totalCount는 props로 전달받음
-  const hotCount = prospects.filter((p) => p.crm_status === "hot").length;
-  const warmCount = prospects.filter((p) => p.crm_status === "warm").length;
-  const coldCount = prospects.filter((p) => p.crm_status === "cold").length;
+  // const hotCount = prospects.filter((p) => p.crm_status === "hot").length;
+  // const warmCount = prospects.filter((p) => p.crm_status === "warm").length;
+  // const coldCount = prospects.filter((p) => p.crm_status === "cold").length;
 
   // 이메일 히스토리 로드
   useEffect(() => {
