@@ -74,6 +74,22 @@ const statusConfig: Record<CRMStatus, {
 
 type FilterStatus = "All" | "Hot" | "Warm" | "Cold";
 
+// Segmented Control 스타일을 위한 헬퍼 함수
+const getActiveFilterStyle = (tab: FilterStatus): string => {
+  switch (tab) {
+    case "All":
+      return "bg-white/10 text-white shadow-[0_2px_8px_rgba(0,0,0,0.4)]";
+    case "Hot":
+      return "bg-[#FF453A]/15 text-[#FF453A] shadow-[0_2px_8px_rgba(255,69,58,0.3)]";
+    case "Warm":
+      return "bg-[#FFD60A]/15 text-[#FFD60A] shadow-[0_2px_8px_rgba(255,214,10,0.3)]";
+    case "Cold":
+      return "bg-[#0A84FF]/15 text-[#0A84FF] shadow-[0_2px_8px_rgba(10,132,255,0.3)]";
+    default:
+      return "bg-white/10 text-white";
+  }
+};
+
 // 이메일 상태 설정
 const emailStatusConfig = {
   pending: {
@@ -378,95 +394,100 @@ export default function ClientDashboard({
 
   return (
     <div className="h-full bg-[#050505] text-zinc-100 font-sans selection:bg-orange-500/30 overflow-hidden flex flex-col">
-      {/* Header */}
-      <div className="flex-shrink-0 h-16 flex items-center justify-between px-6 border-b border-white/10 bg-[#0a0a0a]">
-        <div>
-          <h1 className="text-lg font-semibold text-white tracking-tight">Clients</h1>
-          <p className="text-xs text-zinc-500 mt-0.5">
-            고객사를 관리하고 이메일 캠페인 성과를 추적하세요.
-          </p>
-        </div>
-        <Link
-          href="/prospects/new"
-          className="flex items-center gap-2 bg-gradient-to-b from-orange-400 to-orange-500 text-black px-4 py-2 rounded-full text-sm font-medium transition-all duration-150 hover:scale-[1.02] active:scale-[0.98] shadow-[0_0_20px_rgba(249,115,22,0.3)]"
-        >
-          <Plus size={16} strokeWidth={2.5} />
-          New Client
-        </Link>
-      </div>
-
-      {/* Search & Filter Bar */}
-      <div className="flex-shrink-0 px-6 py-4 border-b border-white/10 bg-[#0a0a0a] space-y-3">
-        {/* Search */}
-        <div className="relative group">
-          <Search
-            className="absolute left-3 top-1/2 -translate-y-1/2 text-zinc-500 group-focus-within:text-zinc-300 transition-colors"
-            size={16}
-          />
-          <input
-            type="text"
-            placeholder="회사명, 담당자, URL 검색..."
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full bg-zinc-900/50 border border-white/10 rounded-xl pl-10 pr-4 py-2.5 text-sm text-zinc-200 focus:outline-none focus:ring-1 focus:ring-zinc-700 focus:bg-zinc-900 transition-all placeholder:text-zinc-600"
-          />
-        </div>
-
-        {/* Status Filters */}
-        <div className="flex gap-2">
-          {(["All", "Hot", "Warm", "Cold"] as FilterStatus[]).map((tab) => {
-            const isActive = activeTab === tab;
-            const config = tab !== "All" ? statusConfig[tab.toLowerCase() as CRMStatus] : null;
-            
-            return (
-              <button
-                key={tab}
-                onClick={() => setActiveTab(tab)}
-                className={cn(
-                  "px-4 py-1.5 rounded-lg text-xs font-medium transition-all",
-                  isActive
-                    ? config
-                      ? `${config.className} border`
-                      : "bg-white text-black"
-                    : "bg-zinc-900 text-zinc-500 hover:text-zinc-300 hover:bg-zinc-800 border border-transparent",
-                )}
-              >
-                {tab}
-              </button>
-            );
-          })}
-        </div>
-      </div>
-
-      {/* Table Container */}
+      {/* Unified Card Container - 제목, 검색/필터, 테이블을 하나의 카드로 */}
       <div className="flex-1 overflow-y-auto min-h-0">
-        <div className="px-6 py-4">
-          {/* Table */}
-          <div className="rounded-xl border border-white/10 bg-[#0a0a0a]/50 overflow-hidden">
-            {/* Table Header */}
-            <div className="grid grid-cols-12 gap-4 px-6 py-3 bg-zinc-900/50 border-b border-white/10">
-              <div className="col-span-3 text-xs font-medium text-zinc-500 uppercase tracking-wider">
-                회사 정보
-              </div>
-              <div className="col-span-2 text-xs font-medium text-zinc-500 uppercase tracking-wider">
-                담당자
-              </div>
-              <div className="col-span-3 text-xs font-medium text-zinc-500 uppercase tracking-wider">
-                URL
-              </div>
-              <div className="col-span-2 text-xs font-medium text-zinc-500 uppercase tracking-wider text-center">
-                상태
-              </div>
-              <div className="col-span-1 text-xs font-medium text-zinc-500 uppercase tracking-wider text-center">
-                마지막 활동
-              </div>
-              <div className="col-span-1 text-xs font-medium text-zinc-500 uppercase tracking-wider text-right">
-                관리
+        <div className="px-2 py-6 md:py-8">
+          <div className="w-full max-w-[1400px] mx-auto rounded-2xl bg-[#0a0a0a] border border-white/10 overflow-hidden p-6 md:p-8 lg:p-10">
+            {/* Page Title - 컨테이너 내부 최상단 */}
+            <div className="flex flex-col gap-2 mb-8">
+              <h1 className="text-4xl font-bold text-white tracking-tight">Clients</h1>
+              <p className="text-base text-zinc-500">
+                고객사를 관리하고 이메일 캠페인 성과를 추적하세요.
+              </p>
+            </div>
+
+            {/* Card Top Section - Search & Filter */}
+            <div className="mb-6 border-b border-white/10 pb-6">
+              <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-4">
+                {/* Search - 왼쪽 */}
+                <div className="relative group w-full sm:w-[320px] flex-shrink-0">
+                  <Search
+                    className="absolute left-3 top-1/2 -translate-y-1/2 text-zinc-500 group-focus-within:text-zinc-300 transition-colors"
+                    size={16}
+                  />
+                  <input
+                    type="text"
+                    placeholder="회사명, 담당자, URL 검색..."
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    className="w-full h-12 bg-[#1C1C1E] border border-[#2C2C2E] rounded-[10px] pl-10 pr-4 text-[15px] text-white focus:outline-none focus:border-[#0A84FF] focus:bg-[#2C2C2E] focus:shadow-[0_0_0_4px_rgba(10,132,255,0.15)] transition-all placeholder:text-zinc-600"
+                  />
+                </div>
+
+                {/* Right Group: Filters + Add Button */}
+                <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
+                  {/* Status Filters - Segmented Control 스타일 */}
+                  <div className="flex items-center gap-0.5 bg-[#1C1C1E] p-1 rounded-[10px] flex-shrink-0">
+                    {(["All", "Hot", "Warm", "Cold"] as FilterStatus[]).map((tab) => {
+                      const isActive = activeTab === tab;
+                      
+                      return (
+                        <button
+                          key={tab}
+                          onClick={() => setActiveTab(tab)}
+                          className={cn(
+                            "px-4 py-2 rounded-[7px] text-sm font-medium transition-all duration-300",
+                            isActive
+                              ? "bg-[#636366] text-white shadow-[0_2px_4px_rgba(0,0,0,0.3)] font-semibold"
+                              : "bg-transparent text-zinc-500 hover:text-white hover:bg-white/10"
+                          )}
+                        >
+                          {tab}
+                        </button>
+                      );
+                    })}
+                  </div>
+
+                  {/* Add Button */}
+                  <Link
+                    href="/prospects/new"
+                    className="flex items-center gap-2 h-12 bg-white text-black px-5 rounded-[10px] text-sm font-semibold hover:bg-[#F2F2F7] hover:scale-[1.02] active:scale-[0.98] transition-all duration-150"
+                  >
+                    <Plus size={16} strokeWidth={2} />
+                    <span>Add</span>
+                  </Link>
+                </div>
               </div>
             </div>
 
-            {/* Table Body */}
-            <div className="divide-y divide-white/5">
+            {/* Card Bottom Section - Table */}
+            <div className="p-6">
+              {/* Table */}
+              <div className="overflow-hidden">
+                {/* Table Header */}
+                <div className="grid grid-cols-12 gap-4 px-6 py-4 bg-zinc-900/50 border-b border-white/10">
+                  <div className="col-span-3 text-sm font-medium text-zinc-500 uppercase tracking-wider">
+                    회사 정보
+                  </div>
+                  <div className="col-span-2 text-sm font-medium text-zinc-500 uppercase tracking-wider">
+                    담당자
+                  </div>
+                  <div className="col-span-3 text-sm font-medium text-zinc-500 uppercase tracking-wider">
+                    URL
+                  </div>
+                  <div className="col-span-2 text-sm font-medium text-zinc-500 uppercase tracking-wider text-center">
+                    상태
+                  </div>
+                  <div className="col-span-1 text-sm font-medium text-zinc-500 uppercase tracking-wider text-center">
+                    마지막 활동
+                  </div>
+                  <div className="col-span-1 text-sm font-medium text-zinc-500 uppercase tracking-wider text-right">
+                    관리
+                  </div>
+                </div>
+
+                {/* Table Body */}
+                <div className="divide-y divide-white/5">
               {sortedClients.length === 0 ? (
                 <div className="px-6 py-12 text-center">
                   <p className="text-zinc-500 text-sm">검색 결과가 없습니다.</p>
@@ -482,7 +503,7 @@ export default function ClientDashboard({
                     <div
                       key={client.id}
                       onClick={() => router.push(`/prospects/${client.id}/mix`)}
-                      className="grid grid-cols-12 gap-4 px-6 py-4 hover:bg-white/5 transition-colors cursor-pointer group"
+                      className="grid grid-cols-12 gap-4 px-6 py-5 hover:bg-white/5 transition-colors cursor-pointer group"
                     >
                       {/* Company Info - 로고 제거 */}
                       <div className="col-span-3 flex items-center gap-3">
@@ -594,22 +615,24 @@ export default function ClientDashboard({
                   );
                 })
               )}
-            </div>
-          </div>
+                </div>
+              </div>
 
-          {/* Footer Summary */}
-          <div className="mt-4 flex items-center justify-between text-xs text-zinc-500">
-            <span>총 {sortedClients.length}개 고객사</span>
-            <div className="flex items-center gap-4">
-              <span>
-                Hot: {sortedClients.filter((c) => c.crm_status === "hot").length}
-              </span>
-              <span>
-                Warm: {sortedClients.filter((c) => c.crm_status === "warm").length}
-              </span>
-              <span>
-                Cold: {sortedClients.filter((c) => c.crm_status === "cold").length}
-              </span>
+              {/* Footer Summary */}
+              <div className="mt-6 flex items-center justify-between text-xs text-zinc-500">
+                <span>총 {sortedClients.length}개 고객사</span>
+                <div className="flex items-center gap-4">
+                  <span>
+                    Hot: {sortedClients.filter((c) => c.crm_status === "hot").length}
+                  </span>
+                  <span>
+                    Warm: {sortedClients.filter((c) => c.crm_status === "warm").length}
+                  </span>
+                  <span>
+                    Cold: {sortedClients.filter((c) => c.crm_status === "cold").length}
+                  </span>
+                </div>
+              </div>
             </div>
           </div>
         </div>

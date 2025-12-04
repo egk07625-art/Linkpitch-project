@@ -46,6 +46,22 @@ const statusConfig = {
 
 type FilterStatus = '전체' | 'Hot' | 'Warm' | 'Cold';
 
+// Segmented Control 스타일을 위한 헬퍼 함수
+const getActiveFilterStyle = (tab: FilterStatus): string => {
+  switch (tab) {
+    case '전체':
+      return "bg-white/10 text-white shadow-[0_2px_8px_rgba(0,0,0,0.4)]";
+    case 'Hot':
+      return "bg-[#FF453A]/15 text-[#FF453A] shadow-[0_2px_8px_rgba(255,69,58,0.3)]";
+    case 'Warm':
+      return "bg-[#FFD60A]/15 text-[#FFD60A] shadow-[0_2px_8px_rgba(255,214,10,0.3)]";
+    case 'Cold':
+      return "bg-[#0A84FF]/15 text-[#0A84FF] shadow-[0_2px_8px_rgba(10,132,255,0.3)]";
+    default:
+      return "bg-white/10 text-white";
+  }
+};
+
 export default function ClientList() {
   const [activeFilter, setActiveFilter] = useState<FilterStatus>('전체');
 
@@ -97,7 +113,7 @@ export default function ClientList() {
     <div className="min-h-screen bg-zinc-950 text-zinc-50 p-8 md:p-12 font-sans selection:bg-orange-500/30">
       
       {/* 헤더: 디자인 가이드 준수 */}
-      <div className="w-full flex justify-between items-end mb-10 border-b border-zinc-800 pb-8">
+      <div className="w-full flex justify-between items-start mb-12">
         <div>
           <h1 className="text-4xl font-light tracking-tight text-zinc-50 mb-3">클라이언트 관리</h1>
           <p className="text-zinc-500 font-light text-sm tracking-wide">
@@ -116,10 +132,10 @@ export default function ClientList() {
       </div>
 
       {/* 컨트롤 바 (검색 & 필터) */}
-      <div className="w-full flex justify-between items-center mb-6">
+      <div className="w-full flex items-center justify-between gap-4 mb-6">
         
-        {/* 검색창: 디자인 가이드 Input 패턴 */}
-        <div className="relative w-[380px] group">
+        {/* 검색창: 디자인 가이드 Input 패턴 - 왼쪽 */}
+        <div className="relative w-[320px] group">
           <div className="absolute left-4 top-1/2 -translate-y-1/2 text-zinc-600 group-focus-within:text-zinc-400 transition-colors duration-150">
             <Search size={18} strokeWidth={1.5} />
           </div>
@@ -134,17 +150,26 @@ export default function ClientList() {
           />
         </div>
 
-        {/* 필터 탭: 디자인 가이드 Badge 패턴 */}
-        <div className="flex items-center gap-1.5 bg-zinc-900 p-1.5 rounded-full border border-zinc-800">
-          {(['전체', 'Hot', 'Warm', 'Cold'] as FilterStatus[]).map((status) => (
-            <button 
-              key={status} 
-              onClick={() => setActiveFilter(status)}
-              className={getTabStyle(status)}
-            >
-              {status}
-            </button>
-          ))}
+        {/* 필터 탭: Segmented Control 스타일 - 오른쪽 */}
+        <div className="flex items-center gap-1 bg-[#1c1c1e] p-1 rounded-xl border border-white/10">
+          {(['전체', 'Hot', 'Warm', 'Cold'] as FilterStatus[]).map((status) => {
+            const isActive = activeFilter === status;
+            
+            return (
+              <button 
+                key={status} 
+                onClick={() => setActiveFilter(status)}
+                className={cn(
+                  "px-4 py-2 rounded-lg text-xs font-semibold transition-all duration-300",
+                  isActive
+                    ? getActiveFilterStyle(status)
+                    : "bg-transparent text-zinc-500 hover:text-white hover:bg-white/10"
+                )}
+              >
+                {status}
+              </button>
+            );
+          })}
         </div>
       </div>
 
