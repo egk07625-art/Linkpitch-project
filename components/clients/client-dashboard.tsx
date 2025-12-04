@@ -1,8 +1,10 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import Link from "next/link";
 import { useRouter } from "next/navigation";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { z } from "zod";
 import {
   Search,
   Plus,
@@ -20,6 +22,8 @@ import {
   X,
   FileText,
   Save,
+  Phone,
+  Edit,
 } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
 import { ko } from "date-fns/locale";
@@ -27,7 +31,7 @@ import { cn } from "@/lib/utils";
 import type { Prospect, CRMStatus } from "@/types/prospect";
 import type { GeneratedEmail } from "@/types/generated-email";
 import { getGeneratedEmailsByProspect } from "@/actions/generated-emails";
-import { updateProspect } from "@/app/actions/prospects";
+import { updateProspect, createProspect } from "@/app/actions/prospects";
 import { toast } from "sonner";
 import {
   Sheet,
@@ -41,6 +45,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { ProspectEditDialog } from "@/components/prospects/prospect-edit-dialog";
 
 interface ClientDashboardProps {
   /** 초기 고객사 목록 */
@@ -48,6 +53,18 @@ interface ClientDashboardProps {
   /** 선택된 고객사 ID */
   selectedClientId?: string;
 }
+
+// 고객사 등록 폼 스키마
+const prospectSchema = z.object({
+  name: z.string().min(1, "회사명을 입력해주세요"),
+  contact_name: z.string().optional(),
+  contact_email: z.string().email("올바른 이메일을 입력해주세요"),
+  contact_phone: z.string().optional(),
+  url: z.string().url("올바른 URL을 입력해주세요"),
+  memo: z.string().optional(),
+});
+
+type ProspectFormData = z.infer<typeof prospectSchema>;
 
 // 상태 스타일 설정
 const statusConfig: Record<CRMStatus, {
@@ -195,6 +212,19 @@ export default function ClientDashboard({
     created_at: string;
   }>>([]);
   const [selectedMemoId, setSelectedMemoId] = useState<string | null>(null);
+  const [isAddModalOpen, setIsAddModalOpen] = useState(false);
+  const [editDialogOpen, setEditDialogOpen] = useState(false);
+  const [selectedClientIdForEdit, setSelectedClientIdForEdit] = useState<string | null>(null);
+
+  // 고객사 등록 폼
+  const {
+    register: registerProspect,
+    handleSubmit: handleProspectSubmit,
+    formState: { errors: prospectErrors, isSubmitting: isSubmittingProspect },
+    reset: resetProspectForm,
+  } = useForm<ProspectFormData>({
+    resolver: zodResolver(prospectSchema),
+  });
 
   // 샘플 데이터 (실제 데이터 연동 시 삭제하세요)
   const sampleClients: Prospect[] = initialClients.length > 0
@@ -287,6 +317,33 @@ export default function ClientDashboard({
     }
   }, [emailHistoryOpen, selectedClientIdForHistory]);
 
+  // 각 prospect별 보낸 이메일 개수 계산 헬퍼 함수
+  const getSentEmailCount = async (prospectId: string): Promise<number> => {
+    try {
+      const result = await getGeneratedEmailsByProspect(prospectId);
+      if (result.data) {
+        return result.data.filter(email => email.status === 'sent').length;
+      }
+      return 0;
+    } catch {
+      return 0;
+    }
+  };
+
+  // 다음 일정 계산 헬퍼 함수 (임시: 샘플 데이터)
+  const getNextSchedule = (client: Prospect): { date: string; daysUntil: number | null } => {
+    // 임시: 샘플 데이터로 다음 일정 계산
+    // 추후 sequences/step 테이블에서 실제 일정 조회 필요
+    const sampleDate = new Date();
+    sampleDate.setDate(sampleDate.getDate() + 3);
+    const daysUntil = Math.ceil((sampleDate.getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24));
+    
+    return {
+      date: sampleDate.toLocaleDateString('ko-KR', { month: 'long', day: 'numeric' }),
+      daysUntil: daysUntil > 0 ? daysUntil : null,
+    };
+  };
+
   const handleEmailHistoryClick = (clientId: string, e: React.MouseEvent) => {
     e.stopPropagation();
     setSelectedClientIdForHistory(clientId);
@@ -333,6 +390,12 @@ export default function ClientDashboard({
     setMemoText("");
     setSelectedMemoId(null);
     setMemoOpen(true);
+  };
+
+  const handleEditClick = (clientId: string, e: React.MouseEvent) => {
+    e.stopPropagation();
+    setSelectedClientIdForEdit(clientId);
+    setEditDialogOpen(true);
   };
 
   const handleLoadMemo = (memoId: string) => {
@@ -392,6 +455,32 @@ export default function ClientDashboard({
   const selectedClient = sortedClients.find(c => c.id === selectedClientIdForHistory);
   const selectedClientForMemo = sortedClients.find(c => c.id === selectedClientIdForMemo);
 
+  // 고객사 등록 핸들러
+  const onProspectSubmit = async (data: ProspectFormData) => {
+    try {
+      await createProspect({
+        name: data.name,
+        contact_name: data.contact_name || undefined,
+        contact_email: data.contact_email,
+        contact_phone: data.contact_phone || undefined,
+        url: data.url,
+        memo: data.memo || undefined,
+      });
+
+      toast.success("고객사가 등록되었습니다.");
+      setIsAddModalOpen(false);
+      resetProspectForm();
+      router.refresh(); // 리스트 새로고침
+    } catch (error) {
+      console.error("Prospect 생성 실패:", error);
+      toast.error(
+        error instanceof Error
+          ? error.message
+          : "고객사 등록에 실패했습니다."
+      );
+    }
+  };
+
   return (
     <div className="h-full bg-[#050505] text-zinc-100 font-sans selection:bg-orange-500/30 overflow-hidden flex flex-col">
       {/* Unified Card Container - 제목, 검색/필터, 테이블을 하나의 카드로 */}
@@ -449,13 +538,13 @@ export default function ClientDashboard({
                   </div>
 
                   {/* Add Button */}
-                  <Link
-                    href="/prospects/new"
+                  <button
+                    onClick={() => setIsAddModalOpen(true)}
                     className="flex items-center gap-2 h-12 bg-white text-black px-5 rounded-[10px] text-sm font-semibold hover:bg-[#F2F2F7] hover:scale-[1.02] active:scale-[0.98] transition-all duration-150"
                   >
                     <Plus size={16} strokeWidth={2} />
                     <span>Add</span>
-                  </Link>
+                  </button>
                 </div>
               </div>
             </div>
@@ -465,21 +554,24 @@ export default function ClientDashboard({
               {/* Table */}
               <div className="overflow-hidden">
                 {/* Table Header */}
-                <div className="grid grid-cols-12 gap-4 px-6 py-4 bg-zinc-900/50 border-b border-white/10">
-                  <div className="col-span-3 text-sm font-medium text-zinc-500 uppercase tracking-wider">
+                <div className="grid grid-cols-12 gap-4 px-6 py-4 bg-zinc-900/50 border-b border-white/10 whitespace-nowrap">
+                  <div className="col-span-2 text-sm font-medium text-zinc-500 uppercase tracking-wider">
                     회사 정보
                   </div>
-                  <div className="col-span-2 text-sm font-medium text-zinc-500 uppercase tracking-wider">
+                  <div className="col-span-1 text-sm font-medium text-zinc-500 uppercase tracking-wider">
                     담당자
                   </div>
-                  <div className="col-span-3 text-sm font-medium text-zinc-500 uppercase tracking-wider">
-                    URL
+                  <div className="col-span-2 text-sm font-medium text-zinc-500 uppercase tracking-wider">
+                    이메일
                   </div>
-                  <div className="col-span-2 text-sm font-medium text-zinc-500 uppercase tracking-wider text-center">
-                    상태
+                  <div className="col-span-2 text-sm font-medium text-zinc-500 uppercase tracking-wider">
+                    연락처
+                  </div>
+                  <div className="col-span-3 text-sm font-medium text-zinc-500 uppercase tracking-wider">
+                    캠페인 활동
                   </div>
                   <div className="col-span-1 text-sm font-medium text-zinc-500 uppercase tracking-wider text-center">
-                    마지막 활동
+                    상태
                   </div>
                   <div className="col-span-1 text-sm font-medium text-zinc-500 uppercase tracking-wider text-right">
                     관리
@@ -503,97 +595,146 @@ export default function ClientDashboard({
                     <div
                       key={client.id}
                       onClick={() => router.push(`/prospects/${client.id}/mix`)}
-                      className="grid grid-cols-12 gap-4 px-6 py-5 hover:bg-white/5 transition-colors cursor-pointer group"
+                      className="grid grid-cols-12 gap-4 px-6 py-5 hover:bg-white/5 transition-colors cursor-pointer group items-center"
                     >
-                      {/* Company Info - 로고 제거 */}
-                      <div className="col-span-3 flex items-center gap-3">
-                        <div className="flex flex-col min-w-0">
-                          <span className="text-sm font-medium text-zinc-100 truncate">
-                            {client.name}
-                          </span>
-                          {client.store_name && (
-                            <span className="text-xs text-zinc-500 truncate">
-                              {client.store_name}
-                            </span>
-                          )}
-                        </div>
-                      </div>
-
-                      {/* Contact */}
-                      <div className="col-span-2 flex flex-col gap-1">
-                        {client.contact_name && (
-                          <div className="flex items-center gap-2 text-sm text-zinc-300">
-                            <User size={12} className="text-zinc-600" />
-                            <span className="truncate">{client.contact_name}</span>
-                          </div>
-                        )}
-                        {client.contact_email && (
-                          <div className="flex items-center gap-2 text-xs text-zinc-500">
-                            <Mail size={12} className="text-zinc-700" />
-                            <span className="truncate">{client.contact_email}</span>
-                          </div>
-                        )}
-                        {!client.contact_name && !client.contact_email && (
-                          <span className="text-xs text-zinc-600">-</span>
-                        )}
-                      </div>
-
-                      {/* URL */}
-                      <div className="col-span-3 flex items-center">
+                      {/* Company Info + URL 통합 */}
+                      <div className="col-span-2 flex flex-col justify-center">
+                        <div className="text-base font-bold text-white mb-1">{client.name}</div>
                         {client.url ? (
                           <a
                             href={client.url}
                             target="_blank"
                             rel="noopener noreferrer"
+                            className="text-xs text-gray-500 hover:text-blue-400 truncate flex items-center gap-1 transition-colors"
                             onClick={(e) => e.stopPropagation()}
-                            className="flex items-center gap-1.5 text-sm text-zinc-400 hover:text-orange-400 transition-colors group/link truncate"
                           >
-                            <ExternalLink size={12} />
-                            <span className="font-mono truncate">{displayUrl}</span>
-                            <ArrowUpRight
-                              size={10}
-                              className="opacity-0 group-hover/link:opacity-100 transition-opacity"
-                            />
+                            <ExternalLink className="w-3 h-3" />
+                            {displayUrl.substring(0, 30)}
+                            {displayUrl.length > 30 ? "..." : ""}
                           </a>
                         ) : (
-                          <span className="text-sm text-zinc-600">-</span>
+                          <span className="text-xs text-gray-500">-</span>
                         )}
                       </div>
 
-                      {/* Status */}
-                      <div className="col-span-2 flex items-center justify-center">
+                      {/* 담당자 (1칸) - 로고 제거 */}
+                      <div className="col-span-1 flex flex-col justify-center overflow-hidden">
+                        <span className="text-sm font-medium text-gray-200 truncate">
+                          {client.contact_name || "-"}
+                        </span>
+                        {client.store_name && (
+                          <span className="text-[11px] text-gray-500 truncate">{client.store_name}</span>
+                        )}
+                      </div>
+
+                      {/* 이메일 컬럼 (독립) */}
+                      <div className="col-span-2 flex flex-col justify-center">
+                        {client.contact_email ? (
+                          <div className="flex items-center gap-2 mb-1">
+                            <Mail className="w-3.5 h-3.5 text-gray-500" />
+                            <span className="text-sm text-gray-400 font-mono tracking-tight">
+                              {client.contact_email}
+                            </span>
+                          </div>
+                        ) : (
+                          <span className="text-sm text-gray-500">-</span>
+                        )}
+                      </div>
+
+                      {/* 연락처 컬럼 (전화번호) */}
+                      <div className="col-span-2 flex flex-col justify-center">
+                        {client.contact_phone ? (
+                          <div className="flex items-center gap-2 mb-1">
+                            <Phone className="w-3.5 h-3.5 text-gray-500" />
+                            <span className="text-sm text-gray-400 font-mono tracking-tight">
+                              {client.contact_phone}
+                            </span>
+                          </div>
+                        ) : (
+                          <span className="text-sm text-gray-500">-</span>
+                        )}
+                      </div>
+
+                      {/* Campaign Activity - NEW */}
+                      <div className="col-span-3 flex items-start gap-6">
+                        {/* 보낸 횟수 */}
+                        <div className="flex flex-col">
+                          <span className="text-[10px] text-gray-500 uppercase tracking-wide font-bold mb-1">
+                            Sent
+                          </span>
+                          <div className="flex items-center gap-2">
+                            <div className="flex items-center justify-center w-6 h-6 rounded-full bg-[#2C2C2E] text-gray-300">
+                              <Send size={12} />
+                            </div>
+                            <span className="text-sm font-semibold text-white">
+                              {/* TODO: 실제 이메일 개수로 교체 */}
+                              0회
+                            </span>
+                          </div>
+                        </div>
+
+                        {/* 구분선 */}
+                        <div className="w-[1px] h-8 bg-[#333]"></div>
+
+                        {/* 다음 일정 */}
+                        <div className="flex flex-col">
+                          <span className="text-[10px] text-blue-400 uppercase tracking-wide font-bold mb-1">
+                            Next
+                          </span>
+                          <div className="flex items-center gap-2">
+                            {(() => {
+                              const nextSchedule = getNextSchedule(client);
+                              return (
+                                <>
+                                  <span className="text-sm font-medium text-gray-300">
+                                    {nextSchedule.date}
+                                  </span>
+                                  {nextSchedule.daysUntil !== null && (
+                                    <span className="text-[10px] px-1.5 py-0.5 rounded bg-blue-500/10 text-blue-400 font-medium">
+                                      D-{nextSchedule.daysUntil}
+                                    </span>
+                                  )}
+                                </>
+                              );
+                            })()}
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* 상태 (독립된 컬럼 - 중앙 정렬) */}
+                      <div className="col-span-1 flex justify-center">
                         <div
                           className={cn(
-                            "flex items-center gap-1.5 px-3 py-1 rounded-full border text-xs font-medium",
+                            "inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md border text-xs font-bold shadow-[0_0_10px_rgba(10,132,255,0.1)]",
                             statusStyle.className,
                           )}
                         >
                           <div
-                            className={cn("w-1.5 h-1.5 rounded-full", statusStyle.dotColor)}
+                            className={cn("w-1.5 h-1.5 rounded-full animate-pulse", statusStyle.dotColor)}
                           />
                           {statusStyle.label}
                         </div>
                       </div>
 
-                      {/* Last Active */}
-                      <div className="col-span-1 flex items-center justify-center">
-                        <span className="text-xs text-zinc-500">
-                          {formatLastActive(client.last_activity_at)}
-                        </span>
-                      </div>
-
-                      {/* Actions - 드롭다운 메뉴 */}
-                      <div className="col-span-1 flex items-center justify-end">
+                      {/* 관리 (독립된 컬럼 - 우측 정렬) */}
+                      <div className="col-span-1 flex justify-end pr-2">
                         <DropdownMenu>
                           <DropdownMenuTrigger asChild>
                             <button
                               onClick={(e) => e.stopPropagation()}
-                              className="p-1.5 rounded-lg hover:bg-zinc-800 text-zinc-500 hover:text-zinc-300 transition-colors"
+                              className="p-2 rounded-lg hover:bg-white/10 text-gray-400 hover:text-white transition-colors"
                             >
-                              <MoreHorizontal size={16} />
+                              <MoreHorizontal size={20} />
                             </button>
                           </DropdownMenuTrigger>
                           <DropdownMenuContent align="end" className="bg-zinc-900 border-zinc-800">
+                            <DropdownMenuItem
+                              onClick={(e) => handleEditClick(client.id, e)}
+                              className="cursor-pointer"
+                            >
+                              <Edit size={14} className="mr-2" />
+                              수정
+                            </DropdownMenuItem>
                             <DropdownMenuItem
                               onClick={(e) => handleEmailHistoryClick(client.id, e)}
                               className="cursor-pointer"
@@ -951,6 +1092,160 @@ export default function ClientDashboard({
           </div>
         </SheetContent>
       </Sheet>
+
+      {/* Edit Prospect Dialog */}
+      {selectedClientIdForEdit && (
+        <ProspectEditDialog
+          prospect={sortedClients.find(c => c.id === selectedClientIdForEdit)!}
+          open={editDialogOpen}
+          onOpenChange={(open) => {
+            setEditDialogOpen(open);
+            if (!open) {
+              setSelectedClientIdForEdit(null);
+            }
+          }}
+        />
+      )}
+
+      {/* Add Prospect Modal */}
+      {isAddModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center">
+          {/* Backdrop */}
+          <div 
+            className="absolute inset-0 bg-black/60 backdrop-blur-sm" 
+            onClick={() => setIsAddModalOpen(false)}
+          />
+          
+          {/* Modal */}
+          <div className="relative w-full max-w-lg bg-[#161618] border border-[#333] rounded-2xl p-8 shadow-2xl mx-4">
+            {/* Header */}
+            <h2 className="text-2xl font-bold text-white mb-1">고객사 등록</h2>
+            <p className="text-gray-400 text-sm mb-6">새로운 고객사 정보를 입력해주세요.</p>
+            
+            {/* Form */}
+            <form onSubmit={handleProspectSubmit(onProspectSubmit)} className="space-y-4">
+              {/* 회사명 */}
+              <div>
+                <label htmlFor="name" className="block text-sm font-semibold text-gray-400 mb-1">
+                  회사명 <span className="text-red-400">*</span>
+                </label>
+                <input
+                  id="name"
+                  {...registerProspect("name")}
+                  placeholder="예: 올리브영"
+                  className="w-full h-12 bg-[#1C1C1E] border border-[#333] rounded-lg px-3 text-white text-[15px] focus:border-white/50 focus:outline-none transition-colors placeholder:text-zinc-600"
+                  disabled={isSubmittingProspect}
+                />
+                {prospectErrors.name && (
+                  <p className="mt-1 text-sm text-red-400">{prospectErrors.name.message}</p>
+                )}
+              </div>
+
+              {/* 담당자 이름 */}
+              <div>
+                <label htmlFor="contact_name" className="block text-sm font-semibold text-gray-400 mb-1">
+                  담당자 이름
+                </label>
+                <input
+                  id="contact_name"
+                  {...registerProspect("contact_name")}
+                  placeholder="예: 홍길동"
+                  className="w-full h-12 bg-[#1C1C1E] border border-[#333] rounded-lg px-3 text-white text-[15px] focus:border-white/50 focus:outline-none transition-colors placeholder:text-zinc-600"
+                  disabled={isSubmittingProspect}
+                />
+              </div>
+
+              {/* 담당자 이메일 */}
+              <div>
+                <label htmlFor="contact_email" className="block text-sm font-semibold text-gray-400 mb-1">
+                  담당자 이메일 <span className="text-red-400">*</span>
+                </label>
+                <input
+                  id="contact_email"
+                  type="email"
+                  {...registerProspect("contact_email")}
+                  placeholder="예: contact@example.com"
+                  className="w-full h-12 bg-[#1C1C1E] border border-[#333] rounded-lg px-3 text-white text-[15px] focus:border-white/50 focus:outline-none transition-colors placeholder:text-zinc-600"
+                  disabled={isSubmittingProspect}
+                />
+                {prospectErrors.contact_email && (
+                  <p className="mt-1 text-sm text-red-400">{prospectErrors.contact_email.message}</p>
+                )}
+              </div>
+
+              {/* 담당자 연락처 */}
+              <div>
+                <label htmlFor="contact_phone" className="block text-sm font-semibold text-gray-400 mb-1">
+                  담당자 연락처
+                </label>
+                <input
+                  id="contact_phone"
+                  type="tel"
+                  {...registerProspect("contact_phone")}
+                  placeholder="예: 010-1234-5678"
+                  className="w-full h-12 bg-[#1C1C1E] border border-[#333] rounded-lg px-3 text-white text-[15px] focus:border-white/50 focus:outline-none transition-colors placeholder:text-zinc-600"
+                  disabled={isSubmittingProspect}
+                />
+              </div>
+
+              {/* 타겟 URL */}
+              <div>
+                <label htmlFor="url" className="block text-sm font-semibold text-gray-400 mb-1">
+                  타겟 URL <span className="text-red-400">*</span>
+                </label>
+                <input
+                  id="url"
+                  type="url"
+                  {...registerProspect("url")}
+                  placeholder="예: https://store.example.com"
+                  className="w-full h-12 bg-[#1C1C1E] border border-[#333] rounded-lg px-3 text-white text-[15px] focus:border-white/50 focus:outline-none transition-colors placeholder:text-zinc-600"
+                  disabled={isSubmittingProspect}
+                />
+                {prospectErrors.url && (
+                  <p className="mt-1 text-sm text-red-400">{prospectErrors.url.message}</p>
+                )}
+              </div>
+
+              {/* 메모 */}
+              <div>
+                <label htmlFor="memo" className="block text-sm font-semibold text-gray-400 mb-1">
+                  메모
+                </label>
+                <textarea
+                  id="memo"
+                  {...registerProspect("memo")}
+                  placeholder="추가 정보를 입력하세요"
+                  rows={4}
+                  className="w-full h-auto min-h-[96px] bg-[#1C1C1E] border border-[#333] rounded-lg px-3 py-3 text-white text-[15px] focus:border-white/50 focus:outline-none transition-colors placeholder:text-zinc-600 resize-none"
+                  disabled={isSubmittingProspect}
+                />
+              </div>
+
+              {/* Buttons */}
+              <div className="flex justify-end gap-3 mt-8">
+                <button 
+                  type="button"
+                  onClick={() => {
+                    setIsAddModalOpen(false);
+                    resetProspectForm();
+                  }}
+                  className="px-5 h-11 text-gray-400 hover:text-white font-medium transition-colors"
+                  disabled={isSubmittingProspect}
+                >
+                  취소
+                </button>
+                <button 
+                  type="submit"
+                  className="px-6 h-11 bg-white text-black font-bold rounded-lg hover:bg-gray-200 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                  disabled={isSubmittingProspect}
+                >
+                  {isSubmittingProspect ? "등록 중..." : "등록하기"}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

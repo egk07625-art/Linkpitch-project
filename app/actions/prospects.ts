@@ -228,6 +228,7 @@ export async function createProspect(
       name: input.name,
       contact_name: input.contact_name,
       contact_email: input.contact_email,
+      contact_phone: input.contact_phone,
       url: input.url,
       memo: input.memo,
       crm_status: "cold",

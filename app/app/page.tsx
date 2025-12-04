@@ -4,18 +4,23 @@
  */
 
 import { getDashboardKPIs } from "@/actions/dashboard";
+import { getProspectsCampaignStats } from "@/actions/prospects";
 import { getProspects } from "@/app/actions/prospects";
 import { DashboardClient } from "@/components/dashboard/dashboard-client";
 
 export default async function DashboardPage() {
   // 병렬로 데이터 조회
-  const [kpiResult, prospectsResult] = await Promise.all([
+  const [kpiResult, prospects] = await Promise.all([
     getDashboardKPIs(),
     getProspects({ limit: 10 }),
   ]);
 
   const kpis = kpiResult.data;
-  const prospects = prospectsResult;
+
+  // 캠페인 통계 데이터 조회 (N+1 문제 방지를 위해 일괄 조회)
+  const prospectIds = prospects.map((p) => p.id);
+  const campaignStatsResult = await getProspectsCampaignStats(prospectIds);
+  const campaignStats = campaignStatsResult.data || {};
 
   return (
     <div className="space-y-8">
@@ -26,7 +31,11 @@ export default async function DashboardPage() {
         </p>
       </header>
 
-      <DashboardClient kpis={kpis} initialProspects={prospects} />
+      <DashboardClient
+        kpis={kpis}
+        initialProspects={prospects}
+        campaignStats={campaignStats}
+      />
     </div>
   );
 }

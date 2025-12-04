@@ -6,24 +6,16 @@ import { ExternalLink, MoreHorizontal } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
 import { ko } from "date-fns/locale";
 
-import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
 import { cn } from "@/lib/utils";
-import type { Prospect, CRMStatus } from "@/types/prospect";
+import type { Prospect, CRMStatus, CampaignStats } from "@/types/prospect";
 
 interface ProspectsTableProps {
   prospects: Prospect[];
   filterStatus?: "hot" | "warm" | "all";
   limit?: number;
   showViewAll?: boolean;
+  campaignStats?: Record<string, CampaignStats>;
 }
 
 const statusConfig: Record<CRMStatus, { label: string; className: string }> = {
@@ -62,6 +54,7 @@ export function ProspectsTable({
   filterStatus,
   limit,
   showViewAll = true,
+  campaignStats = {},
 }: ProspectsTableProps) {
   const router = useRouter();
 
@@ -104,6 +97,40 @@ export function ProspectsTable({
     );
   }
 
+  // 다음 일정 포맷팅 헬퍼
+  function formatNextSchedule(daysUntilNext: number | null): string {
+    if (daysUntilNext === null) return "일정 없음";
+    if (daysUntilNext === 0) return "오늘";
+    if (daysUntilNext === 1) return "내일";
+    return `${daysUntilNext}일 후`;
+  }
+
+  // 날짜 포맷팅 헬퍼 (예: "12월 7일")
+  function formatDate(dateString: string | null | undefined): string {
+    if (!dateString) return "";
+    try {
+      const date = new Date(dateString);
+      const month = date.getMonth() + 1;
+      const day = date.getDate();
+      return `${month}월 ${day}일`;
+    } catch {
+      return "";
+    }
+  }
+
+  // 마지막 활동 포맷팅
+  function formatLastSent(lastSentAt: string | null | undefined): string {
+    if (!lastSentAt) return "-";
+    try {
+      return formatDistanceToNow(new Date(lastSentAt), {
+        addSuffix: true,
+        locale: ko,
+      });
+    } catch {
+      return "-";
+    }
+  }
+
   return (
     <section className="rounded-lg border border-white/[0.03] bg-zinc-900/30 backdrop-blur-md overflow-hidden">
       <div className="p-4 border-b border-zinc-800/50 flex items-center justify-between">
@@ -126,98 +153,200 @@ export function ProspectsTable({
           </Button>
         )}
       </div>
-      <Table>
-        <TableHeader>
-          <TableRow className="border-zinc-800/50 hover:bg-transparent">
-            <TableHead className="text-xs text-zinc-500 font-medium">Company</TableHead>
-            <TableHead className="text-xs text-zinc-500 font-medium">Status</TableHead>
-            <TableHead className="text-xs text-zinc-500 font-medium">URL</TableHead>
-            <TableHead className="text-xs text-zinc-500 font-medium">Last Active</TableHead>
-            <TableHead className="text-xs text-zinc-500 font-medium w-12"></TableHead>
-          </TableRow>
-        </TableHeader>
-        <TableBody>
-          {displayedProspects.map((prospect) => {
-            const statusStyle = statusConfig[prospect.crm_status];
-            const displayUrl = prospect.url || "-";
-            const displayName = prospect.store_name || prospect.name;
 
-            return (
-              <TableRow
-                key={prospect.id}
-                className="border-zinc-800/50 hover:bg-zinc-800/30"
-              >
-                <TableCell
-                  className="font-medium text-zinc-50 cursor-pointer"
-                  onClick={() => {
-                    router.push(`/prospects/${prospect.id}/mix`);
+      {/* Grid 헤더 */}
+      <div className="grid grid-cols-12 gap-4 px-6 py-4 border-b border-[#333] bg-[#161618] text-xs font-semibold text-gray-500 uppercase tracking-wider whitespace-nowrap">
+        <div className="col-span-3">회사 정보</div>
+        <div className="col-span-2">담당자</div>
+        <div className="col-span-2">연락처</div>
+        <div className="col-span-3">캠페인 활동</div>
+        <div className="col-span-1 text-center">상태</div>
+        <div className="col-span-1 text-right">관리</div>
+      </div>
+
+      {/* Grid 데이터 행 */}
+      <div className="divide-y divide-[#2C2C2E]">
+        {displayedProspects.map((prospect) => {
+          const statusStyle = statusConfig[prospect.crm_status];
+          const displayUrl = prospect.url || "";
+          const displayName = prospect.store_name || prospect.name;
+          const stats = campaignStats[prospect.id] || {
+            sentCount: 0,
+            nextScheduleDate: null,
+            daysUntilNext: null,
+            progress: 0,
+          };
+
+          // 마지막으로 보낸 메일 날짜 계산 (임시로 stats에서 가져오거나 prospect의 last_activity_at 사용)
+          const lastSent = stats.nextScheduleDate
+            ? new Date(stats.nextScheduleDate).getTime() - stats.daysUntilNext! * 24 * 60 * 60 * 1000
+            : null;
+
+          return (
+            <div
+              key={prospect.id}
+              className="grid grid-cols-12 gap-4 px-6 py-5 items-center border-b border-[#2C2C2E] hover:bg-[#1C1C1E] transition-all group cursor-pointer"
+              onClick={() => {
+                router.push(`/prospects/${prospect.id}/mix`);
+              }}
+            >
+              {/* 1. 회사 정보 (3칸) */}
+              <div className="col-span-3 flex flex-col justify-center overflow-hidden">
+                <div className="text-base font-bold text-white mb-1 truncate">{displayName}</div>
+                {displayUrl ? (
+                  <a
+                    href={displayUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-xs text-gray-500 hover:text-blue-400 truncate transition-colors block w-full"
+                    onClick={(e) => e.stopPropagation()}
+                  >
+                    {displayUrl.replace(/^https?:\/\//, "").substring(0, 40)}
+                    {displayUrl.length > 40 ? "..." : ""}
+                  </a>
+                ) : (
+                  <span className="text-xs text-gray-500">-</span>
+                )}
+              </div>
+
+              {/* 2. 담당자 (2칸) */}
+              <div className="col-span-2 flex items-center gap-3 overflow-hidden">
+                {/* 아바타: 이니셜로 깔끔하게 */}
+                <div className="flex-shrink-0 w-8 h-8 rounded-full bg-[#2C2C2E] flex items-center justify-center text-xs font-bold text-gray-400 border border-[#333]">
+                  {prospect.contact_name
+                    ? getInitial(prospect.contact_name)
+                    : getInitial(displayName)}
+                </div>
+                <div className="flex flex-col truncate">
+                  <span className="text-sm font-medium text-gray-200 truncate">
+                    {prospect.contact_name || "-"}
+                  </span>
+                  {prospect.category && (
+                    <span className="text-[11px] text-gray-500 truncate">{prospect.category}</span>
+                  )}
+                </div>
+              </div>
+
+              {/* 3. 연락처 (2칸) - 로고 삭제 & 폰트 정리 */}
+              <div className="col-span-2 flex flex-col justify-center overflow-hidden">
+                {prospect.contact_email ? (
+                  <span
+                    className="text-sm text-gray-400 font-mono tracking-tight truncate hover:text-white transition-colors cursor-pointer"
+                    title="메일 복사하기"
+                  >
+                    {prospect.contact_email}
+                  </span>
+                ) : (
+                  <span className="text-sm text-gray-500">-</span>
+                )}
+              </div>
+
+              {/* 4. 캠페인 활동 (3칸) - 정보 밀도 최적화 */}
+              <div className="col-span-3 flex items-center gap-4">
+                {/* SENT */}
+                <div className="flex flex-col">
+                  <span className="text-[10px] text-gray-500 font-bold mb-0.5">SENT</span>
+                  <div className="flex items-center gap-1.5">
+                    {/* 종이비행기 아이콘 작게 */}
+                    <svg
+                      className="w-3 h-3 text-gray-400"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth="2"
+                        d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"
+                      />
+                    </svg>
+                    <span className="text-sm font-bold text-white">{stats.sentCount}회</span>
+                  </div>
+                </div>
+
+                {/* 구분선 */}
+                <div className="w-[1px] h-6 bg-[#333]"></div>
+
+                {/* NEXT */}
+                <div className="flex flex-col">
+                  <span className="text-[10px] text-blue-400 font-bold mb-0.5">NEXT</span>
+                  <div className="flex items-center gap-2">
+                    {stats.nextScheduleDate ? (
+                      <>
+                        <span className="text-sm font-medium text-gray-300">
+                          {formatDate(stats.nextScheduleDate)}
+                        </span>
+                        {stats.daysUntilNext !== null && (
+                          <span className="text-[10px] px-1.5 py-0.5 rounded bg-blue-500/10 text-blue-400 font-bold">
+                            D-{stats.daysUntilNext}
+                          </span>
+                        )}
+                      </>
+                    ) : (
+                      <span className="text-sm font-medium text-gray-500">일정 없음</span>
+                    )}
+                  </div>
+                </div>
+              </div>
+
+              {/* 5. 상태 (독립된 컬럼 - 중앙 정렬) */}
+              <div className="col-span-1 flex justify-center">
+                <span
+                  className={cn(
+                    "inline-flex items-center px-2.5 py-1 rounded-md text-xs font-bold border shadow-[0_0_10px_rgba(10,132,255,0.1)]",
+                    statusStyle.className === "bg-rose-500/10 text-rose-500 border-rose-500/20"
+                      ? "bg-rose-500/10 text-rose-300 border-rose-500/30"
+                      : statusStyle.className === "bg-amber-500/10 text-amber-500 border-amber-500/20"
+                        ? "bg-amber-500/10 text-amber-300 border-amber-500/30"
+                        : "bg-blue-500/10 text-blue-300 border-blue-500/30"
+                  )}
+                >
+                  <div
+                    className={cn(
+                      "w-1.5 h-1.5 rounded-full mr-1.5",
+                      statusStyle.className === "bg-rose-500/10 text-rose-500 border-rose-500/20"
+                        ? "bg-rose-400 animate-pulse"
+                        : statusStyle.className === "bg-amber-500/10 text-amber-500 border-amber-500/20"
+                          ? "bg-amber-400 animate-pulse"
+                          : "bg-blue-400 animate-pulse"
+                    )}
+                  ></div>
+                  {statusStyle.label}
+                </span>
+              </div>
+
+              {/* 6. 관리 (1칸) - 우측 정렬 (이제 튀어나가지 않음) */}
+              <div className="col-span-1 flex justify-end">
+                <button
+                  className="w-8 h-8 flex items-center justify-center rounded-lg hover:bg-white/10 text-gray-500 hover:text-white transition-colors"
+                  onClick={(e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    // TODO: 드롭다운 메뉴 구현
                   }}
                 >
-                  <Link
-                    href={`/prospects/${prospect.id}/mix`}
-                    className="flex items-center gap-3 hover:text-amber-400 transition-colors"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                    }}
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    width="18"
+                    height="18"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
                   >
-                    <div className="flex items-center justify-center size-8 rounded-full bg-zinc-800/80 text-zinc-300 text-sm font-semibold">
-                      {getInitial(displayName)}
-                    </div>
-                    <div className="flex flex-col">
-                      <span>{displayName}</span>
-                      {prospect.category && (
-                        <span className="text-xs text-zinc-500">{prospect.category}</span>
-                      )}
-                    </div>
-                  </Link>
-                </TableCell>
-                <TableCell>
-                  <Badge
-                    variant="outline"
-                    className={cn("rounded-full", statusStyle.className)}
-                  >
-                    {statusStyle.label}
-                  </Badge>
-                </TableCell>
-                <TableCell>
-                  {prospect.url ? (
-                    <a
-                      href={prospect.url}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="inline-flex items-center gap-1.5 text-sm text-zinc-400 hover:text-zinc-300 transition-colors"
-                      onClick={(e) => e.stopPropagation()}
-                    >
-                      <ExternalLink className="h-3.5 w-3.5" />
-                      <span className="max-w-[200px] truncate">
-                        {displayUrl}
-                      </span>
-                    </a>
-                  ) : (
-                    <span className="text-zinc-500">-</span>
-                  )}
-                </TableCell>
-                <TableCell className="text-zinc-400 text-sm">
-                  {formatLastActive(prospect.last_activity_at)}
-                </TableCell>
-                <TableCell>
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={(e) => {
-                      e.preventDefault();
-                      e.stopPropagation();
-                      // TODO: 드롭다운 메뉴 구현
-                    }}
-                  >
-                    <MoreHorizontal className="h-4 w-4" />
-                  </Button>
-                </TableCell>
-              </TableRow>
-            );
-          })}
-        </TableBody>
-      </Table>
+                    <circle cx="12" cy="12" r="1" />
+                    <circle cx="12" cy="5" r="1" />
+                    <circle cx="12" cy="19" r="1" />
+                  </svg>
+                </button>
+              </div>
+            </div>
+          );
+        })}
+      </div>
     </section>
   );
 }

@@ -65,6 +65,8 @@ export interface Prospect {
   contact_name?: string;
   /** 담당자 이메일 */
   contact_email?: string;
+  /** 담당자 전화번호 (선택) */
+  contact_phone?: string;
   /** 타겟 URL (스마트스토어, 랜딩페이지 등) */
   url?: string;
   /** 메모 (선택) */
@@ -102,6 +104,7 @@ export interface CreateProspectInput {
   name: string;
   contact_name?: string;
   contact_email: string;
+  contact_phone?: string;
   url: string;
   memo?: string;
 }
@@ -113,6 +116,7 @@ export interface UpdateProspectInput {
   name?: string;
   contact_name?: string;
   contact_email?: string;
+  contact_phone?: string;
   url?: string;
   memo?: string;
   vision_data?: VisionData;
@@ -126,4 +130,18 @@ export interface UpdateProspectInput {
   tier?: Tier;
   raw_ocr_text?: string;
   last_activity_at?: string;
+}
+
+/**
+ * 캠페인 통계 데이터
+ */
+export interface CampaignStats {
+  /** 보낸 메일 수 */
+  sentCount: number;
+  /** 다음 일정 (ISO 날짜 문자열 또는 null) */
+  nextScheduleDate: string | null;
+  /** 다음 일정까지 남은 일수 (null이면 일정 없음) */
+  daysUntilNext: number | null;
+  /** 진행률 (0-100) */
+  progress: number;
 }
