@@ -2,7 +2,6 @@
 
 import { useState, useEffect } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
-import Link from "next/link";
 import {
   Search,
   Plus,
@@ -31,6 +30,7 @@ import {
 } from "@/components/ui/sheet";
 import { ProspectEditDialog } from "@/components/prospects/prospect-edit-dialog";
 import { ProspectDeleteDialog } from "@/components/prospects/prospect-delete-dialog";
+import { ProspectCreateModal } from "@/components/prospects/prospect-create-modal";
 import { getGeneratedEmailsByProspect } from "@/actions/generated-emails";
 import { updateProspect } from "@/app/actions/prospects";
 import { toast } from "sonner";
@@ -133,6 +133,7 @@ export default function ClientsUnifiedView({
   const [selectedClientIdForEdit, setSelectedClientIdForEdit] = useState<string | null>(null);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [selectedClientIdForDelete, setSelectedClientIdForDelete] = useState<string | null>(null);
+  const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
 
   // 서버에서 이미 필터링/검색된 데이터를 받아오므로 클라이언트 사이드 필터링 제거
   // 정렬: Hot > Warm > Cold 순서
@@ -397,13 +398,13 @@ export default function ClientsUnifiedView({
           </div>
 
           {/* 추가 버튼 (Primary) */}
-          <Link
-            href="/prospects/new"
+          <button
+            onClick={() => setIsCreateModalOpen(true)}
             className="px-6 py-2.5 bg-white text-black font-bold text-base rounded-2xl hover:bg-zinc-200 transition-all flex items-center gap-2 shadow-[0_0_15px_rgba(255,255,255,0.1)]"
           >
             <Plus className="w-5 h-5" />
             <span>Add Client</span>
-          </Link>
+          </button>
         </div>
       </div>
 
@@ -875,6 +876,12 @@ export default function ClientsUnifiedView({
           />
         ) : null;
       })()}
+
+      {/* Create Modal */}
+      <ProspectCreateModal
+        open={isCreateModalOpen}
+        onOpenChange={setIsCreateModalOpen}
+      />
     </div>
   );
 }

@@ -44,7 +44,7 @@ export default async function DashboardPage() {
           {/* Header 타이틀 영역 */}
           <header className="flex flex-col gap-2 px-1">
             <h1 className="text-4xl md:text-5xl font-bold text-white tracking-tight">
-              대시보드
+              Dashboard
             </h1>
             <p className="text-lg text-zinc-500">
               오늘의 세일즈 현황과 인사이트를 한눈에 확인하세요.
