@@ -2,7 +2,6 @@
 
 import { useRouter, useSearchParams } from "next/navigation";
 import { Search, X } from "lucide-react";
-import { cn } from "@/lib/utils";
 import type { CRMStatus } from "@/types/prospect";
 
 export function ProspectsFilters() {
@@ -11,7 +10,6 @@ export function ProspectsFilters() {
 
   const status = searchParams.get("status") as CRMStatus | null;
   const search = searchParams.get("search") || "";
-  const sort = searchParams.get("sort") || "created_at";
 
   const updateParams = (key: string, value: string | null) => {
     const params = new URLSearchParams(searchParams.toString());
@@ -30,16 +28,6 @@ export function ProspectsFilters() {
   const handleSearch = (value: string) => {
     updateParams("search", value || null);
   };
-
-  const handleSort = (value: string) => {
-    updateParams("sort", value);
-  };
-
-  const clearFilters = () => {
-    router.push("/prospects");
-  };
-
-  const hasActiveFilters = status || search;
 
   // 필터 탭 스타일 로직 (선택 시 빛나는 효과)
   const getTabStyle = (tabName: string) => {

@@ -4,7 +4,6 @@ import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Lightbulb, X, ChevronDown } from 'lucide-react';
 import { STRATEGY_GUIDE } from '@/lib/constants/strategy-guide';
-import { cn } from '@/lib/utils';
 
 interface StrategyInsightPanelProps {
   stepNumber?: number;

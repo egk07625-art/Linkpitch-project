@@ -66,7 +66,7 @@ export default function ClientList() {
   const [activeFilter, setActiveFilter] = useState<FilterStatus>('전체');
 
   // 필터 탭 스타일 (디자인 가이드 준수)
-  const getTabStyle = (tabName: FilterStatus) => {
+  const _getTabStyle = (tabName: FilterStatus) => {
     const baseStyle = "px-5 py-2 rounded-full text-xs font-medium transition-all duration-150 border";
     
     if (activeFilter === tabName) {

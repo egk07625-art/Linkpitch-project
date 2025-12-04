@@ -5,7 +5,6 @@ import {
   DndContext, 
   DragOverlay, 
   useDraggable, 
-  useDroppable, 
   DragEndEvent,
   DragStartEvent,
   closestCenter
@@ -14,21 +13,15 @@ import { motion, AnimatePresence } from 'framer-motion'
 import { 
   Bot, 
   ChevronRight,
-  ChevronLeft,
-  FileText, 
   GripVertical, 
   LayoutTemplate, 
-  Mail, 
   Sparkles,
-  PanelLeftClose,
-  PanelLeftOpen,
   Upload,
   Plus,
   X
 } from 'lucide-react'
 import { ScrollArea } from '@/components/ui/scroll-area'
 import { Button } from '@/components/ui/button'
-import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { Badge } from '@/components/ui/badge'
 import { cn } from '@/lib/utils'
 
@@ -94,12 +87,6 @@ export default function Workspace() {
       // Remove from dropped insights
       setDroppedInsights(prev => prev.filter(item => item.id !== id))
     }
-  }
-
-  // --- Merge Handler ---
-  const handleMerge = async () => {
-    // TODO: Call LLM API to merge droppedInsights + aiEmailContent
-    setShowMergeModal(true)
   }
 
   // --- File Upload Handler ---
@@ -384,93 +371,7 @@ function DraggableStrategyChip({ item, onUpdate }: DraggableStrategyChipProps) {
 
 
 /**
- * 4. Simple Email Editor Component
- */
-function SimpleEmailEditor({ content, setContent }: { content: string, setContent: (c: string) => void }) {
-  return (
-    <div className="max-w-3xl mx-auto py-12 px-8">
-      <div className="mb-8 space-y-2 border-b border-zinc-800 pb-6">
-        <label className="text-xs font-semibold text-zinc-500">제목</label>
-        <input 
-          className="w-full bg-transparent text-2xl font-semibold text-white placeholder:text-zinc-700 outline-none"
-          placeholder="클릭률 높은 제목을 입력하세요..."
-          defaultValue="Re: 최근 캠페인 성과 관련 문의드립니다"
-        />
-      </div>
-
-      <div 
-        className="prose prose-invert max-w-none text-lg leading-relaxed text-zinc-300/90 whitespace-pre-wrap outline-none min-h-[400px] empty:before:content-['이메일_내용을_작성하세요...'] empty:before:text-zinc-700"
-        contentEditable
-        suppressContentEditableWarning
-        onInput={(e) => setContent(e.currentTarget.textContent || '')}
-      >
-        {content || "안녕하세요 [Name]님,\n\n최근 귀사의 캠페인을 보고 성과 개선 방안을 제안드리고자 연락드립니다...\\n\\n"}
-      </div>
-    </div>
-  )
-}
-
-/**
- * 5. AI Email Preview Component
- */
-function AIEmailPreview({ 
-  aiContent, 
-  setAiContent, 
-  droppedInsights,
-  onMerge 
-}: { 
-  aiContent: string
-  setAiContent: (c: string) => void
-  droppedInsights: VisionItem[]
-  onMerge: () => void
-}) {
-  return (
-    <div className="max-w-3xl mx-auto py-12 px-8">
-      <div className="mb-6 flex items-center justify-between">
-        <div className="flex items-center gap-3">
-          <h2 className="text-xl font-bold text-zinc-100">AI 생성 제안서</h2>
-          <Badge variant="outline" className="text-xs border-amber-500/50 text-amber-400">
-            <Bot className="w-3 h-3 mr-1" />
-            AI 생성됨
-          </Badge>
-        </div>
-        <Button
-          onClick={onMerge}
-          disabled={droppedInsights.length === 0}
-          className="bg-[#5B21B6] hover:bg-[#4C1D95] text-white px-6 py-2.5 rounded-lg font-medium text-sm transition-all shadow-md border-none"
-        >
-          제안서 생성
-        </Button>
-      </div>
-
-      {/* Info Box */}
-      <div className="bg-amber-500/5 border border-amber-500/20 rounded-lg p-4 mb-8 flex items-start gap-3">
-        <Sparkles className="w-5 h-5 text-amber-400 flex-shrink-0 mt-0.5" />
-        <div className="space-y-1">
-          <p className="text-sm text-zinc-200 font-medium">
-            {droppedInsights.length}개의 인사이트가 선택되었습니다
-          </p>
-          <p className="text-xs text-zinc-400 leading-relaxed">
-            좌측에서 선택한 인사이트들이 AI 제안서에 자동으로 반영됩니다. 
-            &apos;인사이트 합치기&apos;를 클릭하여 최종 제안서를 생성하세요.
-          </p>
-        </div>
-      </div>
-
-      <div 
-        className="prose prose-invert max-w-none text-base leading-relaxed text-zinc-300 whitespace-pre-wrap outline-none min-h-[400px]"
-        contentEditable
-        suppressContentEditableWarning
-        onInput={(e) => setAiContent(e.currentTarget.textContent || '')}
-      >
-        {aiContent || "URL을 입력하면 AI가 자동으로 초안을 작성합니다..."}
-      </div>
-    </div>
-  )
-}
-
-/**
- * 6. Merge Modal Component
+ * 4. Merge Modal Component
  */
 function MergeModal({ isOpen, onClose, mergedContent }: { isOpen: boolean, onClose: () => void, mergedContent: string }) {
   if (!isOpen) return null
@@ -526,7 +427,7 @@ function MergeModal({ isOpen, onClose, mergedContent }: { isOpen: boolean, onClo
   }
 
 /**
- * 7. File Uploader Component
+ * 5. File Uploader Component
  */
 function FileUploader({ onFileUpload }: { onFileUpload: (files: File[]) => void }) {
   const [isDragging, setIsDragging] = useState(false)

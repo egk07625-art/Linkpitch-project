@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { ExternalLink, MoreHorizontal, Edit, Mail, FileText, Trash2, ChevronRight, ChevronLeft, Clock, MousePointer2, Eye, X } from "lucide-react";
+import { MoreHorizontal, Edit, Mail, FileText, Trash2, ChevronRight, ChevronLeft, Clock, MousePointer2, Eye, X } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
 import { ko } from "date-fns/locale";
 
@@ -60,17 +60,6 @@ function getInitial(name: string): string {
   return name.charAt(0).toUpperCase();
 }
 
-function formatLastActive(dateString: string | null | undefined): string {
-  if (!dateString) return "-";
-  try {
-    return formatDistanceToNow(new Date(dateString), {
-      addSuffix: true,
-      locale: ko,
-    });
-  } catch {
-    return "-";
-  }
-}
 
 export function ProspectsTable({
   prospects,
@@ -128,59 +117,7 @@ export function ProspectsTable({
     ? sortedProspects.slice(0, limit)
     : sortedProspects;
 
-  if (displayedProspects.length === 0) {
-    return (
-      <div className="flex flex-col items-center justify-center gap-4 py-16 px-8">
-        <div className="relative">
-          <div className="absolute inset-0 bg-gradient-to-r from-amber-500/20 to-yellow-500/20 blur-3xl" />
-          <div className="relative space-y-3 text-center">
-            <p className="text-sm text-zinc-400">{emptyMessage}</p>
-            {emptyActionHref && (
-              <Button asChild className="premium-button shadow-lg shadow-amber-500/20">
-                <Link href={emptyActionHref}>{emptyActionLabel}</Link>
-              </Button>
-            )}
-          </div>
-        </div>
-      </div>
-    );
-  }
-
-  // 다음 일정 포맷팅 헬퍼
-  function formatNextSchedule(daysUntilNext: number | null): string {
-    if (daysUntilNext === null) return "일정 없음";
-    if (daysUntilNext === 0) return "오늘";
-    if (daysUntilNext === 1) return "내일";
-    return `${daysUntilNext}일 후`;
-  }
-
-  // 날짜 포맷팅 헬퍼 (예: "12월 7일")
-  function formatDate(dateString: string | null | undefined): string {
-    if (!dateString) return "";
-    try {
-      const date = new Date(dateString);
-      const month = date.getMonth() + 1;
-      const day = date.getDate();
-      return `${month}월 ${day}일`;
-    } catch {
-      return "";
-    }
-  }
-
-  // 마지막 활동 포맷팅
-  function formatLastSent(lastSentAt: string | null | undefined): string {
-    if (!lastSentAt) return "-";
-    try {
-      return formatDistanceToNow(new Date(lastSentAt), {
-        addSuffix: true,
-        locale: ko,
-      });
-    } catch {
-      return "-";
-    }
-  }
-
-  // 이메일 히스토리 로드
+  // 이메일 히스토리 로드 - useEffect는 조건부 return 이전에 위치해야 함
   useEffect(() => {
     if (emailHistoryOpen && selectedClientIdForHistory) {
       setLoadingEmails(true);
@@ -200,6 +137,37 @@ export function ProspectsTable({
         .finally(() => setLoadingEmails(false));
     }
   }, [emailHistoryOpen, selectedClientIdForHistory]);
+
+  if (displayedProspects.length === 0) {
+    return (
+      <div className="flex flex-col items-center justify-center gap-4 py-16 px-8">
+        <div className="relative">
+          <div className="absolute inset-0 bg-gradient-to-r from-amber-500/20 to-yellow-500/20 blur-3xl" />
+          <div className="relative space-y-3 text-center">
+            <p className="text-sm text-zinc-400">{emptyMessage}</p>
+            {emptyActionHref && (
+              <Button asChild className="premium-button shadow-lg shadow-amber-500/20">
+                <Link href={emptyActionHref}>{emptyActionLabel}</Link>
+              </Button>
+            )}
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // 날짜 포맷팅 헬퍼 (예: "12월 7일")
+  function formatDate(dateString: string | null | undefined): string {
+    if (!dateString) return "";
+    try {
+      const date = new Date(dateString);
+      const month = date.getMonth() + 1;
+      const day = date.getDate();
+      return `${month}월 ${day}일`;
+    } catch {
+      return "";
+    }
+  }
 
   // 메모 히스토리 파싱
   const parseMemoHistory = (memo: string | undefined): Array<{
@@ -405,7 +373,7 @@ export function ProspectsTable({
           };
 
           // 마지막으로 보낸 메일 날짜 계산 (임시로 stats에서 가져오거나 prospect의 last_activity_at 사용)
-          const lastSent = stats.nextScheduleDate
+          const _lastSent = stats.nextScheduleDate
             ? new Date(stats.nextScheduleDate).getTime() - stats.daysUntilNext! * 24 * 60 * 60 * 1000
             : null;
 

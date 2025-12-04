@@ -10,12 +10,10 @@ import {
   Plus,
   ExternalLink,
   Mail,
-  User,
   MoreHorizontal,
   Send,
   MousePointer2,
   Clock,
-  ArrowUpRight,
   ChevronRight,
   ChevronLeft,
   Eye,
@@ -94,21 +92,6 @@ const statusConfig: Record<CRMStatus, {
 
 type FilterStatus = "All" | "Hot" | "Warm" | "Cold";
 
-// Segmented Control 스타일을 위한 헬퍼 함수
-const getActiveFilterStyle = (tab: FilterStatus): string => {
-  switch (tab) {
-    case "All":
-      return "bg-white/10 text-white shadow-[0_2px_8px_rgba(0,0,0,0.4)]";
-    case "Hot":
-      return "bg-[#FF453A]/15 text-[#FF453A] shadow-[0_2px_8px_rgba(255,69,58,0.3)]";
-    case "Warm":
-      return "bg-[#FFD60A]/15 text-[#FFD60A] shadow-[0_2px_8px_rgba(255,214,10,0.3)]";
-    case "Cold":
-      return "bg-[#0A84FF]/15 text-[#0A84FF] shadow-[0_2px_8px_rgba(10,132,255,0.3)]";
-    default:
-      return "bg-white/10 text-white";
-  }
-};
 
 // 이메일 상태 설정
 const emailStatusConfig = {
@@ -144,18 +127,6 @@ const emailStatusConfig = {
   },
 };
 
-// 날짜 포맷팅 헬퍼
-function formatLastActive(dateString: string | null | undefined): string {
-  if (!dateString) return "-";
-  try {
-    return formatDistanceToNow(new Date(dateString), {
-      addSuffix: true,
-      locale: ko,
-    });
-  } catch {
-    return "-";
-  }
-}
 
 function formatDate(dateString?: string): string {
   if (!dateString) return "";
@@ -193,7 +164,7 @@ function getEmailReactionStatus(email: GeneratedEmail): CRMStatus {
 
 export default function ClientDashboard({
   initialClients = [],
-  selectedClientId,
+  selectedClientId: _selectedClientId,
 }: ClientDashboardProps) {
   const router = useRouter();
   const [activeTab, setActiveTab] = useState<FilterStatus>("All");
@@ -274,21 +245,8 @@ export default function ClientDashboard({
     }
   }, [emailHistoryOpen, selectedClientIdForHistory]);
 
-  // 각 prospect별 보낸 이메일 개수 계산 헬퍼 함수
-  const getSentEmailCount = async (prospectId: string): Promise<number> => {
-    try {
-      const result = await getGeneratedEmailsByProspect(prospectId);
-      if (result.data) {
-        return result.data.filter(email => email.status === 'sent').length;
-      }
-      return 0;
-    } catch {
-      return 0;
-    }
-  };
-
   // 다음 일정 계산 헬퍼 함수 (임시: 샘플 데이터)
-  const getNextSchedule = (client: Prospect): { date: string; daysUntil: number | null } => {
+  const getNextSchedule = (_client: Prospect): { date: string; daysUntil: number | null } => {
     // 임시: 샘플 데이터로 다음 일정 계산
     // 추후 sequences/step 테이블에서 실제 일정 조회 필요
     const sampleDate = new Date();

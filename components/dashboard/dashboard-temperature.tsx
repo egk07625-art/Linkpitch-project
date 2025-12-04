@@ -18,63 +18,10 @@ interface DashboardTemperatureProps {
   campaignStats: Record<string, CampaignStats>;
 }
 
-/**
- * CRM 상태를 대문자로 변환 (Cold/Warm/Hot)
- */
-function capitalizeStatus(status: 'cold' | 'warm' | 'hot'): 'Cold' | 'Warm' | 'Hot' {
-  return status.charAt(0).toUpperCase() + status.slice(1) as 'Cold' | 'Warm' | 'Hot';
-}
-
-/**
- * 발송 수를 "N회" 형식으로 변환
- */
-function formatSentCount(sentCount: number): string {
-  return `${sentCount}회`;
-}
-
-/**
- * 다음 일정을 "내일 10:00" 또는 "일정 없음" 형식으로 변환
- */
-function formatNextSchedule(nextScheduleDate: string | null): string {
-  if (!nextScheduleDate) {
-    return '일정 없음';
-  }
-
-  try {
-    const date = new Date(nextScheduleDate);
-    const now = new Date();
-    const tomorrow = new Date(now);
-    tomorrow.setDate(tomorrow.getDate() + 1);
-    tomorrow.setHours(0, 0, 0, 0);
-
-    const scheduleDate = new Date(date);
-    scheduleDate.setHours(0, 0, 0, 0);
-
-    if (scheduleDate.getTime() === tomorrow.getTime()) {
-      // 내일인 경우
-      const hours = date.getHours();
-      const minutes = date.getMinutes();
-      return `내일 ${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}`;
-    } else if (scheduleDate > tomorrow) {
-      // 미래 날짜인 경우
-      const month = date.getMonth() + 1;
-      const day = date.getDate();
-      const hours = date.getHours();
-      const minutes = date.getMinutes();
-      return `${month}/${day} ${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}`;
-    } else {
-      // 과거 날짜이거나 오늘인 경우
-      return '일정 없음';
-    }
-  } catch {
-    return '일정 없음';
-  }
-}
-
 export function DashboardTemperature({
   kpis,
   prospects,
-  pipelineStats,
+  pipelineStats: _pipelineStats,
   activities,
   campaignStats,
 }: DashboardTemperatureProps) {

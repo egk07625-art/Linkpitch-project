@@ -78,7 +78,7 @@ function formatDate(dateString: string | null | undefined): string {
 export default function ClientsUnifiedView({
   prospects,
   campaignStats,
-  selectedClientId,
+  selectedClientId: _selectedClientId,
 }: ClientsUnifiedViewProps) {
   const router = useRouter();
   const [searchQuery, setSearchQuery] = useState("");

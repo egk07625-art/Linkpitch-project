@@ -18,7 +18,6 @@ import { VisionItem } from '@/types/vision';
 import type { Prospect, VisionData } from '@/types/prospect';
 import type { UserAsset } from '@/types/user-asset';
 import type { GeneratedEmail } from '@/types/generated-email';
-import { createUserAsset } from '@/actions/user-assets';
 import SequencePlaylist from './SequencePlaylist';
 import StrategySidebar from './StrategySidebar';
 
@@ -130,8 +129,9 @@ function DraggableStrategyChip({ item, onUpdate }: DraggableStrategyChipProps) {
   };
 
   const getIcon = () => {
-    if (item.type === 'image') return <Image className="w-3 h-3 text-amber-400" />;
-    if (item.type === 'file') return <FileText className="w-3 h-3 text-amber-400" />;
+    // eslint-disable-next-line jsx-a11y/alt-text
+    if (item.type === 'image') return <Image className="w-3 h-3 text-amber-400" aria-hidden="true" />;
+    if (item.type === 'file') return <FileText className="w-3 h-3 text-amber-400" aria-hidden="true" />;
     return null;
   };
 
@@ -327,7 +327,7 @@ function CollapsibleDropZone({
 }
 
 export default function WorkspaceClient({
-  prospectId,
+  prospectId: _prospectId,
   prospect,
   visionData,
   initialUserAssets,

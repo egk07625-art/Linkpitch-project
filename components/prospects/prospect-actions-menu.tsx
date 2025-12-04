@@ -2,7 +2,6 @@
 
 import { useState } from "react";
 import { MoreHorizontal, Edit, Trash2, Sparkles, FileText } from "lucide-react";
-import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
   DropdownMenuContent,
