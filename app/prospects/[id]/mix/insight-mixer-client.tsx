@@ -1,22 +1,25 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
-import { supabase } from '@/utils/supabase/client';
+import { supabase } from '@/lib/supabase/client';
 import type { GeneratedEmail } from '@/types/generated-email';
-import { 
-  ArrowLeft, Save, Send, Sparkles, FileText, 
-  Image as ImageIcon, MoreHorizontal, Copy, RefreshCw, LayoutTemplate, 
-  Paperclip, ArrowRight, Check
+import {
+  ArrowLeft, Save, Send, Sparkles, FileText,
+  Image as ImageIcon, LayoutTemplate,
+  Check, Mail, UploadCloud, X,
+  BarChart2, TrendingUp, HelpCircle, ShieldCheck, FileOutput,
+  Plus, Paperclip, Copy, User, Users
 } from 'lucide-react';
+import { toast } from 'sonner';
 
-// 제목 카테고리 매핑 (한글화)
-const SUBJECT_CATEGORIES: Record<string, string> = {
-  metric_direct: "📊 지표 직격형",
-  soft_fomo: "😨 경쟁 심리형",
-  curiosity: "🤔 호기심 유발형",
-  report_bait: "📑 리포트 제안형",
-  plain_trust: "🤝 신뢰 기반형"
+// [Design] 이모티콘 제거 -> 직관적인 아이콘과 매핑
+const SUBJECT_CATEGORIES: Record<string, { label: string, icon: any }> = {
+  metric_direct: { label: "지표 직격형", icon: BarChart2 },
+  soft_fomo: { label: "경쟁 심리형", icon: TrendingUp },
+  curiosity: { label: "호기심 유발형", icon: HelpCircle },
+  report_bait: { label: "리포트 제안형", icon: FileOutput },
+  plain_trust: { label: "신뢰 기반형", icon: ShieldCheck }
 };
 
 interface InsightMixerClientProps {
@@ -25,35 +28,70 @@ interface InsightMixerClientProps {
 
 export default function InsightMixerClient({ prospectId }: InsightMixerClientProps) {
   // --------------------------------------------------------
-  // [상태 관리] 데이터가 들어올 그릇들
+  // [State Management]
   // --------------------------------------------------------
   const [loading, setLoading] = useState(true);
   const [prospect, setProspect] = useState<any>(null);
   const [allStepsData, setAllStepsData] = useState<GeneratedEmail[]>([]);
-  
-  // UI 상태
+
+  // UI State
   const [activeStep, setActiveStep] = useState(1);
   const [activeTab, setActiveTab] = useState<'email' | 'report'>('email');
   const [selectedBodyType, setSelectedBodyType] = useState('solopreneur');
-  
-  // 제목 선택 상태 (카테고리 필터)
+
+  // Subject Picker State
   const [activeSubjectCategory, setActiveSubjectCategory] = useState<string>('metric_direct');
-  const [selectedSubjectText, setSelectedSubjectText] = useState<string>(''); // 사용자가 최종 선택한 제목
+  const [selectedSubjectText, setSelectedSubjectText] = useState('');
+
+  // [NEW] User Assets State (로컬 업로드 파일 관리)
+  const [userAssets, setUserAssets] = useState<{name: string, type: 'image' | 'file', url: string}[]>([]);
+  const [isDragging, setIsDragging] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   // --------------------------------------------------------
-  // [핵심 로직] 초기 제목 설정 (Step 또는 카테고리 변경 시)
+  // [Data Fetching]
   // --------------------------------------------------------
   useEffect(() => {
-    // 현재 Step의 데이터 찾기
-    const currentStepData = allStepsData.find(item => item.step_number === activeStep);
+    const fetchData = async () => {
+      setLoading(true);
 
-    // 제목 옵션 파싱
-    let subjectOptions: Record<string, string[]> = {};
-    try {
-      const rawSubjects = currentStepData?.email_subjects;
-      if (typeof rawSubjects === 'string') {
+      const { data: prospectData } = await supabase
+        .from('prospects')
+        .select('*')
+        .eq('id', prospectId)
+        .single();
+
+      if (prospectData) setProspect(prospectData);
+
+      const { data: emailData } = await supabase
+        .from('generated_emails')
+        .select('*')
+        .eq('prospect_id', prospectId)
+        .order('step_number', { ascending: true });
+
+      if (emailData && emailData.length > 0) {
+        setAllStepsData(emailData as GeneratedEmail[]);
+      }
+
+      setLoading(false);
+    };
+
+    fetchData();
+  }, [prospectId]);
+
+  // --------------------------------------------------------
+  // [Logic Handlers]
+  // --------------------------------------------------------
+
+  const currentStepData = allStepsData.find(item => item.step_number === activeStep);
+
+  // 1. Subject Parsing
+  let subjectOptions: Record<string, string[]> = {};
+  try {
+    const rawSubjects = currentStepData?.email_subjects;
+    if (typeof rawSubjects === 'string') {
         subjectOptions = JSON.parse(rawSubjects);
-      } else if (typeof rawSubjects === 'object' && rawSubjects !== null) {
+    } else if (typeof rawSubjects === 'object' && rawSubjects !== null) {
         Object.entries(rawSubjects).forEach(([key, value]) => {
           if (Array.isArray(value)) {
             subjectOptions[key] = value;
@@ -61,306 +99,319 @@ export default function InsightMixerClient({ prospectId }: InsightMixerClientPro
             subjectOptions[key] = [value];
           }
         });
-      }
-    } catch (e) {
-      console.error('[InsightMixer] email_subjects 파싱 실패:', e);
-    }
-
-    const categorySubjects = subjectOptions?.[activeSubjectCategory] || [];
-    if (categorySubjects.length > 0) {
-      // 현재 선택된 제목이 새로운 카테고리에 없으면 첫 번째 제목으로 설정
-      if (!categorySubjects.includes(selectedSubjectText)) {
-        setSelectedSubjectText(categorySubjects[0]);
-      }
-    } else {
-      setSelectedSubjectText('');
-    }
-  }, [activeStep, activeSubjectCategory, allStepsData, selectedSubjectText]);
-
-  // --------------------------------------------------------
-  // [핵심 로직] DB에서 진짜 데이터 가져오기 (useEffect)
-  // --------------------------------------------------------
-  useEffect(() => {
-    const fetchData = async () => {
-      setLoading(true);
-
-      // (1) 고객 정보 가져오기 (이름, 카테고리 등)
-      const { data: prospectData, error: prospectError } = await supabase
-        .from('prospects')
-        .select('*')
-        .eq('id', prospectId) // URL의 id와 일치하는 녀석 찾기
-        .single();
-
-      if (prospectError) {
-        console.error("고객 정보 로딩 실패:", prospectError);
-      } else {
-        setProspect(prospectData);
-      }
-
-      // (2) AI 생성 데이터 가져오기 (이메일 제목, 본문 등)
-      // generated_emails 테이블에서 해당 고객의 모든 Step 데이터를 가져옴
-      const { data: emailData, error: emailError } = await supabase
-        .from('generated_emails')
-        .select('*')
-        .eq('prospect_id', prospectId)
-        .order('step_number', { ascending: true }); // Step 순서대로 정렬
-
-      if (emailError) {
-        console.error("AI 데이터 로딩 실패:", emailError);
-      } else if (emailData && emailData.length > 0) {
-        // 모든 Step 데이터를 배열로 저장
-        setAllStepsData(emailData as GeneratedEmail[]);
-        console.log(`[InsightMixer] 로드된 Step 데이터: ${emailData.length}개`, emailData.map(d => `Step ${d.step_number}`).join(', '));
-      } else {
-        setAllStepsData([]);
-      }
-
-      setLoading(false); // 로딩 끝!
-    };
-
-    fetchData();
-  }, [prospectId]);
-
-  // --------------------------------------------------------
-  // [예외 처리] 로딩 중이거나 데이터가 없을 때
-  // --------------------------------------------------------
-  if (loading) {
-    return (
-      <div className="h-screen w-full bg-[#050505] text-white flex items-center justify-center">
-        <div className="flex flex-col items-center gap-4">
-          <RefreshCw className="w-8 h-8 animate-spin text-blue-500" />
-          <p className="text-zinc-500">데이터를 불러오는 중입니다...</p>
-        </div>
-      </div>
-    );
-  }
-
-  if (!prospect) {
-    return <div className="h-screen w-full bg-black text-white p-10">고객 정보를 찾을 수 없습니다.</div>;
-  }
-
-  // --------------------------------------------------------
-  // [데이터 매핑] 현재 활성화된 Step에 맞는 데이터 찾기
-  // --------------------------------------------------------
-
-  // 현재 활성화된 Step 번호와 일치하는 데이터 찾기
-  const currentStepData = allStepsData.find(item => item.step_number === activeStep);
-
-  // 1. 제목 데이터 파싱 (JSON 객체 처리)
-  let subjectOptions: Record<string, string[]> = {};
-  try {
-    const rawSubjects = currentStepData?.email_subjects;
-    if (typeof rawSubjects === 'string') {
-      subjectOptions = JSON.parse(rawSubjects);
-    } else if (typeof rawSubjects === 'object' && rawSubjects !== null) {
-      // 객체인 경우, 값이 배열인지 확인하고 변환
-      Object.entries(rawSubjects).forEach(([key, value]) => {
-        if (Array.isArray(value)) {
-          subjectOptions[key] = value;
-        } else if (typeof value === 'string') {
-          // 문자열인 경우 배열로 변환
-          subjectOptions[key] = [value];
-        }
-      });
     }
   } catch (e) {
     console.error('[InsightMixer] email_subjects 파싱 실패:', e);
-    subjectOptions = { metric_direct: ["아직 생성된 제목이 없습니다."] };
+    subjectOptions = {};
   }
 
-  // 2. 본문 데이터 처리 (줄바꿈 이슈 해결)
-  // [핵심] n8n의 <br> 태그를 살리면서, 불필요한 줄바꿈(\n)은 제거
+  // 2. Body Text Processing
   const getCleanBody = (type: 'solopreneur' | 'corporate') => {
-    const rawBody = currentStepData?.[`email_body_${type}`];
-    if (!rawBody) return "데이터 로딩 중...";
-    // \n(엔터)를 제거하고 <br>만 남깁니다.
-    return rawBody.replace(/\n/g, '');
+      const rawBody = currentStepData?.[`email_body_${type}`];
+      if (!rawBody) return "데이터 로딩 중...";
+      return rawBody.replace(/\n/g, '');
   };
 
   const currentBodyHtml = getCleanBody(selectedBodyType as 'solopreneur' | 'corporate');
-  const reportHtml = currentStepData?.report_html_editable || "<p>리포트가 없습니다.</p>";
+  const reportHtml = currentStepData?.report_html_editable || "<p class='text-zinc-500 text-sm'>생성된 리포트가 없습니다.</p>";
+  const currentCategorySubjects = subjectOptions?.[activeSubjectCategory] || [];
 
-  // 현재 선택된 카테고리의 제목 리스트 (2개)
-  const currentCategorySubjects = subjectOptions?.[activeSubjectCategory] || []; 
+  // Auto-select first subject
+  useEffect(() => {
+      if (currentCategorySubjects.length > 0 && !selectedSubjectText) {
+          setSelectedSubjectText(currentCategorySubjects[0]);
+      }
+  }, [currentCategorySubjects, selectedSubjectText]);
+
+  // --------------------------------------------------------
+  // [Asset Upload Handlers]
+  // --------------------------------------------------------
+  const handleDragOver = (e: React.DragEvent) => {
+    e.preventDefault();
+    setIsDragging(true);
+  };
+
+  const handleDragLeave = () => {
+    setIsDragging(false);
+  };
+
+  const handleDrop = (e: React.DragEvent) => {
+    e.preventDefault();
+    setIsDragging(false);
+    if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
+      handleFiles(e.dataTransfer.files);
+    }
+  };
+
+  const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files && e.target.files.length > 0) {
+      handleFiles(e.target.files);
+    }
+  };
+
+  const handleFiles = (files: FileList) => {
+    // 실제로는 여기서 Supabase Storage나 서버로 업로드해야 합니다.
+    // MVP 단계에서는 브라우저 메모리(createObjectURL)를 사용하여 즉시 표시합니다.
+    const newAssets = Array.from(files).map(file => ({
+      name: file.name,
+      type: file.type.startsWith('image/') ? 'image' as const : 'file' as const,
+      url: URL.createObjectURL(file)
+    }));
+    setUserAssets(prev => [...prev, ...newAssets]);
+    toast.success(`${files.length}개의 파일이 추가되었습니다.`);
+  };
+
+  const insertAssetToEditor = (assetName: string) => {
+    // 실제 구현 시에는 Editor의 Cursor 위치에 삽입해야 함.
+    // 현재는 사용자에게 알림을 주는 것으로 대체
+    navigator.clipboard.writeText(`[첨부파일: ${assetName}]`);
+    toast.info("파일명이 복사되었습니다. 본문에 붙여넣기(Ctrl+V) 하세요.");
+  };
+
+
+  // --------------------------------------------------------
+  // [Rendering]
+  // --------------------------------------------------------
+  if (loading) return <div className="h-screen bg-black text-white flex items-center justify-center text-sm font-medium tracking-tight">Loading Workspace...</div>;
+  if (!prospect) return <div className="h-screen bg-black text-white flex items-center justify-center text-sm font-medium tracking-tight">Client Not Found</div>;
 
   return (
-    <div className="h-screen w-full bg-[#050505] text-zinc-100 font-sans flex flex-col overflow-hidden">
-      
+    <div className="h-screen w-full bg-[#050505] text-zinc-100 font-sans flex flex-col overflow-hidden selection:bg-blue-500/30">
+
       {/* [1] Header */}
-      <header className="h-16 border-b border-[#2C2C2E] bg-[#0A0A0A] flex items-center justify-between px-6 shrink-0 z-50">
+      <header className="h-16 border-b border-[#222] bg-[#0A0A0A] flex items-center justify-between px-6 shrink-0 z-50">
         <div className="flex items-center gap-4">
-          <Link href="/prospects" className="p-2 -ml-2 rounded-lg text-zinc-500 hover:text-white hover:bg-[#2C2C2E] transition-colors">
+          <Link href="/prospects" className="p-2 -ml-2 rounded-lg text-zinc-500 hover:text-white hover:bg-[#1C1C1E] transition-colors">
             <ArrowLeft className="w-5 h-5" />
           </Link>
-          <div className="h-6 w-[1px] bg-[#333]" />
+          <div className="h-5 w-[1px] bg-[#333]" />
           <div className="flex items-center gap-3">
-             <div className="w-8 h-8 rounded-full bg-[#2C2C2E] flex items-center justify-center text-xs font-bold text-zinc-400 border border-[#333]">
+             <div className="w-8 h-8 rounded-full bg-[#1C1C1E] flex items-center justify-center text-xs font-bold text-zinc-400 border border-[#333]">
                 {prospect.name.charAt(0)}
              </div>
              <div>
-                <h1 className="text-sm font-bold text-white flex items-center gap-2">
-                   {prospect.store_name || prospect.name} 
-                   <span className="text-zinc-500 font-normal">・ {prospect.category || "카테고리 미정"}</span>
+                <h1 className="text-base font-bold text-white flex items-center gap-2 tracking-tight">
+                   {prospect.store_name || prospect.name}
                 </h1>
-                <div className="flex items-center gap-1.5">
-                   <div className={`w-1.5 h-1.5 rounded-full ${prospect.crm_status === 'Hot' ? 'bg-rose-500' : 'bg-blue-500'}`} />
-                   <span className="text-[10px] text-zinc-400 font-medium capitalize">{prospect.crm_status || 'Cold'} Lead</span>
-                </div>
+                <span className="text-xs text-zinc-500 font-medium">{prospect.category}</span>
              </div>
           </div>
         </div>
-
         <div className="flex items-center gap-3">
-           <button className="h-9 px-4 rounded-lg border border-[#333] bg-[#161618] text-sm font-medium text-zinc-300 hover:bg-[#2C2C2E] transition-colors flex items-center gap-2">
-              <Save className="w-4 h-4" />
-              <span>임시 저장</span>
+           <button className="h-9 px-4 rounded-lg border border-[#333] bg-transparent text-xs font-medium text-zinc-400 hover:bg-[#1C1C1E] hover:text-white transition-colors flex items-center gap-2">
+              <Save className="w-4 h-4" /> <span>임시 저장</span>
            </button>
-           <button className="h-9 px-5 rounded-lg bg-white text-black text-sm font-bold hover:bg-zinc-200 transition-colors flex items-center gap-2 shadow-[0_0_15px_rgba(255,255,255,0.15)]">
-              <Send className="w-4 h-4" />
-              <span>발송하기</span>
+           <button className="h-9 px-5 rounded-lg bg-white text-black text-xs font-bold hover:bg-zinc-200 transition-colors flex items-center gap-2 shadow-lg shadow-white/5">
+              <Send className="w-4 h-4" /> <span>발송하기</span>
            </button>
         </div>
       </header>
 
-      {/* [2] Workspace */}
       <div className="flex-1 flex overflow-hidden">
-         
-         {/* (A) Left Panel: Insight Library */}
-         <aside className="w-[320px] border-r border-[#2C2C2E] bg-[#0A0A0A] flex flex-col shrink-0">
-            <div className="px-5 py-4 border-b border-[#2C2C2E] bg-[#0F0F0F]">
-               <h2 className="text-sm font-bold text-white flex items-center gap-2">
-                  <LayoutTemplate className="w-4 h-4 text-blue-500" />
-                  Insight Library
+
+         {/* [2] Left Panel: Asset Library (NEW) */}
+         <aside className="w-[340px] border-r border-[#222] bg-[#0A0A0A] flex flex-col shrink-0">
+            <div className="px-6 py-5 border-b border-[#222] bg-[#0A0A0A]">
+               <h2 className="text-xs font-bold text-zinc-400 flex items-center gap-2 uppercase tracking-wider">
+                  <LayoutTemplate className="w-3.5 h-3.5" />
+                  소재 라이브러리
                </h2>
             </div>
-            <div className="flex-1 p-6 space-y-4 overflow-y-auto">
-               <div className="bg-[#161618] border border-[#333] rounded-xl p-4">
-                  <span className="text-[10px] font-bold text-blue-400 bg-blue-500/10 px-2 py-0.5 rounded border border-blue-500/20 mb-2 inline-block">THEME</span>
-                  <p className="text-sm text-zinc-300 font-medium">
-                     {currentStepData?.theme || "분석 테마가 없습니다."}
-                  </p>
+
+            <div className="flex-1 p-6 flex flex-col gap-6 overflow-y-auto">
+
+               {/* 1. Theme Info (Minimal) */}
+               <div>
+                  <label className="text-[10px] font-bold text-zinc-600 uppercase mb-2 block tracking-wider">분석 테마</label>
+                  <div className="bg-[#111] border border-[#222] rounded-xl p-4">
+                     <p className="text-sm text-zinc-300 font-medium leading-relaxed">
+                        {currentStepData?.theme || "분석 테마가 없습니다."}
+                     </p>
+                  </div>
                </div>
-               <div className="bg-[#161618] border border-[#333] rounded-xl p-4">
-                  <span className="text-[10px] font-bold text-purple-400 bg-purple-500/10 px-2 py-0.5 rounded border border-purple-500/20 mb-2 inline-block">TARGET</span>
-                  <p className="text-sm text-zinc-300 font-medium capitalize">
-                     {currentStepData?.target_type?.replace('_', ' ') || "타겟 정보 없음"}
-                  </p>
+
+               {/* 2. Drag & Drop Upload Zone (New Feature) */}
+               <div className="flex-1 flex flex-col min-h-0">
+                  <div className="flex justify-between items-center mb-2">
+                     <label className="text-[10px] font-bold text-zinc-600 uppercase tracking-wider">나의 자산 (My Assets)</label>
+                     <button onClick={() => fileInputRef.current?.click()} className="text-[10px] text-blue-400 hover:text-blue-300 flex items-center gap-1">
+                        <Plus className="w-3 h-3" /> 추가
+                     </button>
+                  </div>
+
+                  {/* Drop Zone */}
+                  <div
+                     onDragOver={handleDragOver}
+                     onDragLeave={handleDragLeave}
+                     onDrop={handleDrop}
+                     onClick={() => fileInputRef.current?.click()}
+                     className={`
+                        relative border border-dashed rounded-xl p-6 flex flex-col items-center justify-center text-center transition-all cursor-pointer mb-4
+                        ${isDragging ? 'border-blue-500 bg-blue-500/5' : 'border-[#333] bg-[#111] hover:border-zinc-500 hover:bg-[#161618]'}
+                     `}
+                  >
+                     <input type="file" ref={fileInputRef} onChange={handleFileSelect} className="hidden" multiple />
+                     <div className="w-10 h-10 rounded-full bg-[#1C1C1E] flex items-center justify-center mb-3 border border-[#333]">
+                        <UploadCloud className={`w-5 h-5 ${isDragging ? 'text-blue-500' : 'text-zinc-500'}`} />
+                     </div>
+                     <p className="text-xs text-zinc-400 font-medium">
+                        파일을 드래그하거나 <span className="text-white underline decoration-zinc-600 underline-offset-2">클릭하여 업로드</span>
+                     </p>
+                     <p className="text-[10px] text-zinc-600 mt-1">PNG, JPG, PDF (Max 10MB)</p>
+                  </div>
+
+                  {/* Uploaded List */}
+                  <div className="flex-1 overflow-y-auto space-y-2 pr-1">
+                     {userAssets.map((asset, idx) => (
+                        <div
+                           key={idx}
+                           onClick={() => insertAssetToEditor(asset.name)}
+                           className="group flex items-center gap-3 p-3 rounded-lg bg-[#161618] border border-[#222] hover:border-zinc-600 cursor-pointer transition-all"
+                        >
+                           <div className="w-8 h-8 rounded bg-[#222] flex items-center justify-center shrink-0">
+                              {asset.type === 'image' ? <ImageIcon className="w-4 h-4 text-zinc-400"/> : <FileText className="w-4 h-4 text-zinc-400"/>}
+                           </div>
+                           <div className="flex-1 min-w-0">
+                              <p className="text-xs text-zinc-300 truncate font-medium">{asset.name}</p>
+                              <p className="text-[10px] text-zinc-600">클릭하여 삽입</p>
+                           </div>
+                           <Copy className="w-3 h-3 text-zinc-600 group-hover:text-white opacity-0 group-hover:opacity-100 transition-opacity" />
+                        </div>
+                     ))}
+                     {userAssets.length === 0 && (
+                        <div className="text-center py-8 text-zinc-700 text-xs italic">
+                           등록된 파일이 없습니다.
+                        </div>
+                     )}
+                  </div>
                </div>
             </div>
          </aside>
 
-         {/* (B) Center Panel: Editor */}
+         {/* [3] Center Panel: Main Editor */}
          <main className="flex-1 bg-[#050505] flex flex-col relative min-w-0">
-            
+
             {/* Step Navigator */}
-            <div className="h-16 border-b border-[#2C2C2E] flex items-center px-6 gap-2 bg-[#0A0A0A]">
+            <div className="h-16 border-b border-[#222] flex items-center justify-center gap-2 bg-[#0A0A0A]">
                {[1, 2, 3, 4, 5].map((step) => {
-                  // 해당 스텝의 데이터가 존재하는지 확인
                   const hasData = allStepsData.some(d => d.step_number === step);
-                  
+                  const isActive = activeStep === step;
                   return (
                     <button
                         key={step}
                         onClick={() => {
                            setActiveStep(step);
-                           // 스텝 변경 시 상태 리셋
                            setActiveSubjectCategory('metric_direct');
                            setSelectedSubjectText('');
                         }}
-                        className={`flex items-center gap-2 px-4 py-2 rounded-full text-sm font-medium transition-all border ${
-                          activeStep === step 
-                            ? 'bg-white text-black border-white' 
-                            : hasData 
-                              ? 'bg-[#161618] text-zinc-400 border-[#333] hover:border-zinc-500'
-                              : 'bg-[#0A0A0A] text-zinc-700 border-[#222] cursor-not-allowed'
+                        className={`h-9 px-5 rounded-full text-xs font-bold transition-all flex items-center gap-2 border ${
+                          isActive
+                            ? 'bg-white text-black border-white shadow-[0_0_15px_rgba(255,255,255,0.15)]'
+                            : hasData
+                              ? 'bg-[#111] text-zinc-400 border-[#333] hover:border-zinc-500 hover:text-zinc-200'
+                              : 'bg-[#0A0A0A] text-zinc-800 border-[#222] cursor-not-allowed'
                         }`}
                     >
-                        <span className={`w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-bold ${activeStep === step ? 'bg-black text-white' : 'bg-[#2C2C2E]'}`}>{step}</span>
-                        <span>Step {step}</span>
+                        <span className={`w-4 h-4 rounded-full flex items-center justify-center text-[9px] ${isActive ? 'bg-black text-white' : 'bg-[#222] text-zinc-600'}`}>{step}</span>
+                        <span>Step</span>
                     </button>
                   );
                })}
             </div>
 
-            {/* Content Area */}
-            <div className="flex-1 overflow-y-auto p-8">
-               <div className="max-w-3xl mx-auto space-y-8">
-                  
+            <div className="flex-1 overflow-y-auto p-10 md:p-14">
+               <div className="max-w-4xl mx-auto space-y-12">
+
                   {/* Mode Switcher */}
-                  <div className="flex justify-center mb-8">
-                     <div className="p-1 bg-[#161618] border border-[#333] rounded-xl flex">
-                        <button onClick={() => setActiveTab('email')} className={`px-6 py-2 rounded-lg text-sm font-bold transition-all ${activeTab === 'email' ? 'bg-[#2C2C2E] text-white shadow-sm' : 'text-zinc-500 hover:text-zinc-300'}`}>✉️ 이메일</button>
-                        <button onClick={() => setActiveTab('report')} className={`px-6 py-2 rounded-lg text-sm font-bold transition-all ${activeTab === 'report' ? 'bg-[#2C2C2E] text-white shadow-sm' : 'text-zinc-500 hover:text-zinc-300'}`}>📊 리포트</button>
+                  <div className="flex justify-center">
+                     <div className="p-1.5 bg-[#111] border border-[#222] rounded-xl flex items-center shadow-inner">
+                        <button
+                           onClick={() => setActiveTab('email')}
+                           className={`flex items-center gap-2 px-6 py-2.5 rounded-lg text-sm font-bold transition-all ${activeTab === 'email' ? 'bg-[#2C2C2E] text-white shadow-sm border border-[#333]' : 'text-zinc-500 hover:text-zinc-300'}`}
+                        >
+                           <Mail className="w-4 h-4" /> 이메일
+                        </button>
+                        <button
+                           onClick={() => setActiveTab('report')}
+                           className={`flex items-center gap-2 px-6 py-2.5 rounded-lg text-sm font-bold transition-all ${activeTab === 'report' ? 'bg-[#2C2C2E] text-white shadow-sm border border-[#333]' : 'text-zinc-500 hover:text-zinc-300'}`}
+                        >
+                           <FileText className="w-4 h-4" /> 리포트
+                        </button>
                      </div>
                   </div>
 
                   {activeTab === 'email' && (
-                     <div className="space-y-8 animate-in fade-in slide-in-from-bottom-2 duration-300">
-                        
-                        {/* 1. Subject Picker (New Design) */}
-                        <div className="space-y-3">
-                           <div className="flex items-center justify-between">
-                              <label className="text-xs font-bold text-zinc-500 uppercase tracking-wider">이메일 제목 선택</label>
-                              <span className="text-xs text-zinc-600">AI가 5가지 전략으로 제안합니다</span>
-                           </div>
-                           
+                     <div className="space-y-10 animate-in fade-in slide-in-from-bottom-2 duration-300">
+
+                        {/* 1. Subject Picker (New: Tabs & Icons) */}
+                        <div className="space-y-4">
+                           <label className="flex items-center gap-2 text-xs font-bold text-zinc-500 uppercase tracking-widest">
+                              <Sparkles className="w-3.5 h-3.5 text-blue-500" /> Subject Options
+                           </label>
+
                            {/* Category Tabs */}
-                           <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-hide">
-                              {Object.keys(SUBJECT_CATEGORIES).map((key) => (
-                                 <button
-                                    key={key}
-                                    onClick={() => setActiveSubjectCategory(key)}
-                                    className={`px-3 py-1.5 rounded-lg text-xs font-medium border transition-colors whitespace-nowrap ${
-                                       activeSubjectCategory === key 
-                                       ? 'bg-blue-500/10 text-blue-400 border-blue-500/30' 
-                                       : 'bg-[#161618] text-zinc-500 border-[#333] hover:text-zinc-300'
-                                    }`}
-                                 >
-                                    {SUBJECT_CATEGORIES[key]}
-                                 </button>
-                              ))}
+                           <div className="flex gap-2 overflow-x-auto pb-2 no-scrollbar">
+                              {Object.keys(SUBJECT_CATEGORIES).map((key) => {
+                                 const Icon = SUBJECT_CATEGORIES[key].icon;
+                                 return (
+                                    <button
+                                       key={key}
+                                       onClick={() => setActiveSubjectCategory(key)}
+                                       className={`flex items-center gap-2 px-4 py-2 rounded-lg text-xs font-medium transition-all border whitespace-nowrap ${
+                                          activeSubjectCategory === key
+                                          ? 'bg-blue-500/10 text-blue-400 border-blue-500/30 shadow-[0_0_10px_rgba(59,130,246,0.1)]'
+                                          : 'bg-[#111] text-zinc-500 border-[#222] hover:border-zinc-700 hover:text-zinc-300'
+                                       }`}
+                                    >
+                                       <Icon className="w-3.5 h-3.5" />
+                                       {SUBJECT_CATEGORIES[key].label}
+                                    </button>
+                                 )
+                              })}
                            </div>
-                           {/* Selected Category's Options */}
+
                            <div className="grid grid-cols-1 gap-3">
                               {currentCategorySubjects.length > 0 ? (
                                  currentCategorySubjects.map((subject, idx) => (
-                                    <div 
+                                    <div
                                        key={idx}
                                        onClick={() => setSelectedSubjectText(subject)}
-                                       className={`p-4 rounded-xl border cursor-pointer transition-all flex items-center justify-between group ${
-                                          selectedSubjectText === subject 
-                                          ? 'bg-zinc-800 border-white/20' 
-                                          : 'bg-[#161618] border-[#333] hover:border-zinc-600'
+                                       className={`group px-6 py-4 rounded-xl border cursor-pointer transition-all flex items-center justify-between ${
+                                          selectedSubjectText === subject
+                                          ? 'bg-[#1C1C1E] border-blue-500/50 ring-1 ring-blue-500/20'
+                                          : 'bg-[#0F0F0F] border-[#222] hover:border-zinc-600'
                                        }`}
                                     >
-                                       <p className={`text-sm ${selectedSubjectText === subject ? 'text-white' : 'text-zinc-400'}`}>{subject}</p>
-                                       {selectedSubjectText === subject && <Check className="w-4 h-4 text-blue-500" />}
+                                       <p className={`text-base font-medium ${selectedSubjectText === subject ? 'text-white' : 'text-zinc-400 group-hover:text-zinc-200'}`}>{subject}</p>
+                                       {selectedSubjectText === subject && <Check className="w-5 h-5 text-blue-500" />}
                                     </div>
                                  ))
                               ) : (
-                                 <div className="p-4 rounded-xl border border-[#333] bg-[#161618] text-zinc-500 text-sm">이 카테고리의 제목이 없습니다.</div>
+                                 <div className="p-6 rounded-xl border border-[#222] bg-[#0F0F0F] text-zinc-600 text-sm text-center">이 카테고리의 제목이 없습니다.</div>
                               )}
                            </div>
                         </div>
 
-                        {/* 2. Body Editor (Spacing Fix) */}
-                        <div className="space-y-3">
+                        {/* 2. Body Editor (Big & Clean) */}
+                        <div className="space-y-4">
                            <div className="flex items-center justify-between">
-                              <label className="text-xs font-bold text-zinc-500 uppercase tracking-wider">이메일 본문</label>
-                              <div className="flex bg-[#161618] rounded-lg p-0.5 border border-[#333]">
-                                 <button onClick={() => setSelectedBodyType('solopreneur')} className={`px-3 py-1 text-xs rounded-md transition-all ${selectedBodyType === 'solopreneur' ? 'bg-[#2C2C2E] text-white' : 'text-zinc-500'}`}>👤 대표님용</button>
-                                 <button onClick={() => setSelectedBodyType('corporate')} className={`px-3 py-1 text-xs rounded-md transition-all ${selectedBodyType === 'corporate' ? 'bg-[#2C2C2E] text-white' : 'text-zinc-500'}`}>👥 실무자용</button>
+                              <label className="flex items-center gap-2 text-xs font-bold text-zinc-500 uppercase tracking-widest">
+                                 <FileText className="w-3.5 h-3.5 text-blue-500" /> Body Content
+                              </label>
+                              <div className="flex bg-[#111] rounded-lg p-1 border border-[#222]">
+                                 <button onClick={() => setSelectedBodyType('solopreneur')} className={`flex items-center gap-1.5 px-4 py-1.5 text-xs rounded-md transition-all font-bold ${selectedBodyType === 'solopreneur' ? 'bg-[#2C2C2E] text-white shadow-sm' : 'text-zinc-500 hover:text-zinc-300'}`}>
+                                    <User className="w-3.5 h-3.5" /> 대표님용
+                                 </button>
+                                 <button onClick={() => setSelectedBodyType('corporate')} className={`flex items-center gap-1.5 px-4 py-1.5 text-xs rounded-md transition-all font-bold ${selectedBodyType === 'corporate' ? 'bg-[#2C2C2E] text-white shadow-sm' : 'text-zinc-500 hover:text-zinc-300'}`}>
+                                    <Users className="w-3.5 h-3.5" /> 실무자용
+                                 </button>
                               </div>
                            </div>
-                           
-                           <div className="min-h-[300px] bg-[#161618] border border-[#333] rounded-2xl p-6">
-                              {/* 
-                                 [Spacing Fix] 
-                                 - whitespace-pre-wrap 제거 (줄바꿈 중복 방지)
-                                 - prose-p:my-2 로 문단 간격 강제 조정
-                              */}
-                              <div 
-                                 className="text-base text-zinc-300 leading-relaxed font-light outline-none prose prose-invert max-w-none prose-p:my-1 prose-p:leading-7"
+
+                           <div className="min-h-[500px] bg-[#0F0F0F] border border-[#222] rounded-2xl p-10 focus-within:border-zinc-600 focus-within:ring-1 focus-within:ring-zinc-600 transition-all shadow-inner">
+                              {/* 가독성 100점: text-lg, leading-relaxed */}
+                              <div
+                                 className="text-lg text-zinc-300 leading-8 font-light outline-none prose prose-invert max-w-none prose-p:my-4 prose-strong:text-white prose-strong:font-bold"
                                  contentEditable
                                  suppressContentEditableWarning
                                  dangerouslySetInnerHTML={{ __html: currentBodyHtml }}
@@ -371,9 +422,8 @@ export default function InsightMixerClient({ prospectId }: InsightMixerClientPro
                   )}
 
                   {activeTab === 'report' && (
-                     <div className="min-h-[500px] bg-[#161618] border border-[#333] rounded-2xl p-8 animate-in fade-in slide-in-from-bottom-2 duration-300">
-                        {/* HTML 리포트 렌더링 (스타일 격리 필요시 Iframe 고려, 여기선 직접 렌더링) */}
-                        <div className="prose prose-invert max-w-none prose-p:text-zinc-400 prose-headings:text-white" dangerouslySetInnerHTML={{ __html: reportHtml }} />
+                     <div className="min-h-[700px] bg-white border border-zinc-200 rounded-2xl p-12 animate-in fade-in slide-in-from-bottom-2 duration-300 shadow-2xl">
+                        <div className="prose prose-zinc max-w-none prose-lg" dangerouslySetInnerHTML={{ __html: reportHtml }} />
                      </div>
                   )}
 
@@ -381,42 +431,7 @@ export default function InsightMixerClient({ prospectId }: InsightMixerClientPro
             </div>
          </main>
 
-         {/* (C) Right Panel: Preview (Smartphone) */}
-         <aside className="w-[360px] border-l border-[#2C2C2E] bg-[#0A0A0A] flex flex-col shrink-0">
-            <div className="px-5 py-4 border-b border-[#2C2C2E] flex justify-between items-center bg-[#0F0F0F]">
-               <h2 className="text-sm font-bold text-white">수신자 미리보기</h2>
-            </div>
-            <div className="flex-1 overflow-y-auto p-6 bg-[#000] flex items-center justify-center">
-               <div className="w-full bg-white rounded-[32px] overflow-hidden border-[8px] border-[#2C2C2E] shadow-2xl relative min-h-[500px]">
-                  <div className="h-6 bg-white w-full flex justify-center items-center border-b border-gray-100">
-                     <div className="w-16 h-4 bg-black rounded-b-xl" />
-                  </div>
-                  <div className="p-4 bg-gray-50 h-full">
-                     <div className="bg-white p-4 rounded-xl shadow-sm mb-4">
-                        <div className="flex gap-2 items-center mb-2">
-                           <div className="w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center text-blue-600 font-bold text-xs">LP</div>
-                           <div>
-                              <p className="text-xs font-bold text-gray-900">LinkPitch</p>
-                              <p className="text-[10px] text-gray-500">방금 전</p>
-                           </div>
-                        </div>
-                        <div className="text-xs text-gray-800 leading-relaxed">
-                           {/* 미리보기 내용 */}
-                           <p className="font-bold mb-2 text-sm">{selectedSubjectText || "제목을 선택하세요"}</p>
-                           {/* 미리보기 본문: 태그 제거 후 텍스트만 */}
-                           <p className="line-clamp-6 text-gray-600">
-                              {currentBodyHtml.replace(/<[^>]*>?/gm, '')}
-                           </p>
-                        </div>
-                     </div>
-                  </div>
-               </div>
-            </div>
-         </aside>
-
       </div>
     </div>
   )
 }
-
-
