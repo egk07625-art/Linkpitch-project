@@ -1,13 +1,23 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import Link from 'next/link';
-import { supabase } from '@/utils/supabase/client'; // 1. 만능 열쇠 가져오기
+import { supabase } from '@/utils/supabase/client';
+import type { GeneratedEmail } from '@/types/generated-email';
 import { 
   ArrowLeft, Save, Send, Sparkles, FileText, 
   Image as ImageIcon, MoreHorizontal, Copy, RefreshCw, LayoutTemplate, 
-  Paperclip, ArrowRight
+  Paperclip, ArrowRight, Check
 } from 'lucide-react';
+
+// 제목 카테고리 매핑 (한글화)
+const SUBJECT_CATEGORIES: Record<string, string> = {
+  metric_direct: "📊 지표 직격형",
+  soft_fomo: "😨 경쟁 심리형",
+  curiosity: "🤔 호기심 유발형",
+  report_bait: "📑 리포트 제안형",
+  plain_trust: "🤝 신뢰 기반형"
+};
 
 interface InsightMixerClientProps {
   prospectId: string;
@@ -17,15 +27,18 @@ export default function InsightMixerClient({ prospectId }: InsightMixerClientPro
   // --------------------------------------------------------
   // [상태 관리] 데이터가 들어올 그릇들
   // --------------------------------------------------------
-  const [loading, setLoading] = useState(true); // 로딩 중인가?
-  const [prospect, setProspect] = useState<any>(null); // 고객 정보
-  const [aiData, setAiData] = useState<any>(null); // AI가 쓴 글
+  const [loading, setLoading] = useState(true);
+  const [prospect, setProspect] = useState<any>(null);
+  const [allStepsData, setAllStepsData] = useState<GeneratedEmail[]>([]);
   
   // UI 상태
   const [activeStep, setActiveStep] = useState(1);
   const [activeTab, setActiveTab] = useState<'email' | 'report'>('email');
-  const [selectedSubjectIndex, setSelectedSubjectIndex] = useState(0);
   const [selectedBodyType, setSelectedBodyType] = useState('solopreneur');
+  
+  // 제목 선택 상태 (카테고리 필터)
+  const [activeSubjectCategory, setActiveSubjectCategory] = useState<string>('metric_direct');
+  const [selectedSubjectText, setSelectedSubjectText] = useState<string>(''); // 사용자가 최종 선택한 제목
 
   // --------------------------------------------------------
   // [핵심 로직] DB에서 진짜 데이터 가져오기 (useEffect)
@@ -48,18 +61,21 @@ export default function InsightMixerClient({ prospectId }: InsightMixerClientPro
       }
 
       // (2) AI 생성 데이터 가져오기 (이메일 제목, 본문 등)
-      // generated_emails 테이블에서 해당 고객의 데이터를 가져옴
+      // generated_emails 테이블에서 해당 고객의 모든 Step 데이터를 가져옴
       const { data: emailData, error: emailError } = await supabase
         .from('generated_emails')
         .select('*')
         .eq('prospect_id', prospectId)
-        .order('created_at', { ascending: false }); // 최신순
+        .order('step_number', { ascending: true }); // Step 순서대로 정렬
 
       if (emailError) {
         console.error("AI 데이터 로딩 실패:", emailError);
       } else if (emailData && emailData.length > 0) {
-        // 가장 최신 데이터 하나를 사용
-        setAiData(emailData[0]); 
+        // 모든 Step 데이터를 배열로 저장
+        setAllStepsData(emailData as GeneratedEmail[]);
+        console.log(`[InsightMixer] 로드된 Step 데이터: ${emailData.length}개`, emailData.map(d => `Step ${d.step_number}`).join(', '));
+      } else {
+        setAllStepsData([]);
       }
 
       setLoading(false); // 로딩 끝!
@@ -67,6 +83,57 @@ export default function InsightMixerClient({ prospectId }: InsightMixerClientPro
 
     fetchData();
   }, [prospectId]);
+
+  // 현재 활성화된 Step 번호와 일치하는 데이터 찾기 (useMemo로 최적화)
+  const currentStepData = useMemo(() => {
+    return allStepsData.find(item => item.step_number === activeStep);
+  }, [allStepsData, activeStep]);
+
+  // 1. 제목 데이터 파싱 (JSON 객체 처리) - useMemo로 최적화
+  const subjectOptions = useMemo(() => {
+    let parsed: Record<string, string[]> = {};
+    try {
+      const rawSubjects = currentStepData?.email_subjects;
+      if (typeof rawSubjects === 'string') {
+        parsed = JSON.parse(rawSubjects);
+      } else if (typeof rawSubjects === 'object' && rawSubjects !== null) {
+        // 객체인 경우, 값이 배열인지 확인하고 변환
+        Object.entries(rawSubjects).forEach(([key, value]) => {
+          if (Array.isArray(value)) {
+            parsed[key] = value;
+          } else if (typeof value === 'string') {
+            // 문자열인 경우 배열로 변환
+            parsed[key] = [value];
+          }
+        });
+      }
+    } catch (e) {
+      console.error('[InsightMixer] email_subjects 파싱 실패:', e);
+      parsed = { metric_direct: ["아직 생성된 제목이 없습니다."] };
+    }
+    return parsed;
+  }, [currentStepData]);
+
+  // 현재 선택된 카테고리의 제목 리스트
+  const currentCategorySubjects = useMemo(() => {
+    return subjectOptions?.[activeSubjectCategory] || [];
+  }, [subjectOptions, activeSubjectCategory]);
+
+  // 초기 제목 설정 (Step 또는 카테고리 변경 시) - early return 이전으로 이동!
+  useEffect(() => {
+    if (currentCategorySubjects.length > 0) {
+      // 현재 선택된 제목이 새로운 카테고리에 없으면 첫 번째 제목으로 설정
+      setSelectedSubjectText((prev) => {
+        if (!currentCategorySubjects.includes(prev)) {
+          return currentCategorySubjects[0];
+        }
+        return prev;
+      });
+    } else {
+      setSelectedSubjectText('');
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [activeStep, activeSubjectCategory, currentCategorySubjects]);
 
   // --------------------------------------------------------
   // [예외 처리] 로딩 중이거나 데이터가 없을 때
@@ -87,19 +154,20 @@ export default function InsightMixerClient({ prospectId }: InsightMixerClientPro
   }
 
   // --------------------------------------------------------
-  // [데이터 매핑] DB 데이터를 UI 변수에 연결 (Data Binding)
+  // [데이터 매핑] 렌더링에 필요한 데이터 계산
   // --------------------------------------------------------
-  
-  // 만약 AI 데이터가 아직 없으면(스캔 전이면) 기본값 표시
-  const subjectOptions = aiData?.email_subjects || { metric_direct: ["아직 생성된 제목이 없습니다.", "스캔을 진행해주세요."] };
-  const bodyOptions = {
-    solopreneur: aiData?.email_body_solopreneur || "아직 생성된 본문이 없습니다. AI 분석을 먼저 진행해주세요.",
-    corporate: aiData?.email_body_corporate || "아직 생성된 본문이 없습니다."
-  };
-  const reportHtml = aiData?.report_html_editable || "<p>아직 생성된 리포트가 없습니다.</p>";
 
-  // 현재 선택된 제목 (기본값: metric_direct 타입의 첫 번째)
-  const currentSubjects = subjectOptions['metric_direct'] || []; 
+  // 2. 본문 데이터 처리 (줄바꿈 이슈 해결)
+  // [핵심] n8n의 <br> 태그를 살리면서, 불필요한 줄바꿈(\n)은 제거
+  const getCleanBody = (type: 'solopreneur' | 'corporate') => {
+    const rawBody = currentStepData?.[`email_body_${type}`];
+    if (!rawBody) return "데이터 로딩 중...";
+    // \n(엔터)를 제거하고 <br>만 남깁니다.
+    return rawBody.replace(/\n/g, ''); 
+  };
+
+  const currentBodyHtml = getCleanBody(selectedBodyType as 'solopreneur' | 'corporate');
+  const reportHtml = currentStepData?.report_html_editable || "<p>리포트가 없습니다.</p>"; 
 
   return (
     <div className="h-screen w-full bg-[#050505] text-zinc-100 font-sans flex flex-col overflow-hidden">
@@ -143,17 +211,27 @@ export default function InsightMixerClient({ prospectId }: InsightMixerClientPro
       {/* [2] Workspace */}
       <div className="flex-1 flex overflow-hidden">
          
-         {/* (A) Left Panel: Asset Library */}
+         {/* (A) Left Panel: Insight Library */}
          <aside className="w-[320px] border-r border-[#2C2C2E] bg-[#0A0A0A] flex flex-col shrink-0">
             <div className="px-5 py-4 border-b border-[#2C2C2E] bg-[#0F0F0F]">
                <h2 className="text-sm font-bold text-white flex items-center gap-2">
                   <LayoutTemplate className="w-4 h-4 text-blue-500" />
-                  나만의 무기고
+                  Insight Library
                </h2>
             </div>
-            <div className="flex-1 p-6 flex flex-col items-center justify-center text-zinc-500 text-sm">
-               <p>AI 분석 결과가 이곳에 표시됩니다.</p>
-               {/* 여기에 추후 map으로 자산 리스트 렌더링 */}
+            <div className="flex-1 p-6 space-y-4 overflow-y-auto">
+               <div className="bg-[#161618] border border-[#333] rounded-xl p-4">
+                  <span className="text-[10px] font-bold text-blue-400 bg-blue-500/10 px-2 py-0.5 rounded border border-blue-500/20 mb-2 inline-block">THEME</span>
+                  <p className="text-sm text-zinc-300 font-medium">
+                     {currentStepData?.theme || "분석 테마가 없습니다."}
+                  </p>
+               </div>
+               <div className="bg-[#161618] border border-[#333] rounded-xl p-4">
+                  <span className="text-[10px] font-bold text-purple-400 bg-purple-500/10 px-2 py-0.5 rounded border border-purple-500/20 mb-2 inline-block">TARGET</span>
+                  <p className="text-sm text-zinc-300 font-medium capitalize">
+                     {currentStepData?.target_type?.replace('_', ' ') || "타겟 정보 없음"}
+                  </p>
+               </div>
             </div>
          </aside>
 
@@ -162,18 +240,32 @@ export default function InsightMixerClient({ prospectId }: InsightMixerClientPro
             
             {/* Step Navigator */}
             <div className="h-16 border-b border-[#2C2C2E] flex items-center px-6 gap-2 bg-[#0A0A0A]">
-               {[1, 2, 3, 4, 5].map((step) => (
-                  <button
-                     key={step}
-                     onClick={() => setActiveStep(step)}
-                     className={`flex items-center gap-2 px-4 py-2 rounded-full text-sm font-medium transition-all border ${
-                        activeStep === step ? 'bg-white text-black border-white' : 'bg-[#161618] text-zinc-500 border-[#333]'
-                     }`}
-                  >
-                     <span className={`w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-bold ${activeStep === step ? 'bg-black text-white' : 'bg-[#2C2C2E] text-zinc-400'}`}>{step}</span>
-                     <span>Step {step}</span>
-                  </button>
-               ))}
+               {[1, 2, 3, 4, 5].map((step) => {
+                  // 해당 스텝의 데이터가 존재하는지 확인
+                  const hasData = allStepsData.some(d => d.step_number === step);
+                  
+                  return (
+                    <button
+                        key={step}
+                        onClick={() => {
+                           setActiveStep(step);
+                           // 스텝 변경 시 상태 리셋
+                           setActiveSubjectCategory('metric_direct');
+                           setSelectedSubjectText('');
+                        }}
+                        className={`flex items-center gap-2 px-4 py-2 rounded-full text-sm font-medium transition-all border ${
+                          activeStep === step 
+                            ? 'bg-white text-black border-white' 
+                            : hasData 
+                              ? 'bg-[#161618] text-zinc-400 border-[#333] hover:border-zinc-500'
+                              : 'bg-[#0A0A0A] text-zinc-700 border-[#222] cursor-not-allowed'
+                        }`}
+                    >
+                        <span className={`w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-bold ${activeStep === step ? 'bg-black text-white' : 'bg-[#2C2C2E]'}`}>{step}</span>
+                        <span>Step {step}</span>
+                    </button>
+                  );
+               })}
             </div>
 
             {/* Content Area */}
@@ -189,24 +281,55 @@ export default function InsightMixerClient({ prospectId }: InsightMixerClientPro
                   </div>
 
                   {activeTab === 'email' && (
-                     <div className="space-y-8 animate-in fade-in slide-in-from-bottom-2 duration-500">
-                        {/* Subject Selection */}
+                     <div className="space-y-8 animate-in fade-in slide-in-from-bottom-2 duration-300">
+                        
+                        {/* 1. Subject Picker (New Design) */}
                         <div className="space-y-3">
-                           <label className="text-xs font-bold text-zinc-500 uppercase tracking-wider">추천 제목</label>
-                           <div className="grid grid-cols-1 gap-3">
-                              {currentSubjects.slice(0, 3).map((subject: string, idx: number) => (
-                                 <div 
-                                    key={idx}
-                                    onClick={() => setSelectedSubjectIndex(idx)}
-                                    className={`p-4 rounded-xl border cursor-pointer transition-all ${selectedSubjectIndex === idx ? 'bg-blue-500/10 border-blue-500/50' : 'bg-[#161618] border-[#333] hover:border-zinc-600'}`}
+                           <div className="flex items-center justify-between">
+                              <label className="text-xs font-bold text-zinc-500 uppercase tracking-wider">이메일 제목 선택</label>
+                              <span className="text-xs text-zinc-600">AI가 5가지 전략으로 제안합니다</span>
+                           </div>
+                           
+                           {/* Category Tabs */}
+                           <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-hide">
+                              {Object.keys(SUBJECT_CATEGORIES).map((key) => (
+                                 <button
+                                    key={key}
+                                    onClick={() => setActiveSubjectCategory(key)}
+                                    className={`px-3 py-1.5 rounded-lg text-xs font-medium border transition-colors whitespace-nowrap ${
+                                       activeSubjectCategory === key 
+                                       ? 'bg-blue-500/10 text-blue-400 border-blue-500/30' 
+                                       : 'bg-[#161618] text-zinc-500 border-[#333] hover:text-zinc-300'
+                                    }`}
                                  >
-                                    <p className={`text-sm ${selectedSubjectIndex === idx ? 'text-white font-medium' : 'text-zinc-400'}`}>{subject}</p>
-                                 </div>
+                                    {SUBJECT_CATEGORIES[key]}
+                                 </button>
                               ))}
+                           </div>
+                           {/* Selected Category's Options */}
+                           <div className="grid grid-cols-1 gap-3">
+                              {currentCategorySubjects.length > 0 ? (
+                                 currentCategorySubjects.map((subject, idx) => (
+                                    <div 
+                                       key={idx}
+                                       onClick={() => setSelectedSubjectText(subject)}
+                                       className={`p-4 rounded-xl border cursor-pointer transition-all flex items-center justify-between group ${
+                                          selectedSubjectText === subject 
+                                          ? 'bg-zinc-800 border-white/20' 
+                                          : 'bg-[#161618] border-[#333] hover:border-zinc-600'
+                                       }`}
+                                    >
+                                       <p className={`text-sm ${selectedSubjectText === subject ? 'text-white' : 'text-zinc-400'}`}>{subject}</p>
+                                       {selectedSubjectText === subject && <Check className="w-4 h-4 text-blue-500" />}
+                                    </div>
+                                 ))
+                              ) : (
+                                 <div className="p-4 rounded-xl border border-[#333] bg-[#161618] text-zinc-500 text-sm">이 카테고리의 제목이 없습니다.</div>
+                              )}
                            </div>
                         </div>
 
-                        {/* Body Editor */}
+                        {/* 2. Body Editor (Spacing Fix) */}
                         <div className="space-y-3">
                            <div className="flex items-center justify-between">
                               <label className="text-xs font-bold text-zinc-500 uppercase tracking-wider">이메일 본문</label>
@@ -217,11 +340,16 @@ export default function InsightMixerClient({ prospectId }: InsightMixerClientPro
                            </div>
                            
                            <div className="min-h-[300px] bg-[#161618] border border-[#333] rounded-2xl p-6">
+                              {/* 
+                                 [Spacing Fix] 
+                                 - whitespace-pre-wrap 제거 (줄바꿈 중복 방지)
+                                 - prose-p:my-2 로 문단 간격 강제 조정
+                              */}
                               <div 
-                                 className="text-base text-zinc-300 leading-relaxed font-light outline-none whitespace-pre-wrap"
+                                 className="text-base text-zinc-300 leading-relaxed font-light outline-none prose prose-invert max-w-none prose-p:my-1 prose-p:leading-7"
                                  contentEditable
                                  suppressContentEditableWarning
-                                 dangerouslySetInnerHTML={{ __html: bodyOptions[selectedBodyType as keyof typeof bodyOptions] }}
+                                 dangerouslySetInnerHTML={{ __html: currentBodyHtml }}
                               />
                            </div>
                         </div>
@@ -229,8 +357,9 @@ export default function InsightMixerClient({ prospectId }: InsightMixerClientPro
                   )}
 
                   {activeTab === 'report' && (
-                     <div className="min-h-[500px] bg-[#161618] border border-[#333] rounded-2xl p-8">
-                        <div className="prose prose-invert max-w-none" dangerouslySetInnerHTML={{ __html: reportHtml }} />
+                     <div className="min-h-[500px] bg-[#161618] border border-[#333] rounded-2xl p-8 animate-in fade-in slide-in-from-bottom-2 duration-300">
+                        {/* HTML 리포트 렌더링 (스타일 격리 필요시 Iframe 고려, 여기선 직접 렌더링) */}
+                        <div className="prose prose-invert max-w-none prose-p:text-zinc-400 prose-headings:text-white" dangerouslySetInnerHTML={{ __html: reportHtml }} />
                      </div>
                   )}
 
@@ -257,9 +386,13 @@ export default function InsightMixerClient({ prospectId }: InsightMixerClientPro
                               <p className="text-[10px] text-gray-500">방금 전</p>
                            </div>
                         </div>
-                        <div className="text-xs text-gray-800 leading-relaxed line-clamp-6">
-                           {/* 본문 미리보기 (HTML 태그 제거하고 텍스트만) */}
-                           {bodyOptions[selectedBodyType as keyof typeof bodyOptions].replace(/<[^>]*>?/gm, '')}
+                        <div className="text-xs text-gray-800 leading-relaxed">
+                           {/* 미리보기 내용 */}
+                           <p className="font-bold mb-2 text-sm">{selectedSubjectText || "제목을 선택하세요"}</p>
+                           {/* 미리보기 본문: 태그 제거 후 텍스트만 */}
+                           <p className="line-clamp-6 text-gray-600">
+                              {currentBodyHtml.replace(/<[^>]*>?/gm, '')}
+                           </p>
                         </div>
                      </div>
                   </div>
@@ -271,4 +404,5 @@ export default function InsightMixerClient({ prospectId }: InsightMixerClientPro
     </div>
   )
 }
+
 
