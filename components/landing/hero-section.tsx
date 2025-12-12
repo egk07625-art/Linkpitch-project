@@ -257,7 +257,7 @@ function CTAButton() {
               ease: 'easeInOut',
               repeatDelay: 1,
             }}
-            className="absolute inset-0 w-1/3 bg-gradient-to-r from-transparent via-white/30 to-transparent skew-x-12"
+            className="absolute inset-0 w-1/3 bg-gradient-to-r from-transparent via-white/60 to-transparent skew-x-12"
           />
 
           {/* Button Text */}
@@ -265,23 +265,6 @@ function CTAButton() {
             [ 무료로 사전 예약하고 1개월 혜택 받기 👉 ]
           </span>
         </motion.div>
-
-        {/* Pulsing Shadow */}
-        <motion.div
-          animate={{
-            opacity: [0.5, 1, 0.5],
-            scale: [0.95, 1.05, 0.95],
-          }}
-          transition={{
-            duration: 3,
-            repeat: Infinity,
-            ease: 'easeInOut',
-          }}
-          className="absolute inset-0 rounded-full bg-gradient-to-r from-[#2F80ED] to-[#00C6FF] blur-xl -z-10"
-          style={{
-            opacity: 0.6,
-          }}
-        />
 
         {/* Hover Glow */}
         <motion.div

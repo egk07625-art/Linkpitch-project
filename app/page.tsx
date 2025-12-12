@@ -30,8 +30,14 @@ export default function LandingPage() {
       {/* Solution Section - Bento Grid */}
       <SolutionBento />
 
+      {/* Visual Gap (Data Stream Animation) */}
+      <DataStreamGap />
+
       {/* Social Proof & Pricing */}
       <SocialProofPricing />
+
+      {/* Visual Gap (Data Stream Animation) */}
+      <DataStreamGap />
 
       {/* Pre-registration Form */}
       <PreRegisterForm />

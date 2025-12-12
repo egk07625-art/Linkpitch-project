@@ -103,6 +103,15 @@
   }
 }
 
+@keyframes shimmer {
+  0% {
+    background-position: -250% 0;
+  }
+  100% {
+    background-position: 250% 0;
+  }
+}
+
 :root {
   --radius: 0.625rem;
   --background: oklch(1 0 0);
@@ -306,6 +315,11 @@
   /* Bounce Slow Animation */
   .animate-bounce-slow {
     animation: bounce-slow 2s ease-in-out infinite;
+  }
+
+  /* Shimmer Animation */
+  .animate-shimmer {
+    animation: shimmer 3s linear infinite;
   }
 
   /* Apple-style Glass Panel */
