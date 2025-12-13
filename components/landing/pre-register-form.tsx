@@ -119,10 +119,10 @@ export function PreRegisterForm() {
       console.error('Form submission error:', error);
       // Google Apps Script는 CORS 문제로 인해 에러가 발생할 수 있지만,
       // 실제로는 데이터가 저장되었을 수 있으므로 사용자에게는 성공 메시지 표시
-      toast.success('사전 예약이 완료되었습니다! 곧 연락드리겠습니다.');
-      reset();
+    toast.success('사전 예약이 완료되었습니다! 곧 연락드리겠습니다.');
+    reset();
     } finally {
-      setIsSubmitting(false);
+    setIsSubmitting(false);
     }
   };
 
@@ -131,20 +131,20 @@ export function PreRegisterForm() {
       {/* Unified Header */}
       <div className="text-center mb-16 px-6">
           <motion.h2
-            initial={{ opacity: 0, y: 30 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            transition={{ duration: 0.6, ease: 'easeOut' }}
+          initial={{ opacity: 0, y: 30 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true }}
+          transition={{ duration: 0.6, ease: 'easeOut' }}
             className="text-4xl md:text-5xl font-bold text-white leading-tight mb-4"
           >
-            월 49,000원의 혜택, 지금 <span className="text-blue-500">0원</span>에 만나보세요
+            월 <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#FFEBB2] via-[#FFC107] to-[#B45309] font-bold">49,000원</span>의 혜택, 지금 <span className="text-blue-500">0원</span>에 만나보세요
           </motion.h2>
         <motion.p
           initial={{ opacity: 0, y: 30 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
           transition={{ duration: 0.6, delay: 0.1, ease: 'easeOut' }}
-          className="text-gray-400"
+          className="text-white/90 drop-shadow-[0_0_15px_rgba(34,211,238,0.4)]"
         >
           고민하는 순간 마감됩니다. <span className="text-white font-semibold">'1개월 무료권'</span>과{' '}
           <span className="text-white font-semibold">'평생 할인'</span>을 확정 지으세요.
@@ -159,14 +159,11 @@ export function PreRegisterForm() {
           whileInView={{ opacity: 1, x: 0 }}
           viewport={{ once: true }}
           transition={{ duration: 0.6, ease: 'easeOut' }}
-          className="relative flex flex-col justify-between p-8 rounded-3xl border border-white/10 overflow-hidden group h-full shadow-[0_0_40px_-10px_rgba(34,211,238,0.15)]"
+          className="relative flex flex-col justify-between p-8 rounded-3xl border border-white/10 overflow-hidden group h-full shadow-[0_0_40px_-10px_rgba(6,182,212,0.2)]"
           style={{
-            background: 'radial-gradient(ellipse at top, rgba(6,182,212,0.2) 0%, rgba(15,15,15,1) 40%, rgba(5,5,5,1) 100%)',
+            background: 'radial-gradient(ellipse at top, rgba(59,130,246,0.25) 0%, rgba(6,182,212,0.15) 20%, rgba(15,15,15,1) 40%, rgba(5,5,5,1) 100%)',
           }}
         >
-          {/* Background Atmosphere */}
-          {/* Top Light Source */}
-          <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full h-1/2 bg-cyan-500/10 blur-[100px] pointer-events-none" />
 
           {/* Giant Watermark Icon */}
           <div className="absolute -bottom-10 -right-10 text-white/[0.03] transform rotate-[-12deg] pointer-events-none scale-150">
@@ -364,22 +361,22 @@ export function PreRegisterForm() {
             <div>
               <label htmlFor="message" className="block text-sm font-medium text-white mb-2">
                 LinkPitch에게 바라는 점이 있으신가요?{' '}
-                <span className="text-white font-semibold">
-                  상위 1% 마케터
-                </span>
+                    <span className="text-white font-semibold">
+                      상위 1% 마케터
+                    </span>
                 가 되기 위해 필요한 기능을 알려주세요. <span className="text-gray-500">(선택)</span>
-              </label>
-              <textarea
+                  </label>
+                      <textarea
                 {...register('message')}
                 id="message"
-                placeholder="예: 네이버 스마트스토어 외에 쿠팡, 11번가도 지원해주세요"
-                rows={3}
+                        placeholder="예: 네이버 스마트스토어 외에 쿠팡, 11번가도 지원해주세요"
+                        rows={3}
                 className="w-full bg-[#1C1C1C] rounded-xl border-none text-white px-4 py-3 text-sm focus:ring-2 focus:ring-blue-500 outline-none placeholder:text-gray-600 resize-none"
-              />
+                      />
               {errors.message && (
                 <p className="mt-2 text-sm text-red-400">{errors.message.message}</p>
-              )}
-            </div>
+                  )}
+                </div>
 
           {/* Privacy Agreement */}
           <div className="pt-4 border-t border-white/10">
@@ -394,31 +391,33 @@ export function PreRegisterForm() {
                 <span className="text-white font-medium">개인정보 수집 및 이용에 동의합니다.</span>
                 <span className="text-gray-500"> (필수)</span>
               </label>
-            </div>
+              </div>
             {errors.privacyAgreement && (
               <p className="mt-2 text-sm text-red-400">{errors.privacyAgreement.message}</p>
             )}
-          </div>
+            </div>
 
-          {/* Submit Button */}
-          <button
-            type="submit"
-            disabled={isSubmitting}
-            className="w-full py-5 rounded-xl bg-gradient-to-r from-blue-600 to-cyan-500 text-white font-bold text-lg shadow-[0_0_20px_rgba(59,130,246,0.4)] hover:scale-[1.02] transition-transform disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100"
-          >
-            {isSubmitting ? (
-              <div className="flex items-center justify-center gap-2">
-                <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                <span>처리 중...</span>
-              </div>
-            ) : (
-              '[ 1개월 무료 이용권 지금 확보하기 ]'
-            )}
-          </button>
+            {/* Submit Button */}
+            <div className="flex justify-center mt-6">
+              <button
+                type="submit"
+                disabled={isSubmitting}
+                className="w-auto px-8 py-5 rounded-xl bg-gradient-to-r from-blue-600 to-cyan-500 text-white font-bold text-lg shadow-[0_0_20px_rgba(59,130,246,0.4)] hover:scale-[1.02] transition-transform disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100"
+              >
+                {isSubmitting ? (
+                  <div className="flex items-center justify-center gap-2">
+                    <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                    <span>처리 중...</span>
+                  </div>
+                ) : (
+                  '[ 1개월 무료 이용권 지금 확보하기 ]'
+                )}
+              </button>
+            </div>
 
           <p className="text-xs text-center text-gray-600 mt-2">
-            🔒 제출하신 정보는 출시 알림 목적으로만 안전하게 사용됩니다.
-          </p>
+              🔒 제출하신 정보는 출시 알림 목적으로만 안전하게 사용됩니다.
+            </p>
         </motion.form>
       </div>
     </section>

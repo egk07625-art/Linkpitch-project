@@ -112,6 +112,15 @@
   }
 }
 
+@keyframes shine {
+  0% {
+    background-position: -250% 0;
+  }
+  100% {
+    background-position: 250% 0;
+  }
+}
+
 :root {
   --radius: 0.625rem;
   --background: oklch(1 0 0);
@@ -320,6 +329,11 @@
   /* Shimmer Animation */
   .animate-shimmer {
     animation: shimmer 3s linear infinite;
+  }
+
+  /* Shine Animation */
+  .animate-shine {
+    animation: shine 3s linear infinite;
   }
 
   /* Apple-style Glass Panel */

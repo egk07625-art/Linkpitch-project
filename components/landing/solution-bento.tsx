@@ -36,10 +36,10 @@ export function SolutionBento() {
           <h2 className="text-4xl md:text-6xl font-black text-white leading-tight tracking-tight">
             이제{' '}
             {/* Super-Charged AI Text */}
-            <span className="relative inline-block text-transparent bg-clip-text bg-gradient-to-t from-blue-600 via-cyan-400 to-white drop-shadow-[0_0_25px_rgba(34,211,238,0.6)] text-[1.1em]">
+            <span className="relative inline-block text-transparent bg-clip-text bg-gradient-to-r from-cyan-300 to-blue-600 drop-shadow-[0_0_30px_rgba(6,182,212,0.6)] text-[1.1em] font-bold">
               'AI'
             </span>
-            라는 무기를 드십시오.
+            라는 무기를 드십시오
           </h2>
 
           {/* Sub-headline */}
@@ -47,7 +47,7 @@ export function SolutionBento() {
             낡은 <span className="text-red-400 font-bold">'템플릿 복붙'</span>은 이제 멈추고,
             <br className="hidden md:block" />
             데이터가 설계한{' '}
-            <span className="text-cyan-400 font-bold drop-shadow-[0_0_10px_rgba(34,211,238,0.4)]">
+            <span className="text-transparent bg-clip-text bg-gradient-to-r from-cyan-300 to-blue-600 drop-shadow-[0_0_30px_rgba(6,182,212,0.6)] font-bold">
               '이기는 제안서'
             </span>
             로 갈아탈 때입니다!
@@ -72,18 +72,23 @@ export function SolutionBento() {
             </div>
 
             {/* Content */}
-            <h3 className="text-xl md:text-2xl font-bold text-white mb-2 leading-tight group-hover:-translate-y-1 transition-transform duration-500">
-              URL 긁어오기가 아닙니다.
-              <br />
-              <span className="text-cyan-400">'이미지 정밀 스캔'</span>입니다.
+            <h3 className="text-xl md:text-2xl font-bold text-white mb-3 leading-tight">
+              대표님도 몰랐던<br />
+              <span className="text-cyan-400">'숨은 소구점'</span>을 찾아냅니다
             </h3>
-            <p className="text-sm md:text-base text-gray-400 leading-relaxed mb-4">
-              텍스트만 보는 게 아닙니다. 상세페이지 이미지를 통째로 스캔하여, 숨겨진 소구점까지{' '}
-              <span className="text-white font-semibold">10분</span> 안에 완벽하게 분석해냅니다.
+            <p className="text-sm md:text-base text-gray-400 leading-relaxed mb-6">
+              단순 요약이 아닙니다. 상세페이지 디자인과 배치 속에 숨겨진 <span className="text-white font-semibold">'설득의 의도'</span>를 역설계하여 제안서의 핵심 무기로 만듭니다.
             </p>
 
             {/* Visual: Scanning Beam */}
             <div className="relative h-24 w-full bg-black/40 rounded-lg border border-white/5 overflow-hidden">
+              {/* Abstract Content Blocks */}
+              <div className="absolute inset-0 p-3 space-y-2 opacity-30">
+                <div className="h-2 w-1/3 bg-gray-500 rounded"></div>
+                <div className="h-8 w-full bg-gray-600 rounded"></div>
+                <div className="h-2 w-1/2 bg-gray-500 rounded"></div>
+              </div>
+              {/* The Laser */}
               <div className="absolute top-0 left-0 w-full h-[2px] bg-cyan-400 shadow-[0_0_20px_cyan] animate-scan-down" />
             </div>
           </motion.div>
@@ -105,7 +110,7 @@ export function SolutionBento() {
 
             {/* Content */}
             <h3 className="text-xl md:text-2xl font-bold text-white mb-2 leading-tight group-hover:-translate-y-1 transition-transform duration-500">
-              고민 없는 <span className="text-blue-400">'초안'</span>, 3분 완성.
+              고민 없는 <span className="text-blue-400">'초안'</span>, 10분 안에 뽑기
             </h3>
             <p className="text-sm md:text-base text-gray-400 leading-relaxed mb-4">
               상세페이지의 <span className="text-white font-semibold">강점·약점·소구점</span>까지 AI가 찾아냅니다.{' '}
@@ -171,10 +176,10 @@ export function SolutionBento() {
             <h3 className="text-xl md:text-2xl font-bold text-white mb-2 leading-tight group-hover:-translate-y-1 transition-transform duration-500">
               AI의 논리에,
               <br />
-              <span className="text-purple-400">당신의 무기</span>를 더하세요.
+              <span className="text-purple-400">당신의 무기</span>를 더하세요
             </h3>
             <p className="text-sm md:text-base text-gray-400 leading-relaxed mb-4">
-              드래그 한 번으로 끝납니다. AI가 짠 제안서 흐름 속에 내 성공 사례(GIF)와 포트폴리오를 자유롭게 결합하세요.
+              드래그 한 번으로 끝납니다. AI가 짠 제안서 흐름 속에 내 레퍼런스와 인사이트를 자유롭게 결합하세요.
             </p>
 
             {/* Visual: Abstract Layer Icon */}
@@ -202,7 +207,7 @@ export function SolutionBento() {
             <h3 className="text-xl md:text-2xl font-bold text-white mb-2 leading-tight group-hover:-translate-y-1 transition-transform duration-500">
               읽는 순간 감지하는,
               <br />
-              <span className="text-orange-400">골든타임.</span>
+              <span className="text-orange-400">골든타임</span>
             </h3>
             <p className="text-sm md:text-base text-gray-400 leading-relaxed mb-4">
               고객이 제안서를 읽으면 즉시 <span className="text-orange-400 font-semibold">'Hot Lead'</span> 알림이 뜹니다. 감이 아닌 데이터로 타이밍을 잡으세요.
@@ -210,10 +215,10 @@ export function SolutionBento() {
 
             {/* Visual: Notification Toast */}
             <div className="relative">
-              <motion.div
+                  <motion.div
                 initial={{ opacity: 0, y: 20, scale: 0.9 }}
                 whileInView={{ opacity: 1, y: 0, scale: 1 }}
-                viewport={{ once: true }}
+                    viewport={{ once: true }}
                 transition={{ delay: 0.3, type: 'spring', stiffness: 200 }}
                 className="bg-gradient-to-r from-orange-500/20 to-red-500/20 border border-orange-500/40 rounded-xl p-4 flex items-start gap-3 shadow-[0_0_20px_rgba(249,115,22,0.3)] mb-4"
               >
@@ -221,14 +226,14 @@ export function SolutionBento() {
                 <div className="flex-1">
                    <div className="text-sm font-bold text-white mb-1">
                      Hot Lead 감지
-                   </div>
+                </div>
                    <div className="text-xs text-gray-300">
                      담당자가 리포트를 스크롤을 80%이상 리딩했으며 30초이상 머물렀습니다.
-                   </div>
-                </div>
-              </motion.div>
+              </div>
             </div>
           </motion.div>
+            </div>
+                </motion.div>
         </div>
       </div>
     </section>

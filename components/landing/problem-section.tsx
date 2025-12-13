@@ -46,24 +46,24 @@ export function ProblemSection() {
           {problems.map((problem, index) => {
             const Icon = problem.icon;
             return (
-              <motion.div
-                key={problem.id}
-                initial={{ opacity: 0, y: 30 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                transition={{ duration: 0.6, delay: index * 0.2, ease: 'easeOut' }}
+            <motion.div
+              key={problem.id}
+              initial={{ opacity: 0, y: 30 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.6, delay: index * 0.2, ease: 'easeOut' }}
                 className="group bg-[#0A0A0A] border border-white/10 rounded-2xl p-8 hover:border-red-500/30 transition-all duration-300 min-h-[280px] flex flex-col"
-              >
+            >
                 {/* Icon */}
-                <div className="mb-6">
+              <div className="mb-6">
                   <Icon className="w-8 h-8 text-red-500 drop-shadow-[0_0_10px_rgba(220,38,38,0.4)]" />
-                </div>
+              </div>
 
                 {/* Content */}
                 <div className="flex-1">
                   <h3 className="text-2xl font-bold text-white mb-4">
-                    {problem.title}
-                  </h3>
+                {problem.title}
+              </h3>
                   <p className="text-lg text-gray-400 leading-relaxed">
                     {problem.description}
                   </p>
@@ -77,7 +77,7 @@ export function ProblemSection() {
         <motion.div
           initial={{ opacity: 0, y: 30 }}
           whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true }}
+                viewport={{ once: true }}
           transition={{ duration: 0.6, delay: 0.4, ease: 'easeOut' }}
           className="mt-40 mb-20 text-center max-w-4xl mx-auto px-6"
         >
@@ -89,12 +89,12 @@ export function ProblemSection() {
             가 아닙니다.
             <br className="hidden md:block" />
             내 상품을 나보다 더 꿰뚫어 본{' '}
-            <span className="text-cyan-400 font-bold drop-shadow-[0_0_8px_rgba(34,211,238,0.4)]">
+            <span className="text-transparent bg-clip-text bg-gradient-to-r from-cyan-300 to-blue-600 drop-shadow-[0_0_30px_rgba(6,182,212,0.6)] font-bold">
               '정밀 진단 보고서'
             </span>
             입니다.
           </p>
-        </motion.div>
+            </motion.div>
       </div>
     </section>
   );

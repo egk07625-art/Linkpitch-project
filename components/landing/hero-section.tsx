@@ -7,10 +7,92 @@ import { useEffect, useState } from 'react';
 // Apple-style easing curve
 const springEase = 'easeOut' as const;
 
-// Counter Component for "300% 상승"
+// Scaled-Up Glass Timer Component
+function RedAlertTimer() {
+  const [timeLeft, setTimeLeft] = useState({
+    days: 0,
+    hours: 0,
+    minutes: 0,
+    seconds: 0,
+  });
+
+  useEffect(() => {
+    const targetDate = new Date('2025-12-31T23:59:59').getTime();
+
+    const updateTimer = () => {
+      const now = new Date().getTime();
+      const difference = targetDate - now;
+
+      if (difference > 0) {
+        const days = Math.floor(difference / (1000 * 60 * 60 * 24));
+        const hours = Math.floor((difference % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+        const minutes = Math.floor((difference % (1000 * 60 * 60)) / (1000 * 60));
+        const seconds = Math.floor((difference % (1000 * 60)) / 1000);
+
+        setTimeLeft({ days, hours, minutes, seconds });
+      } else {
+        setTimeLeft({ days: 0, hours: 0, minutes: 0, seconds: 0 });
+      }
+    };
+
+    updateTimer();
+    const interval = setInterval(updateTimer, 1000);
+
+    return () => clearInterval(interval);
+  }, []);
+
+  return (
+    <div className="flex flex-col items-center mb-10 mt-12">
+      <span className="text-xs font-bold text-red-400 tracking-[0.2em] uppercase mb-4 animate-pulse">
+        Limited Time Offer
+      </span>
+
+      <div className="flex items-center gap-4 px-10 py-5 rounded-2xl bg-white/[0.05] border border-white/10 backdrop-blur-xl shadow-[0_0_40px_rgba(0,0,0,0.6)]">
+        {/* Time Block: Days */}
+        <div className="flex flex-col items-center">
+          <span className="text-3xl md:text-4xl font-mono font-bold text-white tabular-nums">
+            {String(timeLeft.days).padStart(2, '0')}
+          </span>
+          <span className="text-[10px] font-medium text-gray-500 uppercase mt-1">Days</span>
+        </div>
+
+        <span className="text-2xl text-gray-600 pb-4">:</span>
+
+        {/* Time Block: Hours */}
+        <div className="flex flex-col items-center">
+          <span className="text-3xl md:text-4xl font-mono font-bold text-white tabular-nums">
+            {String(timeLeft.hours).padStart(2, '0')}
+          </span>
+          <span className="text-[10px] font-medium text-gray-500 uppercase mt-1">Hours</span>
+        </div>
+
+        <span className="text-2xl text-gray-600 pb-4">:</span>
+
+        {/* Time Block: Mins */}
+        <div className="flex flex-col items-center">
+          <span className="text-3xl md:text-4xl font-mono font-bold text-white tabular-nums">
+            {String(timeLeft.minutes).padStart(2, '0')}
+          </span>
+          <span className="text-[10px] font-medium text-gray-500 uppercase mt-1">Mins</span>
+        </div>
+
+        <span className="text-2xl text-gray-600 pb-4">:</span>
+
+        {/* Time Block: Secs (Red/Urgent Highlight) */}
+        <div className="flex flex-col items-center">
+          <span className="text-3xl md:text-4xl font-mono font-bold text-red-500 tabular-nums drop-shadow-[0_0_10px_rgba(239,68,68,0.6)]">
+            {String(timeLeft.seconds).padStart(2, '0')}
+          </span>
+          <span className="text-[10px] font-bold text-red-500/70 uppercase mt-1">Secs</span>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// Counter Component for "300% 상승" - Electric Cyan Gradient
 function CountUpCounter({ end, duration = 2.5 }: { end: number; duration?: number }) {
   const [count, setCount] = useState(0);
-  const [colorProgress, setColorProgress] = useState(0);
 
   useEffect(() => {
     const startTime = Date.now();
@@ -28,13 +110,11 @@ function CountUpCounter({ end, duration = 2.5 }: { end: number; duration?: numbe
 
       const currentValue = Math.floor(startValue + (endValue - startValue) * easedProgress);
       setCount(currentValue);
-      setColorProgress(easedProgress);
 
       if (progress < 1) {
         requestAnimationFrame(animate);
       } else {
         setCount(endValue);
-        setColorProgress(1);
       }
     };
 
@@ -45,36 +125,8 @@ function CountUpCounter({ end, duration = 2.5 }: { end: number; duration?: numbe
     return () => clearTimeout(timer);
   }, [end, duration]);
 
-  // Color interpolation: gray-500 (0) -> white (0.5) -> red-500 (1)
-  const getColor = () => {
-    if (colorProgress < 0.5) {
-      // gray-500 to white
-      const t = colorProgress * 2;
-      const gray = 107 + (255 - 107) * t; // #6B7280 to #FFFFFF
-      return `rgb(${gray}, ${gray}, ${gray})`;
-    } else {
-      // white to red-500 (#EF4444)
-      const t = (colorProgress - 0.5) * 2;
-      const r = 255; // Always 255 (red)
-      const g = 255 - (255 - 68) * t; // 255 to 68
-      const b = 255 - (255 - 68) * t; // 255 to 68
-      return `rgb(${r}, ${g}, ${b})`;
-    }
-  };
-
-  const textShadow = colorProgress >= 0.9 
-    ? '0 0 20px rgba(239, 68, 68, 0.6), 0 0 40px rgba(239, 68, 68, 0.3)'
-    : 'none';
-
   return (
-    <span
-      className="tabular-nums font-bold"
-      style={{
-        color: getColor(),
-        textShadow,
-        transition: 'color 0.1s ease-out, text-shadow 0.1s ease-out',
-      }}
-    >
+    <span className="text-transparent bg-clip-text bg-gradient-to-r from-cyan-300 to-blue-600 tabular-nums font-bold">
       {count}%
     </span>
   );
@@ -142,39 +194,14 @@ export function HeroSection() {
           initial={{ y: 40, opacity: 0 }}
           animate={{ y: 0, opacity: 1 }}
           transition={{ duration: 0.8, ease: springEase, delay: 0.4 }}
-          className="text-4xl md:text-6xl lg:text-7xl font-black tracking-tight leading-tight text-center mb-6 md:mb-8 px-4"
+          className="text-5xl md:text-7xl font-black tracking-tight leading-tight text-center mb-6 md:mb-8 px-4"
         >
-          {/* Line 1: Elevator Slide Transition */}
+          {/* Line 1: Simple Text */}
           <div className="flex items-center justify-center gap-3 md:gap-4 mb-2 md:mb-3 flex-wrap">
             <span className="text-white font-medium">커스텀 제안서 작성</span>
-            
-            {/* Container for the transition */}
-            <div className="relative h-[1.1em] overflow-hidden inline-flex flex-col justify-end">
-              <AnimatePresence mode="wait">
-                {showNew ? (
-                  <motion.span
-                    key="new"
-                    initial={{ y: '100%', opacity: 0 }}
-                    animate={{ y: '0%', opacity: 1 }}
-                    exit={{ y: '-100%', opacity: 0 }}
-                    transition={{ type: 'spring', stiffness: 120, damping: 20 }}
-                    className="text-red-500 font-bold"
-                  >
-                    20분
-                  </motion.span>
-                ) : (
-                  <motion.span
-                    key="old"
-                    initial={{ y: '0%', opacity: 1 }}
-                    exit={{ y: '-100%', opacity: 0 }}
-                    transition={{ duration: 0.5, ease: 'easeInOut' }}
-                    className="text-gray-500 font-medium"
-                  >
-                    5시간
-                  </motion.span>
-                )}
-              </AnimatePresence>
-            </div>
+            <span className="text-transparent bg-clip-text bg-gradient-to-r from-cyan-300 to-blue-600 tabular-nums font-bold">
+              20분
+            </span>
           </div>
 
           {/* Line 2: Harmonious Counter */}
@@ -197,7 +224,16 @@ export function HeroSection() {
           5시간 걸리던 설득의 과정, 이제 20분이면 충분합니다.
         </motion.p>
 
-        {/* CTA Button - The Star - Fourth to appear */}
+        {/* Scaled-Up Glass Timer - Fourth to appear */}
+        <motion.div
+          initial={{ y: 40, opacity: 0 }}
+          animate={{ y: 0, opacity: 1 }}
+          transition={{ duration: 0.8, ease: springEase, delay: 0.7 }}
+        >
+          <RedAlertTimer />
+        </motion.div>
+
+        {/* CTA Button - The Star - Fifth to appear */}
         <motion.div
           initial={{ y: 40, opacity: 0 }}
           animate={{ y: 0, opacity: 1 }}
@@ -214,7 +250,7 @@ export function HeroSection() {
           href="#pre-register"
           className="block w-full h-14 rounded-full bg-gradient-to-r from-[#2F80ED] to-[#00C6FF] text-white text-base font-bold flex items-center justify-center shadow-lg shadow-blue-600/40"
         >
-          [ 무료로 사전 예약하고 1개월 혜택 받기 👉 ]
+          [선착순 무료 사전 예약하고 1개월 혜택 받기]
         </Link>
       </div>
     </section>
@@ -262,7 +298,7 @@ function CTAButton() {
 
           {/* Button Text */}
           <span className="relative z-10 text-white text-base md:text-lg font-bold whitespace-nowrap">
-            [ 무료로 사전 예약하고 1개월 혜택 받기 👉 ]
+            [선착순 무료 사전 예약하고 1개월 혜택 받기]
           </span>
         </motion.div>
 

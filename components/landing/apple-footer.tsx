@@ -15,7 +15,7 @@ export function AppleFooter() {
         <div className="text-center mb-8">
           <h3 className="text-2xl font-bold text-white mb-2">LinkPitch</h3>
           <p className="text-[#A1A1A6] text-sm">
-            상품 분석으로 승부하는 차세대 세일즈 플랫폼
+            퍼포먼스마케터를 위한 콜드메일 AI 오토메이션
           </p>
         </div>
 
