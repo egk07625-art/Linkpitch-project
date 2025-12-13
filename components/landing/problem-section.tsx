@@ -22,7 +22,7 @@ const problems = [
 
 export function ProblemSection() {
   return (
-    <section className="bg-black py-24 px-6 md:px-20 relative overflow-hidden">
+    <section className="bg-black py-28 md:py-32 px-6 md:px-20 relative overflow-hidden">
       <div className="max-w-5xl mx-auto">
         {/* Header */}
         <motion.div
@@ -30,9 +30,9 @@ export function ProblemSection() {
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
           transition={{ duration: 0.6, ease: 'easeOut' }}
-          className="text-center mb-16"
+          className="text-center mb-20 md:mb-24"
         >
-          <h2 className="text-4xl md:text-5xl font-bold text-white leading-tight">
+          <h2 className="text-3xl sm:text-4xl md:text-5xl lg:text-7xl font-bold text-white leading-tight break-keep px-4">
             열심히 보낸 제안서,
             <br />
             <span className="text-transparent bg-clip-text bg-gradient-to-r from-red-500 to-red-400">
@@ -42,7 +42,7 @@ export function ProblemSection() {
         </motion.div>
 
         {/* Cards Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 md:gap-8">
           {problems.map((problem, index) => {
             const Icon = problem.icon;
             return (
@@ -52,19 +52,19 @@ export function ProblemSection() {
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
               transition={{ duration: 0.6, delay: index * 0.2, ease: 'easeOut' }}
-                className="group bg-[#0A0A0A] border border-white/10 rounded-2xl p-8 hover:border-red-500/30 transition-all duration-300 min-h-[280px] flex flex-col"
+                className="group bg-[#0A0A0A] border border-white/10 rounded-2xl p-8 md:p-10 hover:border-red-500/30 transition-all duration-300 min-h-[320px] md:min-h-[280px] flex flex-col"
             >
                 {/* Icon */}
-              <div className="mb-6">
-                  <Icon className="w-8 h-8 text-red-500 drop-shadow-[0_0_10px_rgba(220,38,38,0.4)]" />
+              <div className="mb-6 md:mb-8">
+                  <Icon className="w-10 h-10 md:w-12 md:h-12 text-red-500 drop-shadow-[0_0_10px_rgba(220,38,38,0.4)]" />
               </div>
 
                 {/* Content */}
                 <div className="flex-1">
-                  <h3 className="text-2xl font-bold text-white mb-4">
+                  <h3 className="text-xl sm:text-2xl md:text-3xl font-bold text-white mb-5 md:mb-6 leading-snug break-keep">
                 {problem.title}
               </h3>
-                  <p className="text-lg text-gray-400 leading-relaxed">
+                  <p className="text-sm sm:text-base md:text-xl text-gray-400 leading-relaxed break-keep">
                     {problem.description}
                   </p>
                 </div>
@@ -79,17 +79,27 @@ export function ProblemSection() {
           whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true }}
           transition={{ duration: 0.6, delay: 0.4, ease: 'easeOut' }}
-          className="mt-40 mb-20 text-center max-w-4xl mx-auto px-6"
+          className="mt-32 md:mt-40 mb-20 md:mb-24 flex flex-col items-center text-center max-w-4xl mx-auto px-4 md:px-6"
         >
-          <p className="text-xl md:text-2xl font-medium text-gray-300 leading-relaxed">
-            클라이언트가 기다리는 건 뻔한{' '}
-            <span className="text-white font-bold">
-              'ROAS 개선 광고 제안서'
+          {/* Sentence 1: The Problem */}
+          <p className="text-xl sm:text-2xl md:text-3xl font-medium text-gray-400 leading-normal break-keep mb-6 md:mb-8">
+            클라이언트는 뻔한{' '}
+            <br className="md:hidden" />
+            <span className="text-red-400 font-bold border-b border-red-400/30 pb-1">
+              'ROAS 개선 제안서'
             </span>
-            가 아닙니다.
-            <br className="hidden md:block" />
-            내 상품을 나보다 더 꿰뚫어 본{' '}
-            <span className="text-transparent bg-clip-text bg-gradient-to-r from-cyan-300 to-blue-600 drop-shadow-[0_0_30px_rgba(6,182,212,0.6)] font-bold">
+            를 읽지 않습니다.
+          </p>
+
+          {/* Divider */}
+          <div className="w-[1px] h-8 bg-gray-800 my-2"></div>
+
+          {/* Sentence 2: The Solution */}
+          <p className="text-xl sm:text-2xl md:text-3xl font-medium text-white leading-normal break-keep">
+            그들이 반응하는 건,{' '}
+            <br className="md:hidden" />
+            내 상품을 완벽히 해부한{' '}
+            <span className="text-cyan-400 font-bold drop-shadow-[0_0_15px_rgba(34,211,238,0.5)] whitespace-nowrap">
               '정밀 진단 보고서'
             </span>
             입니다.

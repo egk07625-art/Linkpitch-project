@@ -3,6 +3,7 @@
 import Link from 'next/link';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useEffect, useState } from 'react';
+import { ArrowUp } from 'lucide-react';
 
 // Apple-style easing curve
 const springEase = 'easeOut' as const;
@@ -42,48 +43,48 @@ function RedAlertTimer() {
   }, []);
 
   return (
-    <div className="flex flex-col items-center mb-10 mt-12">
-      <span className="text-xs font-bold text-red-400 tracking-[0.2em] uppercase mb-4 animate-pulse">
+    <div className="flex flex-col items-center mb-12 mt-12">
+      <span className="text-sm md:text-base font-bold text-red-400 tracking-[0.2em] uppercase mb-6 animate-pulse">
         Limited Time Offer
       </span>
 
-      <div className="flex items-center gap-4 px-10 py-5 rounded-2xl bg-white/[0.05] border border-white/10 backdrop-blur-xl shadow-[0_0_40px_rgba(0,0,0,0.6)]">
+      <div className="flex items-center gap-2 md:gap-4 px-4 md:px-10 py-4 md:py-5 rounded-2xl bg-white/[0.05] border border-white/10 backdrop-blur-xl shadow-[0_0_40px_rgba(0,0,0,0.6)]">
         {/* Time Block: Days */}
         <div className="flex flex-col items-center">
-          <span className="text-3xl md:text-4xl font-mono font-bold text-white tabular-nums">
+          <span className="text-2xl md:text-5xl font-mono font-bold text-white tabular-nums">
             {String(timeLeft.days).padStart(2, '0')}
           </span>
-          <span className="text-[10px] font-medium text-gray-500 uppercase mt-1">Days</span>
+          <span className="text-[10px] md:text-sm font-medium text-gray-500 uppercase mt-1 md:mt-2">Days</span>
         </div>
 
-        <span className="text-2xl text-gray-600 pb-4">:</span>
+        <span className="text-xl md:text-4xl text-gray-600 pb-4 md:pb-6">:</span>
 
         {/* Time Block: Hours */}
         <div className="flex flex-col items-center">
-          <span className="text-3xl md:text-4xl font-mono font-bold text-white tabular-nums">
+          <span className="text-2xl md:text-5xl font-mono font-bold text-white tabular-nums">
             {String(timeLeft.hours).padStart(2, '0')}
           </span>
-          <span className="text-[10px] font-medium text-gray-500 uppercase mt-1">Hours</span>
+          <span className="text-[10px] md:text-sm font-medium text-gray-500 uppercase mt-1 md:mt-2">Hours</span>
         </div>
 
-        <span className="text-2xl text-gray-600 pb-4">:</span>
+        <span className="text-xl md:text-4xl text-gray-600 pb-4 md:pb-6">:</span>
 
         {/* Time Block: Mins */}
         <div className="flex flex-col items-center">
-          <span className="text-3xl md:text-4xl font-mono font-bold text-white tabular-nums">
+          <span className="text-2xl md:text-5xl font-mono font-bold text-white tabular-nums">
             {String(timeLeft.minutes).padStart(2, '0')}
           </span>
-          <span className="text-[10px] font-medium text-gray-500 uppercase mt-1">Mins</span>
+          <span className="text-[10px] md:text-sm font-medium text-gray-500 uppercase mt-1 md:mt-2">Mins</span>
         </div>
 
-        <span className="text-2xl text-gray-600 pb-4">:</span>
+        <span className="text-xl md:text-4xl text-gray-600 pb-4 md:pb-6">:</span>
 
         {/* Time Block: Secs (Red/Urgent Highlight) */}
         <div className="flex flex-col items-center">
-          <span className="text-3xl md:text-4xl font-mono font-bold text-red-500 tabular-nums drop-shadow-[0_0_10px_rgba(239,68,68,0.6)]">
+          <span className="text-2xl md:text-5xl font-mono font-bold text-red-500 tabular-nums drop-shadow-[0_0_10px_rgba(239,68,68,0.6)]">
             {String(timeLeft.seconds).padStart(2, '0')}
           </span>
-          <span className="text-[10px] font-bold text-red-500/70 uppercase mt-1">Secs</span>
+          <span className="text-[10px] md:text-sm font-bold text-red-500/70 uppercase mt-1 md:mt-2">Secs</span>
         </div>
       </div>
     </div>
@@ -182,10 +183,10 @@ export function HeroSection() {
           initial={{ y: 40, opacity: 0 }}
           animate={{ y: 0, opacity: 1 }}
           transition={{ duration: 0.8, ease: springEase, delay: 0.2 }}
-          className="inline-flex mb-6 md:mb-8"
+          className="inline-flex mb-8 md:mb-10"
         >
-          <div className="rounded-full border border-blue-500/30 bg-blue-500/10 backdrop-blur-sm text-blue-400 px-5 py-2 text-xs md:text-sm font-semibold">
-            경쟁사와의 승부처를 '운영'에서 '분석'으로 이동하십시오
+          <div className="rounded-full border border-blue-500/30 bg-blue-500/10 backdrop-blur-sm text-blue-400 px-6 py-3 text-sm md:text-base font-semibold leading-relaxed break-keep">
+            이제 승부처는 '운영'이 아니라 '분석'입니다.
           </div>
         </motion.div>
 
@@ -194,10 +195,10 @@ export function HeroSection() {
           initial={{ y: 40, opacity: 0 }}
           animate={{ y: 0, opacity: 1 }}
           transition={{ duration: 0.8, ease: springEase, delay: 0.4 }}
-          className="text-5xl md:text-7xl font-black tracking-tight leading-tight text-center mb-6 md:mb-8 px-4"
+          className="text-3xl sm:text-4xl md:text-7xl lg:text-8xl font-black tracking-tight leading-tight text-center mb-8 md:mb-10 px-2 md:px-4 break-keep"
         >
           {/* Line 1: Simple Text */}
-          <div className="flex items-center justify-center gap-3 md:gap-4 mb-2 md:mb-3 flex-wrap">
+          <div className="flex items-center justify-center gap-3 md:gap-4 mb-3 md:mb-4 flex-wrap">
             <span className="text-white font-medium">커스텀 제안서 작성</span>
             <span className="text-transparent bg-clip-text bg-gradient-to-r from-cyan-300 to-blue-600 tabular-nums font-bold">
               20분
@@ -217,7 +218,7 @@ export function HeroSection() {
           initial={{ y: 40, opacity: 0 }}
           animate={{ y: 0, opacity: 1 }}
           transition={{ duration: 0.8, ease: springEase, delay: 0.6 }}
-          className="text-base md:text-lg lg:text-xl text-gray-400 max-w-3xl mx-auto mb-10 md:mb-12 leading-relaxed px-4"
+          className="text-sm sm:text-base md:text-xl lg:text-2xl text-gray-400 max-w-3xl mx-auto mb-12 md:mb-14 leading-relaxed px-4 md:px-6 break-keep"
         >
           AI 정밀 분석으로 소구점을 찾고, '개인 맞춤 이메일'로 전환합니다.
           <br className="hidden md:block" />
@@ -244,15 +245,15 @@ export function HeroSection() {
         </motion.div>
       </div>
 
-      {/* Mobile Sticky CTA - Only on mobile */}
-      <div className="md:hidden fixed bottom-0 left-0 right-0 z-40 p-4 bg-gradient-to-t from-black via-black/95 to-transparent">
-        <Link
-          href="#pre-register"
-          className="block w-full h-14 rounded-full bg-gradient-to-r from-[#2F80ED] to-[#00C6FF] text-white text-base font-bold flex items-center justify-center shadow-lg shadow-blue-600/40"
-        >
-          [선착순 무료 사전 예약하고 1개월 혜택 받기]
-        </Link>
-      </div>
+      {/* Mobile Scroll to Top Button - Only on mobile */}
+      <motion.button
+        onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
+        className="md:hidden fixed bottom-6 right-6 z-40 w-14 h-14 rounded-full bg-gradient-to-r from-[#2F80ED] to-[#00C6FF] text-white flex items-center justify-center shadow-lg shadow-blue-600/40 hover:scale-110 transition-transform"
+        whileHover={{ scale: 1.1 }}
+        whileTap={{ scale: 0.95 }}
+      >
+        <ArrowUp className="w-6 h-6" />
+      </motion.button>
     </section>
   );
 }
@@ -277,7 +278,7 @@ function CTAButton() {
           whileHover={{ scale: 1.05 }}
           whileTap={{ scale: 0.98 }}
           transition={{ duration: 0.2, ease: 'easeOut' }}
-          className="relative h-14 md:h-16 px-8 md:px-10 rounded-full bg-gradient-to-r from-[#2F80ED] to-[#00C6FF] flex items-center justify-center overflow-hidden cursor-pointer"
+          className="relative h-auto min-h-[60px] md:h-18 py-4 md:py-0 px-8 md:px-12 rounded-full bg-gradient-to-r from-[#2F80ED] to-[#00C6FF] flex items-center justify-center overflow-hidden cursor-pointer"
           style={{
             boxShadow: '0 0 20px rgba(47, 128, 237, 0.5)',
           }}
@@ -297,8 +298,8 @@ function CTAButton() {
           />
 
           {/* Button Text */}
-          <span className="relative z-10 text-white text-base md:text-lg font-bold whitespace-nowrap">
-            [선착순 무료 사전 예약하고 1개월 혜택 받기]
+          <span className="relative z-10 text-white text-base md:text-xl font-bold break-keep leading-snug text-center px-4">
+            [ 7일 무제한 이용권 신청 ]
           </span>
         </motion.div>
 

@@ -25,12 +25,11 @@ type FormData = z.infer<typeof formSchema>;
 
 const budgetOptions = [
   { value: '', label: '예산 범위를 선택해주세요' },
-  { value: 'under-30000000', label: '30,000,000이하/월' },
-  { value: '30000000+', label: '30,000,000이상/월' },
-  { value: '50000000+', label: '50,000,000이상/월' },
-  { value: '70000000+', label: '70,000,000이상/월' },
-  { value: '100000000+', label: '100,000,000이상/월' },
-  { value: '200000000+', label: '200,000,000이상/월' },
+  { value: 'under_30m', label: '3,000만원 미만' },
+  { value: '30m_50m', label: '3,000만원 ~ 5,000만원' },
+  { value: '50m_100m', label: '5,000만원 ~ 1억원' },
+  { value: '100m_200m', label: '1억원 ~ 2억원' },
+  { value: 'over_200m', label: '2억원 이상' },
 ];
 
 const roleOptions = [
@@ -127,39 +126,39 @@ export function PreRegisterForm() {
   };
 
   return (
-    <section id="pre-register" className="py-24 bg-black relative">
+    <section id="pre-register" className="py-16 md:py-24 bg-black relative px-4">
       {/* Unified Header */}
-      <div className="text-center mb-16 px-6">
+      <div className="text-center mb-10 md:mb-16">
           <motion.h2
           initial={{ opacity: 0, y: 30 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
           transition={{ duration: 0.6, ease: 'easeOut' }}
-            className="text-4xl md:text-5xl font-bold text-white leading-tight mb-4"
+            className="text-3xl sm:text-4xl md:text-5xl font-bold text-white leading-tight mb-4 break-keep"
           >
-            월 <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#FFEBB2] via-[#FFC107] to-[#B45309] font-bold">49,000원</span>의 혜택, 지금 <span className="text-blue-500">0원</span>에 만나보세요
+            월 <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#FFEBB2] via-[#FFC107] to-[#B45309] font-bold">49,000원</span>의 혜택,<br className="md:hidden" />
+            <span className="md:inline">지금 <span className="text-blue-500">0원</span>에 만나보세요</span>
           </motion.h2>
         <motion.p
           initial={{ opacity: 0, y: 30 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
           transition={{ duration: 0.6, delay: 0.1, ease: 'easeOut' }}
-          className="text-white/90 drop-shadow-[0_0_15px_rgba(34,211,238,0.4)]"
+          className="text-sm md:text-lg text-white/90 drop-shadow-[0_0_15px_rgba(34,211,238,0.4)] leading-relaxed break-keep"
         >
-          고민하는 순간 마감됩니다. <span className="text-white font-semibold">'1개월 무료권'</span>과{' '}
-          <span className="text-white font-semibold">'평생 할인'</span>을 확정 지으세요.
+          고민하는 순간 마감됩니다. 지금 사전예약하세요
         </motion.p>
       </div>
 
       {/* The Split Grid */}
-      <div className="max-w-6xl mx-auto px-6 grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-12 items-stretch">
+      <div className="max-w-6xl mx-auto grid grid-cols-1 lg:grid-cols-2 gap-8 items-start">
         {/* Left: Benefit Card - Holographic VIP Ticket */}
         <motion.div
           initial={{ opacity: 0, x: -30 }}
           whileInView={{ opacity: 1, x: 0 }}
           viewport={{ once: true }}
           transition={{ duration: 0.6, ease: 'easeOut' }}
-          className="relative flex flex-col justify-between p-8 rounded-3xl border border-white/10 overflow-hidden group h-full shadow-[0_0_40px_-10px_rgba(6,182,212,0.2)]"
+          className="relative flex flex-col justify-between p-5 md:p-8 rounded-3xl border border-white/10 overflow-hidden group shadow-[0_0_40px_-10px_rgba(6,182,212,0.2)]"
           style={{
             background: 'radial-gradient(ellipse at top, rgba(59,130,246,0.25) 0%, rgba(6,182,212,0.15) 20%, rgba(15,15,15,1) 40%, rgba(5,5,5,1) 100%)',
           }}
@@ -172,45 +171,66 @@ export function PreRegisterForm() {
 
           {/* Content: Top */}
           <div className="relative z-10">
-            <div className="inline-flex items-center px-3 py-1 rounded-full bg-blue-900/30 text-blue-300 text-xs font-bold mb-6 border border-blue-500/30">
+            <div className="inline-flex items-center px-3 py-1 rounded-full bg-blue-900/30 text-blue-300 text-[10px] md:text-xs font-bold mb-4 md:mb-8 border border-blue-500/30">
               Early Bird
             </div>
-            <div className="mb-8">
-              <p className="text-gray-500 line-through text-sm">정식 출시가 월 49,000원</p>
-              <p className="mt-1">
-                <span className="text-7xl font-black text-blue-500 drop-shadow-[0_0_15px_rgba(59,130,246,0.5)]">
+            <div className="mb-6 md:mb-10">
+              <p className="text-gray-500 line-through text-xs md:text-sm">정식 출시가 월 49,000원</p>
+              <p className="mt-2">
+                <span className="text-5xl md:text-6xl font-black text-blue-500 drop-shadow-[0_0_15px_rgba(59,130,246,0.5)]">
                   0원
                 </span>
-                <span className="text-2xl font-medium text-gray-400 ml-2">에 미리 확보</span>
+                <span className="text-lg md:text-2xl font-medium text-gray-400 ml-2">에 확보</span>
               </p>
             </div>
           </div>
 
           {/* Content: Middle - Illuminated Checks */}
-          <ul className="space-y-6 text-gray-200 flex-1 relative z-10">
-            <li className="flex items-center gap-3">
-              <div className="w-6 h-6 rounded-full bg-cyan-500/10 flex items-center justify-center shadow-[0_0_8px_rgba(6,182,212,0.5)]">
-                <CheckCircle2 className="text-cyan-400 w-4 h-4" />
+          <ul className="space-y-3 md:space-y-5 text-gray-300 mb-8 md:mb-10 flex-1 relative z-10">
+            {/* 1. Duration */}
+            <li className="flex items-center gap-3 md:gap-4">
+              <div className="flex-shrink-0 w-7 h-7 md:w-6 md:h-6 rounded-full bg-cyan-500/10 flex items-center justify-center shadow-[0_0_8px_rgba(6,182,212,0.5)] border border-cyan-500/30">
+                <Check className="text-cyan-400 w-4 h-4 md:w-4 md:h-4" />
               </div>
-              <span className="text-base md:text-lg">런칭 즉시 1개월 무제한 이용</span>
+              <span className="text-sm sm:text-base md:text-xl break-keep">
+                런칭 즉시 <span className="text-white font-bold">7일 무료 이용권</span>
+              </span>
             </li>
-            <li className="flex items-center gap-3">
-              <div className="w-6 h-6 rounded-full bg-cyan-500/10 flex items-center justify-center shadow-[0_0_8px_rgba(6,182,212,0.5)]">
-                <CheckCircle2 className="text-cyan-400 w-4 h-4" />
+
+            {/* 2. Unlimited Access (Cyan Highlight) */}
+            <li className="flex items-center gap-3 md:gap-4">
+              <div className="flex-shrink-0 w-7 h-7 md:w-6 md:h-6 rounded-full bg-cyan-500/10 flex items-center justify-center shadow-[0_0_8px_rgba(6,182,212,0.5)] border border-cyan-500/30">
+                <Check className="text-cyan-400 w-4 h-4 md:w-4 md:h-4" />
               </div>
-              <span className="text-base md:text-lg">평생 30% 구독 할인 혜택</span>
+              <span className="text-sm sm:text-base md:text-xl break-keep">
+                AI 분석 및 제안서 생성 <span className="text-cyan-400 font-bold">'무제한'</span> 제공
+              </span>
             </li>
-            <li className="flex items-center gap-3">
-              <div className="w-6 h-6 rounded-full bg-cyan-500/10 flex items-center justify-center shadow-[0_0_8px_rgba(6,182,212,0.5)]">
-                <CheckCircle2 className="text-cyan-400 w-4 h-4" />
+
+            {/* 3. Onboarding Support (White Highlight) */}
+            <li className="flex items-center gap-3 md:gap-4">
+              <div className="flex-shrink-0 w-7 h-7 md:w-6 md:h-6 rounded-full bg-cyan-500/10 flex items-center justify-center shadow-[0_0_8px_rgba(6,182,212,0.5)] border border-cyan-500/30">
+                <Check className="text-cyan-400 w-4 h-4 md:w-4 md:h-4" />
               </div>
-              <span className="text-base md:text-lg">Hot Lead 실시간 추적 기능</span>
+              <span className="text-sm sm:text-base md:text-xl break-keep">
+                초기 세팅 및 사용법 <span className="text-white font-bold">1:1 온보딩</span> 지원
+              </span>
             </li>
-            <li className="flex items-center gap-3">
-              <div className="w-6 h-6 rounded-full bg-cyan-500/10 flex items-center justify-center shadow-[0_0_8px_rgba(6,182,212,0.5)]">
-                <CheckCircle2 className="text-cyan-400 w-4 h-4" />
+
+            {/* 4. Tracking Feature */}
+            <li className="flex items-center gap-3 md:gap-4">
+              <div className="flex-shrink-0 w-7 h-7 md:w-6 md:h-6 rounded-full bg-cyan-500/10 flex items-center justify-center shadow-[0_0_8px_rgba(6,182,212,0.5)] border border-cyan-500/30">
+                <Check className="text-cyan-400 w-4 h-4 md:w-4 md:h-4" />
               </div>
-              <span className="text-base md:text-lg">베타 테스터 우선 초대</span>
+              <span className="text-sm sm:text-base md:text-xl break-keep">Hot Lead 실시간 추적 기능</span>
+            </li>
+
+            {/* 5. Beta Status */}
+            <li className="flex items-center gap-3 md:gap-4">
+              <div className="flex-shrink-0 w-7 h-7 md:w-6 md:h-6 rounded-full bg-cyan-500/10 flex items-center justify-center shadow-[0_0_8px_rgba(6,182,212,0.5)] border border-cyan-500/30">
+                <Check className="text-cyan-400 w-4 h-4 md:w-4 md:h-4" />
+              </div>
+              <span className="text-sm sm:text-base md:text-xl break-keep">베타 테스터 우선 초대</span>
             </li>
           </ul>
 
@@ -226,8 +246,8 @@ export function PreRegisterForm() {
                   key={i}
                   className="bg-white"
                   style={{
-                    width: `${Math.random() * 3 + 1}px`,
-                    height: `${Math.random() * 100 + 20}%`,
+                    width: `${((i * 7) % 3) + 1}px`,
+                    height: `${((i * 37) % 100) + 20}%`,
                   }}
                 />
               ))}
@@ -245,11 +265,11 @@ export function PreRegisterForm() {
           viewport={{ once: true }}
           transition={{ duration: 0.6, delay: 0.1, ease: 'easeOut' }}
           onSubmit={handleSubmit(onSubmit)}
-          className="flex flex-col gap-4"
+          className="flex flex-col gap-3 md:gap-4 bg-[#0F0F0F] p-4 md:p-8 rounded-3xl border border-white/10"
         >
             {/* Name */}
             <div>
-              <label htmlFor="name" className="block text-sm font-medium text-white mb-2">
+              <label htmlFor="name" className="block text-sm md:text-lg font-medium text-white mb-2 md:mb-3 break-keep">
                 이름 *
               </label>
               <input
@@ -257,16 +277,16 @@ export function PreRegisterForm() {
                 type="text"
                 id="name"
                 placeholder="홍길동"
-                className="w-full bg-[#1C1C1C] h-12 rounded-xl border-none text-white px-4 text-sm focus:ring-2 focus:ring-blue-500 outline-none placeholder:text-gray-600"
+                className="w-full bg-[#1C1C1C] h-12 rounded-xl border-none text-white px-4 md:px-5 text-base focus:ring-2 focus:ring-blue-500 outline-none placeholder:text-gray-600"
               />
               {errors.name && (
-                <p className="mt-2 text-sm text-red-400">{errors.name.message}</p>
+                <p className="mt-1 md:mt-2 text-sm text-red-400">{errors.name.message}</p>
               )}
             </div>
 
             {/* Company */}
             <div>
-              <label htmlFor="company" className="block text-sm font-medium text-white mb-2">
+              <label htmlFor="company" className="block text-sm md:text-lg font-medium text-white mb-3 break-keep">
                 회사 <span className="text-gray-500">(선택)</span>
               </label>
               <input
@@ -274,22 +294,22 @@ export function PreRegisterForm() {
                 type="text"
                 id="company"
                 placeholder="ABC 마케팅"
-                className="w-full bg-[#1C1C1C] h-12 rounded-xl border-none text-white px-4 text-sm focus:ring-2 focus:ring-blue-500 outline-none placeholder:text-gray-600"
+                className="w-full bg-[#1C1C1C] h-12 rounded-xl border-none text-white px-4 md:px-5 text-base focus:ring-2 focus:ring-blue-500 outline-none placeholder:text-gray-600"
               />
               {errors.company && (
-                <p className="mt-2 text-sm text-red-400">{errors.company.message}</p>
+                <p className="mt-2 text-sm md:text-sm text-red-400">{errors.company.message}</p>
               )}
             </div>
 
             {/* Role */}
             <div>
-              <label htmlFor="role" className="block text-sm font-medium text-white mb-2">
+              <label htmlFor="role" className="block text-sm md:text-lg font-medium text-white mb-3 break-keep">
                 직무 *
               </label>
               <select
                 {...register('role')}
                 id="role"
-                className="w-full bg-[#1C1C1C] h-12 rounded-xl border-none text-white px-4 text-sm focus:ring-2 focus:ring-blue-500 outline-none cursor-pointer"
+                className="w-full bg-[#1C1C1C] h-12 rounded-xl border-none text-white px-4 md:px-5 text-base focus:ring-2 focus:ring-blue-500 outline-none cursor-pointer"
               >
                 {roleOptions.map((option) => (
                   <option key={option.value} value={option.value} className="bg-[#1C1C1C]">
@@ -298,13 +318,13 @@ export function PreRegisterForm() {
                 ))}
               </select>
               {errors.role && (
-                <p className="mt-2 text-sm text-red-400">{errors.role.message}</p>
+                <p className="mt-2 text-sm md:text-sm text-red-400">{errors.role.message}</p>
               )}
             </div>
 
             {/* Email - Highlighted */}
             <div>
-              <label htmlFor="email" className="block text-sm font-medium text-white mb-2">
+              <label htmlFor="email" className="block text-sm md:text-lg font-medium text-white mb-3 break-keep">
                 이메일 *
               </label>
               <input
@@ -312,16 +332,16 @@ export function PreRegisterForm() {
                 type="email"
                 id="email"
                 placeholder="your@email.com"
-                className="w-full bg-[#1C1C1C] h-12 rounded-xl border-none text-white px-4 text-sm focus:ring-2 focus:ring-blue-500 outline-none placeholder:text-gray-600"
+                className="w-full bg-[#1C1C1C] h-12 rounded-xl border-none text-white px-4 md:px-5 text-base focus:ring-2 focus:ring-blue-500 outline-none placeholder:text-gray-600"
               />
               {errors.email && (
-                <p className="mt-2 text-sm text-red-400">{errors.email.message}</p>
+                <p className="mt-2 text-sm md:text-sm text-red-400">{errors.email.message}</p>
               )}
             </div>
 
             {/* Phone */}
             <div>
-              <label htmlFor="phone" className="block text-sm font-medium text-white mb-2">
+              <label htmlFor="phone" className="block text-sm md:text-lg font-medium text-white mb-3 break-keep">
                 연락처 *
               </label>
               <input
@@ -329,22 +349,22 @@ export function PreRegisterForm() {
                 type="tel"
                 id="phone"
                 placeholder="010-1234-5678"
-                className="w-full bg-[#1C1C1C] h-12 rounded-xl border-none text-white px-4 text-sm focus:ring-2 focus:ring-blue-500 outline-none placeholder:text-gray-600"
+                className="w-full bg-[#1C1C1C] h-12 rounded-xl border-none text-white px-4 md:px-5 text-base focus:ring-2 focus:ring-blue-500 outline-none placeholder:text-gray-600"
               />
               {errors.phone && (
-                <p className="mt-2 text-sm text-red-400">{errors.phone.message}</p>
+                <p className="mt-1 md:mt-2 text-sm text-red-400">{errors.phone.message}</p>
               )}
             </div>
 
             {/* Budget */}
             <div>
-              <label htmlFor="budget" className="block text-sm font-medium text-white mb-2">
+              <label htmlFor="budget" className="block text-sm md:text-lg font-medium text-white mb-3 break-keep">
                 월 광고 집행 예산 *
               </label>
               <select
                 {...register('budget')}
                 id="budget"
-                className="w-full bg-[#1C1C1C] h-12 rounded-xl border-none text-white px-4 text-sm focus:ring-2 focus:ring-blue-500 outline-none cursor-pointer"
+                className="w-full bg-[#1C1C1C] h-12 rounded-xl border-none text-white px-4 md:px-5 text-base focus:ring-2 focus:ring-blue-500 outline-none cursor-pointer"
               >
                 {budgetOptions.map((option) => (
                   <option key={option.value} value={option.value} className="bg-[#1C1C1C]">
@@ -353,69 +373,66 @@ export function PreRegisterForm() {
                 ))}
               </select>
               {errors.budget && (
-                <p className="mt-2 text-sm text-red-400">{errors.budget.message}</p>
+                <p className="mt-2 text-sm md:text-sm text-red-400">{errors.budget.message}</p>
               )}
             </div>
 
             {/* Message */}
-            <div>
-              <label htmlFor="message" className="block text-sm font-medium text-white mb-2">
-                LinkPitch에게 바라는 점이 있으신가요?{' '}
-                    <span className="text-white font-semibold">
-                      상위 1% 마케터
-                    </span>
-                가 되기 위해 필요한 기능을 알려주세요. <span className="text-gray-500">(선택)</span>
-                  </label>
-                      <textarea
+            <div className="flex flex-col gap-2">
+              <label htmlFor="message" className="block text-sm md:text-lg font-medium text-white mb-2 md:mb-3 break-keep">
+                여러분의 '불편함'이 LinkPitch의 '기능'이 됩니다. <span className="text-gray-500">(선택)</span>
+              </label>
+
+              <textarea
                 {...register('message')}
                 id="message"
-                        placeholder="예: 네이버 스마트스토어 외에 쿠팡, 11번가도 지원해주세요"
-                        rows={3}
-                className="w-full bg-[#1C1C1C] rounded-xl border-none text-white px-4 py-3 text-sm focus:ring-2 focus:ring-blue-500 outline-none placeholder:text-gray-600 resize-none"
-                      />
+                placeholder="원하는 추가 기능이나 바라는 점을 자유롭게 적어주세요"
+                rows={3}
+                className="w-full bg-[#1C1C1C] rounded-xl border-none text-white px-4 md:px-5 py-3 md:py-4 text-base focus:ring-2 focus:ring-blue-500 outline-none placeholder:text-gray-600 resize-none"
+              />
               {errors.message && (
-                <p className="mt-2 text-sm text-red-400">{errors.message.message}</p>
-                  )}
-                </div>
+                <p className="mt-1 md:mt-2 text-sm text-red-400">{errors.message.message}</p>
+              )}
+            </div>
 
           {/* Privacy Agreement */}
           <div className="pt-4 border-t border-white/10">
-            <div className="flex items-start gap-3">
+            <div className="flex items-start gap-4">
               <input
                 {...register('privacyAgreement')}
                 type="checkbox"
                 id="privacyAgreement"
-                className="mt-0.5 w-5 h-5 rounded border-gray-600 bg-[#1C1C1C] text-blue-500 focus:ring-2 focus:ring-blue-500 cursor-pointer"
+                className="mt-1 w-6 h-6 md:w-5 md:h-5 rounded border-gray-600 bg-[#1C1C1C] text-blue-500 focus:ring-2 focus:ring-blue-500 cursor-pointer flex-shrink-0"
               />
-              <label htmlFor="privacyAgreement" className="text-sm text-[#A1A1A6] cursor-pointer leading-relaxed">
+              <label htmlFor="privacyAgreement" className="text-base md:text-sm text-[#A1A1A6] cursor-pointer leading-relaxed">
                 <span className="text-white font-medium">개인정보 수집 및 이용에 동의합니다.</span>
                 <span className="text-gray-500"> (필수)</span>
               </label>
               </div>
             {errors.privacyAgreement && (
-              <p className="mt-2 text-sm text-red-400">{errors.privacyAgreement.message}</p>
+              <p className="mt-3 text-base md:text-sm text-red-400">{errors.privacyAgreement.message}</p>
             )}
             </div>
 
             {/* Submit Button */}
-            <div className="flex justify-center mt-6">
+            <div className="flex justify-center mt-8 md:mt-6">
               <button
                 type="submit"
                 disabled={isSubmitting}
-                className="w-auto px-8 py-5 rounded-xl bg-gradient-to-r from-blue-600 to-cyan-500 text-white font-bold text-lg shadow-[0_0_20px_rgba(59,130,246,0.4)] hover:scale-[1.02] transition-transform disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100"
+                className="w-full h-auto min-h-[60px] py-4 px-6 rounded-xl bg-gradient-to-r from-blue-600 to-cyan-500 text-white font-bold text-base md:text-xl shadow-[0_0_20px_rgba(59,130,246,0.4)] hover:scale-[1.02] transition-transform disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100 break-keep leading-snug"
               >
                 {isSubmitting ? (
-                  <div className="flex items-center justify-center gap-2">
-                    <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                  <div className="flex items-center justify-center gap-3">
+                    <div className="w-6 h-6 md:w-5 md:h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
                     <span>처리 중...</span>
                   </div>
                 ) : (
-                  '[ 1개월 무료 이용권 지금 확보하기 ]'
+                  '[ 무제한 이용권 지금 확보하기 ]'
                 )}
               </button>
             </div>
 
-          <p className="text-xs text-center text-gray-600 mt-2">
+          <p className="text-sm md:text-xs text-center text-gray-600 mt-4 md:mt-2">
               🔒 제출하신 정보는 출시 알림 목적으로만 안전하게 사용됩니다.
             </p>
         </motion.form>
