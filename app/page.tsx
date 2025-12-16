@@ -1,7 +1,6 @@
 'use client';
 
 import { useEffect } from 'react';
-import { useSearchParams } from 'next/navigation';
 import { AppleNavbar } from '@/components/landing/apple-navbar';
 import { HeroSection } from '@/components/landing/hero-section';
 import { ProblemSection } from '@/components/landing/problem-section';
@@ -12,15 +11,13 @@ import { PreRegisterForm } from '@/components/landing/pre-register-form';
 import { AppleFooter } from '@/components/landing/apple-footer';
 
 export default function LandingPage() {
-  const searchParams = useSearchParams();
-
-  // UTM 파라미터 추적
+  // UTM 파라미터 추적 (window.location.search 직접 사용하여 SSR 문제 회피)
   useEffect(() => {
-    // GA4가 로드될 때까지 대기 (최대 3초)
+    // 클라이언트 사이드에서만 실행
+    if (typeof window === 'undefined') return;
+
+    // GA4가 로드될 때까지 대기
     const checkGtag = () => {
-      if (typeof window === 'undefined') return;
-      
-      // window.gtag 타입 선언
       const gtag = (window as any).gtag;
       if (!gtag) {
         // GA4가 아직 로드되지 않았으면 재시도
@@ -28,11 +25,13 @@ export default function LandingPage() {
         return;
       }
 
-      const utmSource = searchParams.get('utm_source');
-      const utmMedium = searchParams.get('utm_medium');
-      const utmCampaign = searchParams.get('utm_campaign');
-      const utmTerm = searchParams.get('utm_term');
-      const utmContent = searchParams.get('utm_content');
+      // URL 파라미터에서 UTM 추출
+      const urlParams = new URLSearchParams(window.location.search);
+      const utmSource = urlParams.get('utm_source');
+      const utmMedium = urlParams.get('utm_medium');
+      const utmCampaign = urlParams.get('utm_campaign');
+      const utmTerm = urlParams.get('utm_term');
+      const utmContent = urlParams.get('utm_content');
 
       // UTM 파라미터가 있으면 GA4 이벤트로 전송
       if (utmSource || utmMedium || utmCampaign) {
@@ -61,7 +60,7 @@ export default function LandingPage() {
 
     // 초기 체크
     checkGtag();
-  }, [searchParams]);
+  }, []);
   return (
     <div className="min-h-screen bg-[#050505] text-white font-sans antialiased overflow-x-hidden">
       {/* Navigation */}
