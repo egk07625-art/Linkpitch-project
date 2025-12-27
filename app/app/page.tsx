@@ -8,8 +8,10 @@ import {
   getCRMPipelineStats,
   getRecentActivity,
 } from "@/actions/dashboard";
-import { getProspectsCampaignStats } from "@/actions/prospects";
-import { getProspects } from "@/app/actions/prospects";
+import {
+  getProspectsCampaignStats,
+  getProspects,
+} from "@/actions/prospects";
 import { DashboardTemperature } from "@/components/dashboard/dashboard-temperature";
 
 // Dynamic rendering 설정 (auth()가 headers()를 사용하므로)
@@ -26,7 +28,7 @@ export default async function DashboardPage() {
     ]);
 
   const kpis = kpiResult.data;
-  const prospects = prospectsResult || [];
+  const prospects = prospectsResult?.data || [];
   const pipelineStats = pipelineResult.data;
   const activities = activityResult.data;
 

@@ -4,13 +4,16 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Tech Stack
 
-- **Next.js 15.5.6** with React 19 and App Router
+- **Next.js 16.0.7** with React 19 and App Router
 - **Authentication**: Clerk (with Korean localization)
 - **Database**: Supabase (PostgreSQL)
 - **Styling**: Tailwind CSS v4 (uses `globals.css`, no config file)
 - **UI Components**: shadcn/ui (based on Radix UI)
 - **Icons**: lucide-react
 - **Forms**: react-hook-form + Zod
+- **Animations**: Framer Motion
+- **State Management**: Zustand (for client-side state)
+- **Analytics**: Google Analytics 4 (GA4) - Landing page only
 - **Package Manager**: pnpm
 - **Language**: TypeScript (strict typing required)
 
@@ -75,23 +78,43 @@ bash scripts/check-environment.sh
 프로젝트 파일은 `app` 외부에 저장:
 
 - `app/`: 라우팅 전용 (page.tsx, layout.tsx, route.ts 등만)
+  - `app/page.tsx`: 랜딩 페이지 (GA4 추적 포함)
+  - `app/app/`: 대시보드 및 앱 라우트 (`/app/*`)
 - `components/`: 재사용 가능한 컴포넌트
   - `components/ui/`: shadcn 컴포넌트 (자동 생성, 수정 금지)
   - `components/providers/`: React Context 프로바이더들
+  - `components/landing/`: 랜딩 페이지 전용 컴포넌트
+    - `apple-navbar.tsx`: 상단 네비게이션
+    - `hero-section.tsx`: 히어로 섹션
+    - `problem-section.tsx`: 문제 정의 섹션
+    - `solution-bento.tsx`: 솔루션 벤토 그리드
+    - `social-proof-pricing.tsx`: 가격 및 소셜 프루프
+    - `pre-register-form.tsx`: 사전 등록 폼
+    - `apple-footer.tsx`: 푸터
+    - `data-stream-gap.tsx`: 시각적 간격 애니메이션
+  - `components/dashboard/`: 대시보드 컴포넌트
+  - `components/report/`: 리포트 뷰어 컴포넌트
+- `actions/`: Server Actions (API 대신 우선 사용)
+  - `dashboard.ts`: 대시보드 데이터 조회
+  - `prospects.ts`: 프로스펙트 관리
+  - `track-report-view.ts`: 리포트 조회 추적
+  - `generated-emails.ts`: 생성된 이메일 관리
+  - `user-assets.ts`: 사용자 자산 관리
+  - `workspace.ts`: 워크스페이스 관리
 - `lib/`: 유틸리티 함수 및 클라이언트 설정
   - `lib/supabase/`: Supabase 클라이언트들 (환경별로 분리)
   - `lib/utils.ts`: 공통 유틸리티 (cn 함수 등)
 - `hooks/`: 커스텀 React Hook들
+  - `use-sync-user.ts`: Clerk → Supabase 사용자 동기화
+  - `use-report-tracking.ts`: 리포트 조회 추적 훅
+- `types/`: TypeScript 타입 정의
+  - `dashboard.ts`, `prospect.ts`, `sequence.ts`, `step.ts` 등
+- `store/`: 전역 상태 관리 (Zustand)
+  - `mixer-store.ts`: 인사이트 믹서 상태
 - `supabase/`: 데이터베이스 마이그레이션 및 설정
   - `supabase/migrations/`: SQL 마이그레이션 파일들
   - `supabase/config.toml`: Supabase 프로젝트 설정
-
-**예정된 디렉토리** (아직 없지만 필요 시 생성):
-
-- `actions/`: Server Actions (API 대신 우선 사용)
-- `types/`: TypeScript 타입 정의
-- `constants/`: 상수 값들
-- `states/`: 전역 상태 (jotai 사용, 최소화)
+- `utils/`: 추가 유틸리티 함수들
 
 ### Naming Conventions
 
@@ -208,7 +231,7 @@ OPENAI_API_KEY=
 - enum 대신 const 객체 사용
 - `satisfies` 연산자로 타입 검증
 
-### React 19 & Next.js 15 Patterns
+### React 19 & Next.js 16 Patterns
 
 ```typescript
 // Async Request APIs (항상 await 사용)
@@ -218,13 +241,61 @@ const params = await props.params;
 const searchParams = await props.searchParams;
 
 // Server Component 우선
-// 'use client'는 필요한 경우에만
+// 'use client'는 필요한 경우에만 (애니메이션, 인터랙션 등)
+
+// useSearchParams 사용 시 주의
+// Next.js 16에서는 Suspense boundary 필요하거나 window.location.search 직접 사용
 ```
+
+## Landing Page
+
+### 구조
+
+랜딩 페이지(`app/page.tsx`)는 Apple-inspired 디자인 시스템을 사용합니다:
+
+- **디자인**: 다크 테마 (`bg-[#050505]`), Glassmorphism 효과
+- **애니메이션**: Framer Motion을 사용한 스크롤 기반 애니메이션
+- **컴포넌트**: `components/landing/` 디렉토리에 모듈화
+- **GA4 추적**: 랜딩 페이지에만 적용 (UTM 파라미터 추적 포함)
+
+### GA4 & UTM Tracking
+
+- **위치**: `app/page.tsx`에만 GA4 스크립트 포함
+- **추적 범위**: 랜딩 페이지(`/`)에만 적용, 다른 페이지(`/app/*` 등)에는 미적용
+- **UTM 파라미터**: 자동 추출 및 GA4 이벤트로 전송
+  - `utm_source`, `utm_medium`, `utm_campaign`, `utm_term`, `utm_content`
+- **이벤트**: `page_view`, `utm_tracking` 커스텀 이벤트
+
+### 주요 섹션
+
+1. **HeroSection**: 메인 헤드라인, CTA 버튼, 타이머
+2. **ProblemSection**: 문제 정의 카드들
+3. **SolutionBento**: 솔루션 벤토 그리드 (3열 레이아웃)
+4. **SocialProofPricing**: 가격 카드 및 소셜 프루프
+5. **PreRegisterForm**: 사전 등록 폼 (react-hook-form + Zod)
+
+## Analytics & Tracking
+
+### Google Analytics 4 (GA4)
+
+- **적용 범위**: 랜딩 페이지(`/`)에만 적용
+- **구현 방식**: Next.js `Script` 컴포넌트 사용 (`strategy="afterInteractive"`)
+- **UTM 추적**: URL 파라미터에서 자동 추출 및 전송
+- **이벤트 추적**: 페이지뷰 및 커스텀 이벤트 (`utm_tracking`)
+
+### 리포트 조회 추적
+
+- **훅**: `hooks/use-report-tracking.ts`
+- **기능**: 스크롤 깊이, 체류 시간, 마일스톤 이벤트 추적
+- **Server Action**: `actions/track-report-view.ts`
+- **이벤트 타입**: `view`, `scroll_50`, `scroll_80`, `dwell_10s`, `dwell_30s`
 
 ## Key Files
 
 - `middleware.ts`: Clerk 미들웨어 (인증 라우트 보호)
-- `app/layout.tsx`: RootLayout with ClerkProvider + SyncUserProvider
+- `app/layout.tsx`: RootLayout with ClerkProvider + SyncUserProvider (GA4 없음)
+- `app/page.tsx`: 랜딩 페이지 (GA4 추적 포함)
+- `app/app/layout.tsx`: 앱 레이아웃 (대시보드 등)
 - `lib/supabase.ts`: 레거시 Supabase 클라이언트 (사용 지양, 새 파일들 사용)
 - `components.json`: shadcn/ui 설정
 

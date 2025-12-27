@@ -93,7 +93,7 @@ export async function analyzeUrl(options: AnalyzeUrlOptions | string) {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           url,
-          user_id: clerkId,
+          user_id: userUuid,
           clean_html,
           main_images,
           text_length,

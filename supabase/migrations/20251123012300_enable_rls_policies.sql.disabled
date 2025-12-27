@@ -1,20 +1,23 @@
 -- ================================================
 -- Enable Row Level Security (RLS) Policies
--- LinkPitch MVP - Security Layer
+-- LinkPitch MVP v8.6 - Security Layer
+-- 현재 비활성화 상태 (.disabled) - 프로덕션 배포 시 활성화
 -- ================================================
 
 -- ================================================
--- 1. Enable RLS on all tables
+-- 1. Enable RLS on all user data tables
 -- ================================================
 
 ALTER TABLE users ENABLE ROW LEVEL SECURITY;
 ALTER TABLE prospects ENABLE ROW LEVEL SECURITY;
 ALTER TABLE sequences ENABLE ROW LEVEL SECURITY;
 ALTER TABLE step ENABLE ROW LEVEL SECURITY;
-ALTER TABLE report_events ENABLE ROW LEVEL SECURITY;
-ALTER TABLE generation_logs ENABLE ROW LEVEL SECURITY;
+ALTER TABLE step_generations ENABLE ROW LEVEL SECURITY;
+ALTER TABLE generated_emails ENABLE ROW LEVEL SECURITY;
+ALTER TABLE user_assets ENABLE ROW LEVEL SECURITY;
+ALTER TABLE report_tracking_logs ENABLE ROW LEVEL SECURITY;
 
--- plans, user_plans, step_templates는 관리자 전용이므로 RLS 불필요
+-- plans, user_plans, step_templates, site_analysis_cache는 관리자 전용이므로 RLS 불필요
 
 -- ================================================
 -- 2. Helper Function: Get Current User's UUID
@@ -131,32 +134,104 @@ CREATE POLICY "step_delete_own"
   USING (user_id = public.current_user_id());
 
 -- ================================================
--- 7. Report Events Table Policies
+-- 7. Step Generations Table Policies
 -- ================================================
 
-CREATE POLICY "report_events_select_own"
-  ON report_events
+CREATE POLICY "step_generations_select_own"
+  ON step_generations
   FOR SELECT
   USING (user_id = public.current_user_id());
 
-CREATE POLICY "report_events_insert_own"
-  ON report_events
+CREATE POLICY "step_generations_insert_own"
+  ON step_generations
   FOR INSERT
   WITH CHECK (user_id = public.current_user_id());
 
+CREATE POLICY "step_generations_update_own"
+  ON step_generations
+  FOR UPDATE
+  USING (user_id = public.current_user_id())
+  WITH CHECK (user_id = public.current_user_id());
+
+CREATE POLICY "step_generations_delete_own"
+  ON step_generations
+  FOR DELETE
+  USING (user_id = public.current_user_id());
+
 -- ================================================
--- 8. Generation Logs Table Policies
+-- 8. Generated Emails Table Policies
 -- ================================================
 
-CREATE POLICY "generation_logs_select_own"
-  ON generation_logs
+CREATE POLICY "generated_emails_select_own"
+  ON generated_emails
   FOR SELECT
   USING (user_id = public.current_user_id());
 
-CREATE POLICY "generation_logs_insert_own"
-  ON generation_logs
+CREATE POLICY "generated_emails_insert_own"
+  ON generated_emails
   FOR INSERT
   WITH CHECK (user_id = public.current_user_id());
+
+CREATE POLICY "generated_emails_update_own"
+  ON generated_emails
+  FOR UPDATE
+  USING (user_id = public.current_user_id())
+  WITH CHECK (user_id = public.current_user_id());
+
+CREATE POLICY "generated_emails_delete_own"
+  ON generated_emails
+  FOR DELETE
+  USING (user_id = public.current_user_id());
+
+-- ================================================
+-- 9. User Assets Table Policies
+-- ================================================
+
+CREATE POLICY "user_assets_select_own"
+  ON user_assets
+  FOR SELECT
+  USING (user_id = public.current_user_id());
+
+CREATE POLICY "user_assets_insert_own"
+  ON user_assets
+  FOR INSERT
+  WITH CHECK (user_id = public.current_user_id());
+
+CREATE POLICY "user_assets_update_own"
+  ON user_assets
+  FOR UPDATE
+  USING (user_id = public.current_user_id())
+  WITH CHECK (user_id = public.current_user_id());
+
+CREATE POLICY "user_assets_delete_own"
+  ON user_assets
+  FOR DELETE
+  USING (user_id = public.current_user_id());
+
+-- ================================================
+-- 10. Report Tracking Logs Table Policies
+-- ================================================
+
+-- 리포트 추적 로그는 프로스펙트 소유자만 조회 가능
+CREATE POLICY "report_tracking_logs_select_own"
+  ON report_tracking_logs
+  FOR SELECT
+  USING (
+    prospect_id IN (
+      SELECT id FROM prospects WHERE user_id = public.current_user_id()
+    )
+  );
+
+-- 리포트 추적 로그는 누구나 삽입 가능 (익명 추적 허용)
+-- 단, prospect_id는 유효한 프로스펙트여야 함
+CREATE POLICY "report_tracking_logs_insert_own"
+  ON report_tracking_logs
+  FOR INSERT
+  WITH CHECK (
+    prospect_id IN (
+      SELECT id FROM prospects WHERE user_id = public.current_user_id()
+    )
+  );
 
 -- ================================================
 -- Completion Message
@@ -165,7 +240,8 @@ CREATE POLICY "generation_logs_insert_own"
 DO $$
 BEGIN
     RAISE NOTICE '✅ RLS Policies enabled successfully!';
-    RAISE NOTICE '🔒 Tables protected: users, prospects, sequences, step, report_events, generation_logs';
+    RAISE NOTICE '🔒 Tables protected: users, prospects, sequences, step, step_generations, generated_emails, user_assets, report_tracking_logs';
     RAISE NOTICE '👤 Policy type: User owns their own data (user_id based)';
     RAISE NOTICE '🔑 Authentication: Clerk JWT integration via public.current_user_id()';
+    RAISE NOTICE '⚠️  Note: This file is currently disabled. Remove .disabled extension to activate.';
 END $$;

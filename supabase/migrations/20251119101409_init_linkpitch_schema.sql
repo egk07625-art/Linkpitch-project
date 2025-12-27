@@ -1,12 +1,11 @@
 -- ================================================================
--- LinkPitch MVP v8.2 (Upsert Patch Version)
--- 변경사항: 
---   - [핵심] generated_emails 테이블에 UNIQUE 제약조건 추가 (Upsert용)
---   - contact_phone 컬럼 (prospects)
---   - credits 컬럼 (users)
+-- LinkPitch MVP v8.9 (Full Version - Tier Column Removed)
 -- ================================================================
 
--- [1] 초기화 (순서대로 삭제)
+-- [0] 시스템 타임존 설정
+SET timezone = 'Asia/Seoul';
+
+-- [1] 초기화
 DROP TABLE IF EXISTS generated_emails CASCADE;
 DROP TABLE IF EXISTS generated_proposals CASCADE;
 DROP TABLE IF EXISTS report_tracking_logs CASCADE;
@@ -21,7 +20,7 @@ DROP TABLE IF EXISTS user_plans CASCADE;
 DROP TABLE IF EXISTS plans CASCADE;
 DROP TABLE IF EXISTS users CASCADE;
 
--- [2] 유틸리티 함수
+-- [2] 유틸리티 함수: 업데이트 시간 자동 갱신
 CREATE OR REPLACE FUNCTION update_updated_at_column()
 RETURNS TRIGGER AS $$
 BEGIN
@@ -30,13 +29,14 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
--- [3] 기본 인프라
+-- [3] 기본 인프라 테이블
 CREATE TABLE users (
     id UUID DEFAULT gen_random_uuid() NOT NULL,
     clerk_id TEXT NOT NULL,
     email VARCHAR(255) NOT NULL,
     name VARCHAR(255),
     credits INT NOT NULL DEFAULT 3,
+    consultation_url TEXT,
     created_at TIMESTAMPTZ DEFAULT NOW() NOT NULL,
     updated_at TIMESTAMPTZ DEFAULT NOW() NOT NULL,
     CONSTRAINT pk_users PRIMARY KEY (id),
@@ -95,7 +95,7 @@ CREATE TABLE user_assets (
     CONSTRAINT fk_user_assets_user FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
 );
 
--- [4] 핵심 비즈니스 테이블
+-- [4] 핵심 비즈니스 테이블 (prospects에서 tier 삭제)
 CREATE TABLE prospects (
     id UUID DEFAULT gen_random_uuid() NOT NULL,
     user_id UUID NOT NULL,
@@ -104,7 +104,6 @@ CREATE TABLE prospects (
     contact_name VARCHAR(255),
     contact_email VARCHAR(255), 
     contact_phone VARCHAR(50), 
-
     url VARCHAR(500),
     memo TEXT,
     crm_status VARCHAR(50) DEFAULT 'cold' NOT NULL, 
@@ -113,7 +112,6 @@ CREATE TABLE prospects (
     visit_count INT DEFAULT 0,
     store_name VARCHAR(255),
     category VARCHAR(100),
-    tier VARCHAR(20),
     raw_ocr_text TEXT,
     last_activity_at TIMESTAMPTZ, 
     created_at TIMESTAMPTZ DEFAULT NOW() NOT NULL,
@@ -121,7 +119,6 @@ CREATE TABLE prospects (
     CONSTRAINT pk_prospects PRIMARY KEY (id),
     CONSTRAINT fk_prospects_user FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
     CONSTRAINT chk_prospects_crm_status CHECK (crm_status IN ('cold', 'warm', 'hot')),
-    CONSTRAINT chk_prospects_tier CHECK (tier IS NULL OR tier IN ('High', 'Middle', 'Low')),
     CONSTRAINT chk_prospects_scroll_depth CHECK (max_scroll_depth BETWEEN 0 AND 100),
     CONSTRAINT chk_prospects_duration CHECK (max_duration_seconds >= 0),
     CONSTRAINT chk_prospects_visits CHECK (visit_count >= 0)
@@ -183,16 +180,11 @@ CREATE TABLE step_generations (
     CONSTRAINT chk_generations_cost CHECK (cost_krw >= 0)
 );
 
--- 외래키 추가
-ALTER TABLE prospects ADD CONSTRAINT fk_prospects_cache 
-FOREIGN KEY (cache_id) REFERENCES site_analysis_cache(id) ON DELETE SET NULL;
+-- 외래키 연결
+ALTER TABLE prospects ADD CONSTRAINT fk_prospects_cache FOREIGN KEY (cache_id) REFERENCES site_analysis_cache(id) ON DELETE SET NULL;
+ALTER TABLE step ADD CONSTRAINT fk_step_selected_generation FOREIGN KEY (selected_generation_id) REFERENCES step_generations(id) ON DELETE SET NULL;
 
-ALTER TABLE step ADD CONSTRAINT fk_step_selected_generation 
-FOREIGN KEY (selected_generation_id) REFERENCES step_generations(id) ON DELETE SET NULL;
-
--- ================================================================
--- [5] generated_emails 테이블 (n8n Upsert 완벽 지원)
--- ================================================================
+-- [5] generated_emails 테이블 (tier 관련 컬럼 및 제약조건 삭제)
 CREATE TABLE generated_emails (
     id UUID DEFAULT gen_random_uuid() NOT NULL,
     prospect_id UUID,
@@ -200,44 +192,27 @@ CREATE TABLE generated_emails (
     step_number INT NOT NULL,
     theme VARCHAR(100) NOT NULL,
     target_type VARCHAR(50) NOT NULL,
-    
-    -- HTML 저장 전략
-    report_html TEXT NOT NULL DEFAULT '',
-    report_html_editable TEXT NOT NULL DEFAULT '',
-    
-    -- 메타 데이터
+    issuing_company VARCHAR(255) NOT NULL,
+    report_title TEXT NOT NULL DEFAULT '',
+    report_markdown TEXT NOT NULL DEFAULT '',
+    report_file_name TEXT NOT NULL DEFAULT '',
     store_name VARCHAR(255) NOT NULL DEFAULT '',
     category VARCHAR(100) NOT NULL DEFAULT '',
-    tier VARCHAR(20) DEFAULT 'Middle',
-    
-    -- 이메일 본문
-    email_body_solopreneur TEXT,
-    email_body_corporate TEXT,
-    
-    -- 이메일 제목
-    email_subjects JSONB NOT NULL DEFAULT '{}'::jsonb,
-    
-    -- 상태
+    diagnosis_type VARCHAR(50) DEFAULT 'Rescue',
+    consultation_url TEXT,
+    email_body TEXT,
+    email_subjects JSONB NOT NULL DEFAULT '[]'::jsonb,
     status VARCHAR(20) DEFAULT 'pending',
     sent_at TIMESTAMPTZ,
     opened_at TIMESTAMPTZ,
     clicked_at TIMESTAMPTZ,
-    
-    -- 타임스탬프
     created_at TIMESTAMPTZ DEFAULT NOW() NOT NULL,
     updated_at TIMESTAMPTZ DEFAULT NOW() NOT NULL,
-    
-    -- 제약조건
     CONSTRAINT pk_generated_emails PRIMARY KEY (id),
-    CONSTRAINT fk_generated_emails_prospect FOREIGN KEY (prospect_id) REFERENCES prospects(id) ON DELETE CASCADE,
     CONSTRAINT fk_generated_emails_user FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
-    
-    -- [핵심 수정] Upsert를 위한 유니크 제약조건 (이게 있어야 덮어쓰기가 가능합니다)
     CONSTRAINT uq_generated_emails_prospect_step UNIQUE (prospect_id, step_number),
-    
     CONSTRAINT chk_generated_emails_status CHECK (status IN ('pending', 'sent', 'opened', 'clicked', 'failed')),
-    CONSTRAINT chk_generated_emails_step_number CHECK (step_number > 0 AND step_number <= 10),
-    CONSTRAINT chk_generated_emails_tier CHECK (tier IS NULL OR tier IN ('High', 'Middle', 'Low'))
+    CONSTRAINT chk_generated_emails_step_number CHECK (step_number > 0 AND step_number <= 10)
 );
 
 -- [6] 템플릿 & 로그
@@ -267,90 +242,63 @@ CREATE TABLE report_tracking_logs (
     CONSTRAINT chk_tracking_duration CHECK (duration_seconds >= 0)
 );
 
--- ================================================================
 -- [7] 인덱스 최적화
--- ================================================================
-
--- JSONB GIN 인덱스
 CREATE INDEX idx_cache_vision_data_gin ON site_analysis_cache USING GIN (vision_data);
 CREATE INDEX idx_generations_report_data_gin ON step_generations USING GIN (report_data);
 CREATE INDEX idx_generations_report_materials_gin ON step_generations USING GIN (report_materials);
 CREATE INDEX idx_emails_subjects_gin ON generated_emails USING GIN (email_subjects);
-
--- Users
 CREATE INDEX idx_users_clerk_id ON users(clerk_id);
 CREATE INDEX idx_users_email ON users(email);
 CREATE INDEX idx_users_credits ON users(credits);
-
--- Plans
+CREATE INDEX idx_users_consultation_url ON users(consultation_url) WHERE consultation_url IS NOT NULL;
+CREATE INDEX idx_emails_consultation_url ON generated_emails(consultation_url) WHERE consultation_url IS NOT NULL;
+CREATE INDEX idx_emails_prospect_id ON generated_emails(prospect_id) WHERE prospect_id IS NOT NULL;
+CREATE INDEX idx_emails_issuing_company ON generated_emails(issuing_company);
+CREATE INDEX idx_emails_report_title ON generated_emails(report_title);
 CREATE INDEX idx_plans_active ON plans(is_active) WHERE is_active = true;
-
--- User Plans
 CREATE INDEX idx_user_plans_user_current ON user_plans(user_id, is_current) WHERE is_current = true;
 CREATE INDEX idx_user_plans_dates ON user_plans(started_at, ended_at);
 CREATE INDEX idx_user_plans_plan ON user_plans(plan_id);
-
--- Site Analysis Cache
 CREATE INDEX idx_cache_url_hash ON site_analysis_cache(url_hash);
 CREATE INDEX idx_cache_last_accessed ON site_analysis_cache(last_accessed_at DESC);
 CREATE INDEX idx_cache_access_count ON site_analysis_cache(access_count DESC);
 CREATE INDEX idx_cache_analyzed ON site_analysis_cache(analyzed_at DESC);
-
--- User Assets
 CREATE INDEX idx_assets_user_created ON user_assets(user_id, created_at DESC);
 CREATE INDEX idx_assets_user_type ON user_assets(user_id, file_type);
-
--- Prospects
 CREATE INDEX idx_prospects_user_created ON prospects(user_id, created_at DESC);
 CREATE INDEX idx_prospects_crm_status ON prospects(user_id, crm_status);
 CREATE INDEX idx_prospects_crm_dashboard ON prospects(user_id, crm_status, last_activity_at DESC NULLS LAST);
 CREATE INDEX idx_prospects_store_name ON prospects(store_name) WHERE store_name IS NOT NULL;
 CREATE INDEX idx_prospects_email ON prospects(contact_email) WHERE contact_email IS NOT NULL;
 CREATE INDEX idx_prospects_phone ON prospects(contact_phone) WHERE contact_phone IS NOT NULL;
-
-CREATE INDEX idx_prospects_tier ON prospects(tier) WHERE tier IS NOT NULL;
 CREATE INDEX idx_prospects_category ON prospects(category) WHERE category IS NOT NULL;
-
--- Sequences
 CREATE INDEX idx_sequences_user_created ON sequences(user_id, created_at DESC);
 CREATE INDEX idx_sequences_prospect ON sequences(prospect_id);
 CREATE INDEX idx_sequences_user_status ON sequences(user_id, status);
 CREATE INDEX idx_sequences_active ON sequences(user_id, prospect_id) WHERE status = 'active';
-
--- Step
 CREATE INDEX idx_step_sequence ON step(sequence_id, step_number);
 CREATE INDEX idx_step_status ON step(status, sent_at);
-
--- Step Generations
 CREATE INDEX idx_generations_step_version ON step_generations(step_id, version_number DESC);
 CREATE INDEX idx_generations_user_created ON step_generations(user_id, created_at DESC);
 CREATE INDEX idx_generations_step_status ON step_generations(step_id, status);
 CREATE INDEX idx_generations_cost ON step_generations(user_id, cost_krw) WHERE cost_krw > 0;
-
--- Generated Emails
 CREATE INDEX idx_emails_prospect ON generated_emails(prospect_id);
 CREATE INDEX idx_emails_user_created ON generated_emails(user_id, created_at DESC);
 CREATE INDEX idx_emails_user_status ON generated_emails(user_id, status);
 CREATE INDEX idx_emails_type ON generated_emails(target_type);
-
--- Report Tracking Logs
 CREATE INDEX idx_tracking_prospect ON report_tracking_logs(prospect_id, created_at DESC);
 CREATE INDEX idx_tracking_session ON report_tracking_logs(session_id);
 CREATE INDEX idx_tracking_engagement ON report_tracking_logs(prospect_id, scroll_depth, duration_seconds);
 CREATE INDEX idx_tracking_ip ON report_tracking_logs(ip_address) WHERE ip_address IS NOT NULL;
 
--- ================================================================
--- [8] 트리거
--- ================================================================
-
--- updated_at 자동 갱신
+-- [8] 트리거 설정
 CREATE TRIGGER trg_users_update BEFORE UPDATE ON users FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
 CREATE TRIGGER trg_prospects_update BEFORE UPDATE ON prospects FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
 CREATE TRIGGER trg_sequences_update BEFORE UPDATE ON sequences FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
 CREATE TRIGGER trg_step_update BEFORE UPDATE ON step FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
 CREATE TRIGGER trg_emails_update BEFORE UPDATE ON generated_emails FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
 
--- Prospect 상태 자동 업데이트
+-- Prospect 상태 자동 업데이트 로직
 CREATE OR REPLACE FUNCTION update_prospect_status()
 RETURNS TRIGGER AS $$
 DECLARE
@@ -396,7 +344,7 @@ $$ LANGUAGE plpgsql;
 
 CREATE TRIGGER trg_auto_update_status AFTER INSERT ON report_tracking_logs FOR EACH ROW EXECUTE FUNCTION update_prospect_status();
 
--- Cache 접근 기록
+-- Cache 접근 기록 로직
 CREATE OR REPLACE FUNCTION update_cache_access()
 RETURNS TRIGGER AS $$
 BEGIN
@@ -415,10 +363,7 @@ FOR EACH ROW
 WHEN (NEW.cache_id IS NOT NULL)
 EXECUTE FUNCTION update_cache_access();
 
--- ================================================================
--- [11] 유틸리티 함수: 캐시 정리 (Cron Job용)
--- ================================================================
-
+-- 유틸리티 함수: 캐시 정리
 CREATE OR REPLACE FUNCTION cleanup_expired_cache()
 RETURNS TABLE(deleted_count INT) AS $$
 DECLARE
@@ -432,11 +377,7 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
-COMMENT ON FUNCTION cleanup_expired_cache IS '30일 이상 미사용 캐시 삭제 (크론잡으로 실행)';
-
--- ================================================================
--- [12] 개발 단계 RLS 비활성화 (프로덕션 배포 전 활성화 필수)
--- ================================================================
+-- [12] RLS 비활성화 (운영용)
 ALTER TABLE users DISABLE ROW LEVEL SECURITY;
 ALTER TABLE user_plans DISABLE ROW LEVEL SECURITY;
 ALTER TABLE prospects DISABLE ROW LEVEL SECURITY;
@@ -450,37 +391,11 @@ ALTER TABLE report_tracking_logs DISABLE ROW LEVEL SECURITY;
 ALTER TABLE plans DISABLE ROW LEVEL SECURITY;
 ALTER TABLE step_templates DISABLE ROW LEVEL SECURITY;
 
--- 기존 RLS 정책 삭제 (있는 경우)
-DROP POLICY IF EXISTS "users_select_own" ON users;
-DROP POLICY IF EXISTS "users_insert_own" ON users;
-DROP POLICY IF EXISTS "users_update_own" ON users;
-DROP POLICY IF EXISTS "prospects_select_own" ON prospects;
-DROP POLICY IF EXISTS "prospects_insert_own" ON prospects;
-DROP POLICY IF EXISTS "prospects_update_own" ON prospects;
-DROP POLICY IF EXISTS "prospects_delete_own" ON prospects;
-DROP POLICY IF EXISTS "sequences_select_own" ON sequences;
-DROP POLICY IF EXISTS "sequences_insert_own" ON sequences;
-DROP POLICY IF EXISTS "sequences_update_own" ON sequences;
-DROP POLICY IF EXISTS "sequences_delete_own" ON sequences;
-DROP POLICY IF EXISTS "step_select_own" ON step;
-DROP POLICY IF EXISTS "step_insert_own" ON step;
-DROP POLICY IF EXISTS "step_update_own" ON step;
-DROP POLICY IF EXISTS "step_delete_own" ON step;
-DROP POLICY IF EXISTS "report_events_select_own" ON report_events;
-DROP POLICY IF EXISTS "report_events_insert_own" ON report_events;
-DROP POLICY IF EXISTS "generation_logs_select_own" ON generation_logs;
-DROP POLICY IF EXISTS "generation_logs_insert_own" ON generation_logs;
-
--- ================================================================
 -- [9] 초기 데이터 삽입
--- ================================================================
-
 INSERT INTO step_templates (step_number, step_name, description, timeline_day) VALUES
-(1, 'Diagnosis', '현상 진단 - 구조적 문제 도출', 1),
-(2, 'Cost Saving', '비용 효율 - 품질지수 및 예산 분석', 3),
-(3, 'Visual', '시각적 설득 - 썸네일/상세페이지 진단', 6),
-(4, 'FOMO', '트렌드 & 긴급성 - 시장 경쟁 분석', 10),
-(5, 'Authority', '신뢰 & 통합 솔루션 - 최종 제안', 14);
+(1, 'Diagnosis', '현상 진단 - 전략적 소견서 발행', 1),
+(2, 'Blueprint', '가치 설계 - 전환 블루프린트 제시', 3),
+(3, 'Masterplan', '실전 운영 - 통합 실행 로드맵 확정', 6);
 
 INSERT INTO plans (code, name, monthly_quota, price_krw) VALUES
 ('free', 'Free', 3, 0), 
@@ -497,13 +412,12 @@ VALUES (
 )
 ON CONFLICT (id) DO NOTHING;
 
--- [10] 통계 수집 및 완료
+-- [10] 분석
 ANALYZE users;
 ANALYZE prospects;
 ANALYZE generated_emails;
 
 DO $$ 
 BEGIN 
-    RAISE NOTICE '✅ LinkPitch MVP v8.2 (Upsert Patch) 설치 완료!';
-    RAISE NOTICE '📊 핵심 변경: generated_emails 테이블에 CONSTRAINT uq_generated_emails_prospect_step 추가됨.';
+    RAISE NOTICE '✅ LinkPitch MVP v8.9 설치 완료! (tier 삭제 및 전체 로직 보존)';
 END $$;
