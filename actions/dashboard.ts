@@ -279,7 +279,7 @@ export async function getRecentActivity(limit: number = 10): Promise<{
           opened_at,
           clicked_at,
           prospect_id,
-          prospects!inner(name)
+          prospects(name)
         `
         )
         .eq('user_id', userId)
@@ -298,7 +298,7 @@ export async function getRecentActivity(limit: number = 10): Promise<{
           scroll_depth,
           duration_seconds,
           created_at,
-          prospects!inner(name)
+          prospects(name)
         `
         )
         .in('prospect_id', prospectIds)
@@ -318,10 +318,10 @@ export async function getRecentActivity(limit: number = 10): Promise<{
     ]);
 
     if (emailsResult.error) {
-      console.error('이메일 활동 조회 실패:', emailsResult.error);
+      console.error('이메일 활동 조회 실패:', JSON.stringify(emailsResult.error, null, 2));
     }
     if (trackingLogsResult.error) {
-      console.error('리포트 추적 로그 조회 실패:', trackingLogsResult.error);
+      console.error('리포트 추적 로그 조회 실패:', JSON.stringify(trackingLogsResult.error, null, 2));
     }
 
     // 활동 목록 생성

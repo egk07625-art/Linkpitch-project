@@ -5,13 +5,11 @@ import Link from 'next/link';
 import { supabase } from '@/lib/supabase/client';
 import type { GeneratedEmail } from '@/types/generated-email';
 import {
-  ArrowLeft, Save, Send, Sparkles, FileText,
-  Image as ImageIcon, LayoutTemplate,
-  Check, Mail, X, Plus, Trash2, Edit2, Folder, FolderOpen,
-  ChevronRight, ChevronDown, MoreHorizontal, File,
-  BarChart2, TrendingUp, HelpCircle, ShieldCheck, FileOutput,
-  User, Users
+  Mail, FileText, Send, Save, ArrowLeft, Sparkles, ChevronDown, ChevronRight,
+  Plus, X, Folder, FolderOpen, Trash2, Edit2, Check, LayoutTemplate, HelpCircle, FileOutput, ShieldCheck, Clock,
+  BarChart2, TrendingUp
 } from 'lucide-react';
+import Editor from '@monaco-editor/react';
 import { toast } from 'sonner';
 
 // [Design] 아이콘 매핑
@@ -54,9 +52,11 @@ export default function InsightMixerClient({ prospectId }: InsightMixerClientPro
   // UI State
   const [activeStep, setActiveStep] = useState(1);
   const [activeTab, setActiveTab] = useState<'email' | 'report'>('email');
-  const [selectedBodyType, setSelectedBodyType] = useState('solopreneur');
   const [activeSubjectCategory, setActiveSubjectCategory] = useState<string>('metric_direct');
   const [selectedSubjectText, setSelectedSubjectText] = useState('');
+  const [isLibraryOpen, setIsLibraryOpen] = useState(false);
+  const [isHistoryOpen, setIsHistoryOpen] = useState(false);
+  const [reportMarkdown, setReportMarkdown] = useState('');
 
   // [Advanced Asset State]
   const [folders, setFolders] = useState<FolderType[]>([
@@ -78,7 +78,7 @@ export default function InsightMixerClient({ prospectId }: InsightMixerClientPro
       setLoading(true);
       const { data: prospectData } = await supabase.from('prospects').select('*').eq('id', prospectId).single();
       if (prospectData) setProspect(prospectData);
-      const { data: emailData } = await supabase.from('generated_emails').select('*').eq('prospect_id', prospectId).order('step_number', { ascending: true });
+      const { data: emailData } = await supabase.from('generated_emails').select('*').eq('prospect_id', prospectId).order('step_number', { ascending: true }).order('created_at', { ascending: false });
       if (emailData && emailData.length > 0) setAllStepsData(emailData as GeneratedEmail[]);
       setLoading(false);
     };
@@ -108,12 +108,13 @@ export default function InsightMixerClient({ prospectId }: InsightMixerClientPro
     subjectOptions = {};
   }
 
-  const getCleanBody = (type: 'solopreneur' | 'corporate') => {
-    const rawBody = currentStepData?.[`email_body_${type}`];
+  const getCleanBody = () => {
+    // 단일화: solopreneur 필드를 우선 사용하고 없으면 corporate 사용
+    const rawBody = currentStepData?.email_body_solopreneur || currentStepData?.email_body_corporate;
     return rawBody ? rawBody.replace(/\n/g, '') : "데이터 로딩 중...";
   };
 
-  const currentBodyHtml = getCleanBody(selectedBodyType as 'solopreneur' | 'corporate');
+  const currentBodyHtml = getCleanBody();
   const reportHtml = currentStepData?.report_html_editable || "<p class='text-zinc-500 text-sm'>생성된 리포트가 없습니다.</p>";
   const currentCategorySubjects = subjectOptions?.[activeSubjectCategory] || [];
 
@@ -278,6 +279,20 @@ export default function InsightMixerClient({ prospectId }: InsightMixerClientPro
             <ArrowLeft className="w-5 h-5" />
           </Link>
           <div className="h-5 w-[1px] bg-[#333]" />
+          
+          {/* Library Toggle (Left) */}
+          <button
+            onClick={() => setIsLibraryOpen(!isLibraryOpen)}
+            className={`h-9 px-3 rounded-lg border transition-all flex items-center gap-2 mb-0.5 ${
+              isLibraryOpen 
+                ? 'bg-[#1C1C1E] text-white border-[#333] shadow-sm' 
+                : 'border-transparent text-zinc-400 hover:bg-[#1C1C1E] hover:text-white hover:border-[#333]'
+            }`}
+          >
+            <LayoutTemplate className="w-4 h-4" />
+            <span className="text-xs font-bold">소재 라이브러리</span>
+          </button>
+
           <div className="flex items-center gap-3">
             <div className="w-8 h-8 rounded-full bg-[#1C1C1E] flex items-center justify-center text-xs font-bold text-zinc-400 border border-[#333]">
               {prospect.name.charAt(0)}
@@ -291,6 +306,17 @@ export default function InsightMixerClient({ prospectId }: InsightMixerClientPro
           </div>
         </div>
         <div className="flex items-center gap-3">
+          <button
+            onClick={() => setIsHistoryOpen(!isHistoryOpen)}
+            className={`h-9 px-3 rounded-lg border transition-all flex items-center gap-2 ${
+              isHistoryOpen 
+                ? 'bg-[#1C1C1E] text-white border-[#333] shadow-sm' 
+                : 'border-transparent text-zinc-400 hover:bg-[#1C1C1E] hover:text-white hover:border-[#333]'
+            }`}
+          >
+            <Clock className="w-4 h-4" />
+            <span className="text-xs font-bold">히스토리</span>
+          </button>
           <button className="h-9 px-4 rounded-lg border border-[#333] bg-transparent text-xs font-medium text-zinc-400 hover:bg-[#1C1C1E] hover:text-white transition-colors flex items-center gap-2">
             <Save className="w-4 h-4" /> <span>임시 저장</span>
           </button>
@@ -303,17 +329,24 @@ export default function InsightMixerClient({ prospectId }: InsightMixerClientPro
       <div className="flex-1 flex overflow-hidden">
 
         {/* [Left Panel] Asset Library */}
-        <aside className="w-[340px] border-r border-[#222] bg-[#0A0A0A] flex flex-col shrink-0">
-          <div className="px-6 py-5 border-b border-[#222] bg-[#0A0A0A] flex justify-between items-center">
+        <aside
+          className={`border-r border-[#222] bg-[#0A0A0A] flex flex-col shrink-0 transition-all duration-300 ease-in-out overflow-hidden ${isLibraryOpen ? 'w-[340px] translate-x-0' : 'w-0 -translate-x-full border-none'}`}
+        >
+          <div className="px-6 py-5 border-b border-[#222] bg-[#0A0A0A] flex justify-between items-center whitespace-nowrap overflow-hidden">
             <h2 className="text-xs font-bold text-zinc-400 flex items-center gap-2 uppercase tracking-wider">
               <LayoutTemplate className="w-3.5 h-3.5" /> 소재 라이브러리
             </h2>
-            <button onClick={addFolder} className="text-zinc-500 hover:text-white transition-colors" title="폴더 추가">
-              <Plus className="w-4 h-4" />
-            </button>
+            <div className="flex items-center gap-1">
+              <button onClick={addFolder} className="p-1 text-zinc-500 hover:text-white transition-colors rounded hover:bg-[#1C1C1E]" title="폴더 추가">
+                <Plus className="w-4 h-4" />
+              </button>
+              <button onClick={() => setIsLibraryOpen(false)} className="p-1 text-zinc-500 hover:text-white transition-colors rounded hover:bg-[#1C1C1E]" title="닫기">
+                <X className="w-4 h-4" />
+              </button>
+            </div>
           </div>
 
-          <div className="flex-1 overflow-y-auto p-4 space-y-2">
+          <div className="flex-1 overflow-y-auto p-4 space-y-2 whitespace-nowrap">
             {folders.map((folder) => (
               <div key={folder.id} className="select-none mb-4">
                 {/* Folder Header */}
@@ -417,8 +450,8 @@ export default function InsightMixerClient({ prospectId }: InsightMixerClientPro
         <main className="flex-1 bg-[#050505] flex flex-col relative min-w-0">
 
           {/* Step Navigator */}
-          <div className="h-16 border-b border-[#222] flex items-center justify-center gap-2 bg-[#0A0A0A]">
-            {[1, 2, 3, 4, 5].map((step) => {
+          <div className="h-16 flex items-center justify-center gap-2 bg-[#050505] mt-4">
+            {[1, 2, 3].map((step) => {
               const hasData = allStepsData.some(d => d.step_number === step);
               const isActive = activeStep === step;
               return (
@@ -434,7 +467,7 @@ export default function InsightMixerClient({ prospectId }: InsightMixerClientPro
             })}
           </div>
 
-          <div className="flex-1 overflow-y-auto p-10 md:p-14">
+          <div className="flex-1 overflow-y-auto p-10 md:p-14 no-scrollbar">
             <div className="max-w-4xl mx-auto space-y-12">
 
               {/* Mode Switcher */}
@@ -481,19 +514,9 @@ export default function InsightMixerClient({ prospectId }: InsightMixerClientPro
 
                   {/* Body Editor (Drop Target) */}
                   <div className="space-y-4">
-                    <div className="flex items-center justify-between">
-                      <label className="flex items-center gap-2 text-xs font-bold text-zinc-500 uppercase tracking-widest">
+                      <label className="text-xs font-bold text-zinc-500 uppercase tracking-widest">
                         <FileText className="w-3.5 h-3.5 text-blue-500" /> Body Content
                       </label>
-                      <div className="flex bg-[#111] rounded-lg p-1 border border-[#222]">
-                        <button onClick={() => setSelectedBodyType('solopreneur')} className={`flex items-center gap-1.5 px-4 py-1.5 text-xs rounded-md transition-all font-bold ${selectedBodyType === 'solopreneur' ? 'bg-[#2C2C2E] text-white shadow-sm' : 'text-zinc-500 hover:text-zinc-300'}`}>
-                          <User className="w-3.5 h-3.5" /> 대표님용
-                        </button>
-                        <button onClick={() => setSelectedBodyType('corporate')} className={`flex items-center gap-1.5 px-4 py-1.5 text-xs rounded-md transition-all font-bold ${selectedBodyType === 'corporate' ? 'bg-[#2C2C2E] text-white shadow-sm' : 'text-zinc-500 hover:text-zinc-300'}`}>
-                          <Users className="w-3.5 h-3.5" /> 실무자용
-                        </button>
-                      </div>
-                    </div>
 
                     <div
                       className={`
@@ -526,8 +549,23 @@ export default function InsightMixerClient({ prospectId }: InsightMixerClientPro
 
               {/* Report Tab */}
               {activeTab === 'report' && (
-                <div className="min-h-[700px] bg-white border border-zinc-200 rounded-2xl p-12 animate-in fade-in slide-in-from-bottom-2 duration-300 shadow-2xl">
-                  <div className="prose prose-zinc max-w-none prose-lg" dangerouslySetInnerHTML={{ __html: reportHtml }} />
+                <div className="h-[700px] bg-[#1E1E1E] border border-[#333] rounded-2xl overflow-hidden animate-in fade-in slide-in-from-bottom-2 duration-300 shadow-2xl">
+                  <Editor
+                    height="100%"
+                    language="markdown"
+                    theme="vs-dark"
+                    value={reportMarkdown || currentStepData?.report_markdown || '# 리포트 작성\n\n여기에 마크다운으로 리포트를 작성하세요...'}
+                    onChange={(value) => setReportMarkdown(value || '')}
+                    options={{
+                      minimap: { enabled: false },
+                      fontSize: 14,
+                      wordWrap: 'on',
+                      lineNumbers: 'on',
+                      scrollBeyondLastLine: false,
+                      automaticLayout: true,
+                      padding: { top: 16, bottom: 16 }
+                    }}
+                  />
                 </div>
               )}
 
@@ -535,33 +573,55 @@ export default function InsightMixerClient({ prospectId }: InsightMixerClientPro
           </div>
         </main>
 
-        {/* [Right Panel] Preview */}
-        <aside className="w-[340px] border-l border-[#222] bg-[#0A0A0A] flex flex-col shrink-0">
-          <div className="px-5 py-4 border-b border-[#222] bg-[#0A0A0A]">
+        {/* [Right Panel] History & Preview */}
+        <aside
+          className={`border-l border-[#222] bg-[#0A0A0A] flex flex-col shrink-0 transition-all duration-300 ease-in-out overflow-hidden ${isHistoryOpen ? 'w-[340px] translate-x-0' : 'w-0 translate-x-full border-none'}`}
+        >
+          <div className="px-6 py-5 border-b border-[#222] bg-[#0A0A0A] flex justify-between items-center whitespace-nowrap overflow-hidden">
             <h2 className="text-xs font-bold text-zinc-400 flex items-center gap-2 uppercase tracking-wider">
-              <BarChart2 className="w-3.5 h-3.5" />Preview
+              <Clock className="w-3.5 h-3.5" /> 히스토리
             </h2>
+            <button onClick={() => setIsHistoryOpen(false)} className="p-1 text-zinc-500 hover:text-white transition-colors rounded hover:bg-[#1C1C1E]" title="닫기">
+              <X className="w-4 h-4" />
+            </button>
           </div>
-          <div className="flex-1 overflow-y-auto p-6 bg-[#050505] flex items-center justify-center">
-            <div className="w-full bg-white rounded-[24px] overflow-hidden border-[6px] border-[#1C1C1E] shadow-2xl relative min-h-[480px]">
-              <div className="h-5 bg-white w-full flex justify-center items-center border-b border-gray-100">
-                <div className="w-12 h-3 bg-black rounded-b-lg" />
-              </div>
-              <div className="p-4 bg-gray-50 h-full">
-                <div className="bg-white p-3 rounded-lg shadow-sm border border-gray-100 mb-3">
-                  <div className="flex gap-2 items-center mb-2">
-                    <div className="w-6 h-6 rounded-full bg-black flex items-center justify-center text-white font-bold text-[8px]">LP</div>
-                    <div>
-                      <p className="text-[10px] font-bold text-gray-900">LinkPitch</p>
-                      <p className="text-[8px] text-gray-400">now</p>
-                    </div>
+
+          <div className="flex-1 overflow-y-auto p-6 space-y-6">
+            {/* Report Preview Button */}
+            <div className="p-5 border border-[#333] rounded-xl bg-[#1C1C1E]/30">
+              <button
+                onClick={() => window.open(`/r/${prospectId}`, '_blank')}
+                className="w-full h-14 rounded-lg bg-blue-600 hover:bg-blue-700 text-white text-base font-bold transition-colors flex items-center justify-center gap-2 shadow-lg"
+              >
+                <FileText className="w-5 h-5" />
+                리포트 미리보기
+              </button>
+              <p className="text-xs text-zinc-500 mt-3 text-center leading-relaxed">
+                고객이 보게 될 최종 페이지를 새 탭에서 확인
+              </p>
+            </div>
+
+            {/* History List */}
+            <div>
+              <h3 className="text-sm font-bold text-zinc-400 mb-4 uppercase tracking-wider">📝 이전 발송 내역</h3>
+              
+              {allStepsData.map((stepData, index) => (
+                <div key={stepData.id} className="mb-4 p-4 border border-[#333] rounded-xl bg-[#1C1C1E]/20 hover:bg-[#1C1C1E]/40 transition-colors cursor-pointer">
+                  <div className="flex items-center justify-between mb-2">
+                    <span className="text-base font-semibold text-white">Step {stepData.step_number}</span>
+                    <span className={`text-xs px-3 py-1 rounded-full font-medium ${
+                      stepData.step_number === activeStep 
+                        ? 'bg-white text-black font-bold' 
+                        : 'bg-[#333] text-zinc-400'
+                    }`}>
+                      {stepData.step_number === activeStep ? '현재' : stepData.theme}
+                    </span>
                   </div>
-                  <div className="text-[10px] text-gray-800 leading-relaxed font-medium">
-                    <p className="font-bold mb-1.5">{selectedSubjectText || "Subject..."}</p>
-                    <p className="line-clamp-[8] text-gray-600 font-light">{currentBodyHtml.replace(/<[^>]*>?/gm, '')}</p>
+                  <div className="text-xs text-zinc-500">
+                    {new Date(stepData.created_at).toLocaleDateString('ko-KR')} 생성
                   </div>
                 </div>
-              </div>
+              ))}
             </div>
           </div>
         </aside>
