@@ -467,7 +467,7 @@ export default function ClientsUnifiedView({
                         href={displayUrl}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="text-sm text-zinc-500 truncate group-hover:text-blue-400 transition-colors block w-full font-medium"
+                        className="text-sm text-zinc-500 truncate group-hover:text-zinc-400 transition-colors block w-full font-medium"
                         onClick={(e) => e.stopPropagation()}
                       >
                         {displayUrl.replace(/^https?:\/\//, "").substring(0, 40)}
@@ -537,7 +537,7 @@ export default function ClientsUnifiedView({
                             <span className="text-base font-medium text-zinc-300">
                               {formatDate(stats.nextScheduleDate)}
                               {stats.daysUntilNext !== null && (
-                                <span className="text-[10px] px-1.5 py-0.5 rounded bg-blue-500/10 text-blue-400 font-bold ml-2">
+                                <span className="text-[10px] px-1.5 py-0.5 rounded bg-zinc-500/10 text-zinc-400 font-bold ml-2">
                                   D-{stats.daysUntilNext}
                                 </span>
                               )}
@@ -561,7 +561,7 @@ export default function ClientsUnifiedView({
                           ? "bg-rose-500/10 text-rose-300 border-rose-500/30"
                           : statusStyle.className === "bg-amber-500/10 text-amber-500 border-amber-500/20"
                             ? "bg-amber-500/10 text-amber-300 border-amber-500/30"
-                            : "bg-blue-500/10 text-blue-300 border-blue-500/30"
+                            : "bg-zinc-500/10 text-zinc-300 border-zinc-500/30"
                       )}
                     >
                       {statusStyle.label}

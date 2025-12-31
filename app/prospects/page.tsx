@@ -65,7 +65,7 @@ type FilterStatus = 'All' | 'Hot' | 'Warm' | 'Cold';
 const statusConfig: Record<string, { label: string; className: string }> = {
   hot: { label: 'Hot', className: 'bg-rose-500/10 text-rose-300 border-rose-500/30' },
   warm: { label: 'Warm', className: 'bg-amber-500/10 text-amber-300 border-amber-500/30' },
-  cold: { label: 'Cold', className: 'bg-blue-500/10 text-blue-300 border-blue-500/30' },
+  cold: { label: 'Cold', className: 'bg-zinc-500/10 text-zinc-300 border-zinc-500/30' },
 };
 
 function formatDate(dateString: string | null | undefined): string {
@@ -501,13 +501,13 @@ function ClientsPageContent() {
                             minute: '2-digit',
                           })}
                           {memo.updated_at !== memo.created_at && (
-                            <span className="text-[10px] text-blue-400 ml-1">(수정됨)</span>
+                            <span className="text-[10px] text-zinc-400 ml-1">(수정됨)</span>
                           )}
                         </span>
                         <button
                           onClick={() => handleEditMemo(memo)}
                           disabled={isSavingMemo || editingMemoId === memo.id}
-                          className="text-xs text-blue-400 hover:text-blue-300 disabled:opacity-50 disabled:cursor-not-allowed"
+                          className="text-xs text-zinc-400 hover:text-zinc-300 disabled:opacity-50 disabled:cursor-not-allowed"
                         >
                           수정
                         </button>
@@ -548,14 +548,14 @@ function ClientsPageContent() {
                 {historyData.map((log, index) => (
                   <div key={log.id} className="flex gap-6 relative group">
                     {/* 타임라인 점 */}
-                    <div className="w-10 h-10 rounded-full bg-[#1C1C1E] border border-[#333] flex items-center justify-center shrink-0 z-10 group-hover:border-blue-500 transition-colors">
-                      <Send className="w-4 h-4 text-blue-400" />
+                    <div className="w-10 h-10 rounded-full bg-[#1C1C1E] border border-[#333] flex items-center justify-center shrink-0 z-10 group-hover:border-white/40 transition-colors">
+                      <Send className="w-4 h-4 text-zinc-400" />
                     </div>
                     
                     {/* 내용 카드 */}
                     <div className="flex-1 bg-[#0A0A0C] border border-[#333] rounded-xl p-5 hover:border-zinc-600 transition-colors cursor-pointer" onClick={() => handleRowClick(selectedProspect!.id)}>
                       <div className="flex justify-between items-start mb-2">
-                        <span className="px-2 py-0.5 rounded bg-blue-500/10 text-blue-400 text-[10px] font-bold border border-blue-500/20 uppercase">
+                        <span className="px-2 py-0.5 rounded bg-white/10 text-white/85 text-[10px] font-bold border border-white/20 uppercase">
                           Step {log.step_number || 1}
                         </span>
                         <span className="text-xs text-zinc-500 flex items-center gap-1">
@@ -710,7 +710,7 @@ function ClientsPageContent() {
                           {prospect.category && (
                             <span className="text-sm font-medium text-zinc-400 mb-1 truncate">{prospect.category}</span>
                           )}
-                          <span className="text-sm text-zinc-500 truncate group-hover:text-blue-400 transition-colors block w-full">{prospect.url?.replace(/^https?:\/\//, '')}</span>
+                          <span className="text-sm text-zinc-500 truncate group-hover:text-zinc-300 transition-colors block w-full">{prospect.url?.replace(/^https?:\/\//, '')}</span>
                         </div>
                         <div className="col-span-2 flex items-center gap-4 overflow-hidden">
                           <div className="w-11 h-11 rounded-full bg-[#252528] flex items-center justify-center text-base font-bold text-zinc-400 border border-[#333]">{getInitial(prospect.contact_name || prospect.name)}</div>
@@ -736,7 +736,7 @@ function ClientsPageContent() {
                             <DropdownMenuContent align="end" className="w-48 bg-[#1C1C1E] border border-[#333] text-zinc-200 rounded-xl shadow-xl p-1" onClick={(e) => e.stopPropagation()}>
                               <DropdownMenuLabel className="text-xs text-zinc-500 uppercase tracking-wider px-3 py-2">Actions</DropdownMenuLabel>
                               
-                              <DropdownMenuItem onClick={() => handleEdit(prospect)} className="flex items-center gap-2 px-3 py-2.5 text-sm cursor-pointer rounded-lg hover:bg-[#2C2C2E] focus:bg-[#2C2C2E]"><Edit className="w-4 h-4 text-blue-400" /> <span>정보 수정</span></DropdownMenuItem>
+                              <DropdownMenuItem onClick={() => handleEdit(prospect)} className="flex items-center gap-2 px-3 py-2.5 text-sm cursor-pointer rounded-lg hover:bg-[#2C2C2E] focus:bg-[#2C2C2E]"><Edit className="w-4 h-4 text-zinc-400" /> <span>정보 수정</span></DropdownMenuItem>
                               
                               {/* ⚡ Sheet Trigger: 메모 보기 */}
                               <DropdownMenuItem onClick={() => handleOpenMemo(prospect)} className="flex items-center gap-2 px-3 py-2.5 text-sm cursor-pointer rounded-lg hover:bg-[#2C2C2E] focus:bg-[#2C2C2E]"><StickyNote className="w-4 h-4 text-yellow-400" /> <span>메모 보기</span></DropdownMenuItem>

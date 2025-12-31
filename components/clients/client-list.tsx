@@ -28,13 +28,13 @@ const statusConfig = {
   },
   cold: {
     label: "Cold",
-    bgColor: "bg-blue-500/10",
-    borderColor: "border-blue-500/20",
-    dotColor: "bg-blue-400",
-    dotShadow: "shadow-[0_0_5px_rgba(59,130,246,1)]",
-    textColor: "text-blue-200",
-    shadow: "shadow-[0_0_10px_rgba(59,130,246,0.05)]",
-    hoverShadow: "group-hover:shadow-[0_0_15px_rgba(59,130,246,0.15)]",
+    bgColor: "bg-zinc-500/10",
+    borderColor: "border-zinc-500/20",
+    dotColor: "bg-zinc-400",
+    dotShadow: "shadow-[0_0_5px_rgba(161,161,170,1)]",
+    textColor: "text-zinc-200",
+    shadow: "shadow-[0_0_10px_rgba(161,161,170,0.05)]",
+    hoverShadow: "group-hover:shadow-[0_0_15px_rgba(161,161,170,0.15)]",
   },
   all: {
     label: "전체",
@@ -86,8 +86,8 @@ export default function ClientList() {
         case 'Cold':
           return cn(
             baseStyle,
-            "bg-blue-500/10 border-blue-500/30 text-blue-400",
-            "shadow-[0_0_10px_rgba(59,130,246,0.15)]"
+            "bg-zinc-500/10 border-zinc-500/30 text-zinc-400",
+            "shadow-[0_0_10px_rgba(161,161,170,0.15)]"
           );
         default: // 전체
           return cn(

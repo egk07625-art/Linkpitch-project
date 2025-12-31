@@ -81,7 +81,7 @@ export function DashboardClient({
           </div>
           <button
             onClick={() => setSelectedFilter(selectedFilter === "hot" ? null : "hot")}
-            className="text-sm font-medium text-blue-400 hover:text-blue-300 transition-colors flex items-center gap-1"
+            className="text-sm font-medium text-zinc-400 hover:text-zinc-300 transition-colors flex items-center gap-1"
           >
             관리 페이지로 이동 <ArrowRight className="w-4 h-4" />
           </button>

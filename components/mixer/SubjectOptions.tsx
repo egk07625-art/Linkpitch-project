@@ -99,7 +99,7 @@ export function SubjectOptions({
       {/* 헤더 */}
       <div className="flex justify-between items-center">
         <label className="flex items-center gap-2 text-base font-bold text-zinc-500 uppercase tracking-widest">
-          <Sparkles className="w-5 h-5 text-cyan-500" /> Subject Options
+          <Sparkles className="w-5 h-5 text-white/60" /> Subject Options
         </label>
 
         {/* 제목 복사 버튼 */}
@@ -145,18 +145,18 @@ export function SubjectOptions({
               onClick={() => onCategoryChange(key)}
               className={`relative flex items-center gap-2 px-4 py-2.5 rounded-lg text-sm font-medium transition-all whitespace-nowrap ${
                 isActive
-                  ? 'bg-gradient-to-r from-cyan-500/20 to-blue-500/15 text-cyan-400 border border-cyan-500/30 shadow-lg shadow-cyan-500/10'
+                  ? 'bg-white/10 text-white border border-white/20 shadow-lg shadow-white/5'
                   : 'text-zinc-500 hover:text-zinc-300 hover:bg-zinc-800/50 border border-transparent'
               }`}
               whileHover={{ scale: 1.02 }}
               whileTap={{ scale: 0.98 }}
             >
-              <Icon className={`w-4 h-4 ${isActive ? 'text-cyan-400' : 'text-zinc-500'}`} />
+              <Icon className={`w-4 h-4 ${isActive ? 'text-white' : 'text-zinc-500'}`} />
               <span className="hidden sm:inline">{category.label}</span>
 
               {/* 선택된 항목 있음 표시 */}
               {hasSelected && (
-                <span className="w-2 h-2 rounded-full bg-cyan-400 animate-pulse" />
+                <span className="w-2 h-2 rounded-full bg-white animate-pulse" />
               )}
 
               {/* 제목 개수 뱃지 */}
@@ -197,7 +197,7 @@ export function SubjectOptions({
                     onClick={() => !isEditing && onSubjectSelect(displayText)}
                     className={`group relative rounded-xl cursor-pointer transition-all duration-200 border overflow-hidden ${
                       isSelected
-                        ? 'bg-gradient-to-r from-cyan-500/10 via-cyan-500/5 to-transparent border-cyan-500/40 shadow-lg shadow-cyan-500/10'
+                        ? 'bg-white/10 border-white/30 shadow-lg shadow-white/5'
                         : 'bg-zinc-900/40 border-zinc-800 hover:border-zinc-700 hover:bg-zinc-800/40'
                     }`}
                   >
@@ -205,7 +205,7 @@ export function SubjectOptions({
                     <div
                       className={`absolute left-0 top-0 bottom-0 w-1 transition-all duration-300 ${
                         isSelected
-                          ? 'bg-gradient-to-b from-cyan-400 to-blue-500'
+                          ? 'bg-white'
                           : 'bg-transparent group-hover:bg-zinc-700'
                       }`}
                     />
@@ -215,7 +215,7 @@ export function SubjectOptions({
                       <span
                         className={`flex-shrink-0 w-8 h-8 rounded-lg flex items-center justify-center text-sm font-bold transition-all ${
                           isSelected
-                            ? 'bg-cyan-500/20 text-cyan-300 border border-cyan-500/30'
+                            ? 'bg-white/15 text-white border border-white/20'
                             : 'bg-zinc-800 text-zinc-500 border border-zinc-700 group-hover:text-zinc-400'
                         }`}
                       >
@@ -236,7 +236,7 @@ export function SubjectOptions({
                               onClick={(e) => e.stopPropagation()}
                               className="w-full max-w-[700px] bg-zinc-900 text-white text-sm px-3 py-2.5 rounded-md
                                          border border-zinc-700/50
-                                         focus:border-cyan-500/70 focus:shadow-[0_0_0_3px_rgba(34,211,238,0.1),0_0_15px_rgba(34,211,238,0.15)]
+                                         focus:border-white/50 focus:shadow-[0_0_0_3px_rgba(255,255,255,0.1)]
                                          outline-none transition-all duration-200"
                               placeholder="제목을 입력하세요..."
                             />
@@ -312,7 +312,7 @@ export function SubjectOptions({
                       <div
                         className={`flex-shrink-0 w-7 h-7 rounded-full flex items-center justify-center transition-all ${
                           isSelected
-                            ? 'bg-gradient-to-br from-cyan-400 to-blue-500 text-white scale-100 shadow-lg shadow-cyan-500/30'
+                            ? 'bg-white text-black scale-100 shadow-lg shadow-white/20'
                             : 'bg-zinc-800 text-zinc-600 scale-90 opacity-0 group-hover:opacity-50 border border-zinc-700'
                         }`}
                       >

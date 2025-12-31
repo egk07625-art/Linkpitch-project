@@ -119,7 +119,7 @@ export function EmailPreviewModal({
               {/* 상단 툴바 */}
               <div className="flex items-center justify-between px-4 py-3 border-b border-gray-100">
                 <div className="flex items-center gap-2 text-sm text-gray-500">
-                  <Mail size={18} className="text-blue-500" />
+                  <Mail size={18} className="text-zinc-500" />
                   <span className="font-medium">이메일 미리보기</span>
                 </div>
                 <button
@@ -137,8 +137,8 @@ export function EmailPreviewModal({
                 <div className="flex items-center gap-3">
                   <span className="text-sm text-gray-400 w-16">받는 사람</span>
                   <div className="flex items-center gap-2">
-                    <div className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center">
-                      <User size={16} className="text-blue-600" />
+                    <div className="w-8 h-8 bg-zinc-100 rounded-full flex items-center justify-center">
+                      <User size={16} className="text-zinc-600" />
                     </div>
                     <span className="text-sm font-medium text-gray-700">
                       {recipient} 담당자님
@@ -225,7 +225,7 @@ export function EmailPreviewModal({
                   <button
                     onClick={onCopyEmail}
                     className="flex items-center gap-2 px-5 py-2.5
-                               bg-blue-600 hover:bg-blue-700
+                               bg-neutral-800 hover:bg-neutral-700
                                text-white text-sm font-medium
                                rounded-lg shadow-sm hover:shadow
                                transition-all duration-200"

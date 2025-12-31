@@ -49,13 +49,13 @@ const statusConfig = {
   },
   cold: {
     label: "Cold",
-    bgColor: "bg-blue-500/10",
-    borderColor: "border-blue-500/30",
-    dotColor: "bg-blue-400",
-    dotShadow: "shadow-[0_0_8px_rgba(59,130,246,0.8)]",
-    textColor: "text-blue-300",
-    ringColor: "ring-blue-500/20",
-    gradient: "from-blue-500/20 to-transparent",
+    bgColor: "bg-zinc-500/10",
+    borderColor: "border-zinc-500/30",
+    dotColor: "bg-zinc-400",
+    dotShadow: "shadow-[0_0_8px_rgba(113,113,122,0.8)]",
+    textColor: "text-zinc-300",
+    ringColor: "ring-zinc-500/20",
+    gradient: "from-zinc-500/20 to-transparent",
   },
 };
 
@@ -75,8 +75,8 @@ const emailStatusConfig = {
   opened: {
     label: "열람",
     icon: Eye,
-    color: "text-blue-400",
-    bgColor: "bg-blue-500/10",
+    color: "text-zinc-300",
+    bgColor: "bg-zinc-500/10",
   },
   clicked: {
     label: "클릭",
@@ -482,7 +482,7 @@ export function ProspectsList({ prospects }: ProspectsListProps) {
                     </div>
                     <div className="w-px h-8 bg-white/[0.06]" />
                     <div>
-                      <p className="text-2xl font-light text-blue-400">{emailStats.opened}</p>
+                      <p className="text-2xl font-light text-zinc-300">{emailStats.opened}</p>
                       <p className="text-[10px] text-zinc-600">열람</p>
                     </div>
                     <div className="w-px h-8 bg-white/[0.06]" />
@@ -658,7 +658,7 @@ export function ProspectsList({ prospects }: ProspectsListProps) {
                               )}
                               {email.opened_at && (
                                 <div className="text-xs text-zinc-600">
-                                  <span className="text-blue-500">열람:</span>{" "}
+                                  <span className="text-zinc-400">열람:</span>{" "}
                                   {formatFullDate(email.opened_at)}
                                 </div>
                               )}

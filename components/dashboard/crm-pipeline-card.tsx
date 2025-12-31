@@ -30,13 +30,13 @@ export function CRMPipelineCard({ stats }: CRMPipelineCardProps) {
           {/* Cold Segment */}
           {coldPercentage > 0 && (
             <div
-              className="h-full bg-blue-500/20 border-r border-black/20 flex items-center justify-center relative group/bar transition-all"
+              className="h-full bg-zinc-500/20 border-r border-black/20 flex items-center justify-center relative group/bar transition-all"
               style={{ width: `${coldPercentage}%` }}
             >
-              <span className="text-xs font-bold text-blue-400">
+              <span className="text-xs font-bold text-zinc-400">
                 Cold ({coldPercentage}%)
               </span>
-              <div className="absolute inset-0 bg-blue-500/10 opacity-0 group-hover/bar:opacity-100 transition-opacity"></div>
+              <div className="absolute inset-0 bg-zinc-500/10 opacity-0 group-hover/bar:opacity-100 transition-opacity"></div>
             </div>
           )}
           {/* Warm Segment */}
@@ -89,7 +89,7 @@ export function CRMPipelineCard({ stats }: CRMPipelineCardProps) {
       </div>
 
       {/* 배경 장식 */}
-      <div className="absolute top-0 right-0 w-64 h-64 bg-gradient-to-br from-blue-500/5 to-transparent rounded-full blur-3xl -mr-16 -mt-16 pointer-events-none"></div>
+      <div className="absolute top-0 right-0 w-64 h-64 bg-gradient-to-br from-zinc-500/5 to-transparent rounded-full blur-3xl -mr-16 -mt-16 pointer-events-none"></div>
     </div>
   );
 }

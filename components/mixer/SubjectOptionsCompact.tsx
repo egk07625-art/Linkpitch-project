@@ -104,10 +104,10 @@ export function SubjectOptionsCompact({
         onKeyDown={handleHeaderKeyDown}
         role="button"
         tabIndex={0}
-        className="w-full flex items-center justify-between px-5 py-3.5 hover:bg-gray-800/30 transition-colors cursor-pointer focus:outline-none focus:ring-2 focus:ring-cyan-500/50 focus:ring-offset-2 focus:ring-offset-gray-900"
+        className="w-full flex items-center justify-between px-5 py-3.5 hover:bg-gray-800/30 transition-colors cursor-pointer focus:outline-none focus:ring-2 focus:ring-white/30 focus:ring-offset-2 focus:ring-offset-gray-900"
       >
         <div className="flex items-center gap-3 min-w-0 flex-1">
-          <span className="flex-shrink-0 px-2 py-1 bg-cyan-500/20 text-cyan-400 text-xs font-bold rounded">
+          <span className="flex-shrink-0 px-2 py-1 bg-white/10 text-white/85 text-xs font-bold rounded border border-white/10">
             Step {currentStep}
           </span>
           <span className="text-sm text-gray-300 truncate">
@@ -176,7 +176,7 @@ export function SubjectOptionsCompact({
                     className={cn(
                       'flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-medium transition-all whitespace-nowrap',
                       isActive
-                        ? 'bg-cyan-500/20 text-cyan-400 border border-cyan-500/30'
+                        ? 'bg-white/12 text-white border border-white/20'
                         : 'text-gray-500 hover:text-gray-300 hover:bg-gray-800/50 border border-transparent'
                     )}
                   >
@@ -208,7 +208,7 @@ export function SubjectOptionsCompact({
                       className={cn(
                         'group flex items-center gap-3 px-3 py-2.5 rounded-lg cursor-pointer transition-all',
                         isSelected
-                          ? 'bg-cyan-500/10 border-l-2 border-cyan-400'
+                          ? 'bg-white/10 border-l-2 border-white/40'
                           : 'hover:bg-gray-800/50 border-l-2 border-transparent'
                       )}
                     >
@@ -216,7 +216,7 @@ export function SubjectOptionsCompact({
                       <span className={cn(
                         'flex-shrink-0 w-6 h-6 rounded-md flex items-center justify-center text-xs font-bold',
                         isSelected
-                          ? 'bg-cyan-500/20 text-cyan-300'
+                          ? 'bg-white/15 text-white'
                           : 'bg-gray-800 text-gray-500'
                       )}>
                         {idx + 1}
@@ -235,8 +235,8 @@ export function SubjectOptionsCompact({
                               onKeyDown={handleKeyDown}
                               onClick={(e) => e.stopPropagation()}
                               className="w-full bg-gray-800 text-white text-sm px-2 py-1.5 rounded
-                                         border border-cyan-500/50 focus:border-cyan-500
-                                         focus:shadow-[0_0_0_2px_rgba(34,211,238,0.1)]
+                                         border border-white/30 focus:border-white/50
+                                         focus:shadow-[0_0_0_2px_rgba(255,255,255,0.1)]
                                          outline-none transition-all"
                             />
                             <p className="text-[9px] text-gray-600 pl-1">
@@ -291,8 +291,8 @@ export function SubjectOptionsCompact({
                         )}
 
                         {isSelected && (
-                          <div className="w-5 h-5 rounded-full bg-cyan-500 flex items-center justify-center">
-                            <Check size={11} className="text-white" strokeWidth={3} />
+                          <div className="w-5 h-5 rounded-full bg-white flex items-center justify-center">
+                            <Check size={11} className="text-black" strokeWidth={3} />
                           </div>
                         )}
                       </div>
@@ -308,7 +308,7 @@ export function SubjectOptionsCompact({
 
             {/* 하단 팁 */}
             <div className="px-4 py-2 border-t border-gray-800 bg-gray-900/30">
-              <p className="text-[11px] text-cyan-400/70">
+              <p className="text-[11px] text-white/50">
                 제목을 클릭하면 직접 수정할 수 있어요
               </p>
             </div>

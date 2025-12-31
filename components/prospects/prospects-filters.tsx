@@ -44,7 +44,7 @@ export function ProspectsFilters() {
         case 'Warm':
           return `${baseStyle} bg-amber-500/10 border-amber-500/30 text-amber-400 shadow-[0_0_15px_rgba(245,158,11,0.2)]`;
         case 'Cold':
-          return `${baseStyle} bg-blue-500/10 border-blue-500/30 text-blue-400 shadow-[0_0_15px_rgba(59,130,246,0.2)]`;
+          return `${baseStyle} bg-zinc-500/10 border-zinc-500/30 text-zinc-400 shadow-[0_0_15px_rgba(113,113,122,0.2)]`;
         default: // All
           return `${baseStyle} bg-white text-black border-white shadow-[0_0_15px_rgba(255,255,255,0.4)]`;
       }

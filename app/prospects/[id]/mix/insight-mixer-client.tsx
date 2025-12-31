@@ -1252,7 +1252,7 @@ export default function InsightMixerClient({ prospectId }: InsightMixerClientPro
                             li: ({ children }) => <li className="leading-relaxed">{children}</li>,
                             p: ({ children }) => <p className="my-4 leading-relaxed text-zinc-700">{children}</p>,
                             a: ({ href, children }) => (
-                              <a href={href} className="text-blue-600 hover:text-blue-800 underline" target="_blank" rel="noopener noreferrer">{children}</a>
+                              <a href={href} className="text-zinc-600 hover:text-zinc-900 underline underline-offset-2" target="_blank" rel="noopener noreferrer">{children}</a>
                             ),
                             code: ({ children, className }) => {
                               const isInline = !className;
@@ -1341,7 +1341,7 @@ export default function InsightMixerClient({ prospectId }: InsightMixerClientPro
               <div className="p-4 border border-gray-800 rounded-xl bg-gray-800/30">
               <button
                 onClick={() => window.open(generateStepReportUrl(activeStep), '_blank')}
-                  className="w-full h-10 rounded-lg bg-cyan-600 hover:bg-cyan-700 text-white text-sm font-bold transition-colors flex items-center justify-center gap-2"
+                  className="w-full h-10 rounded-lg bg-neutral-800 hover:bg-neutral-700 text-white text-sm font-bold transition-colors flex items-center justify-center gap-2"
               >
                   <FileText className="w-4 h-4" />
                   Step {activeStep} 리포트 보기
@@ -1360,20 +1360,20 @@ export default function InsightMixerClient({ prospectId }: InsightMixerClientPro
                     key={stepData.id}
                     onClick={() => setActiveStep(stepData.step_number)}
                     className={`mb-2 p-3 border rounded-lg transition-colors cursor-pointer ${
-                      stepData.step_number === activeStep 
-                        ? 'border-cyan-500/30 bg-cyan-500/10'
+                      stepData.step_number === activeStep
+                        ? 'border-white/20 bg-white/10'
                         : 'border-gray-800 bg-gray-800/20 hover:bg-gray-800/40'
                     }`}
                   >
                     <div className="flex items-center justify-between mb-1">
                       <span className={`text-sm font-semibold ${
-                        stepData.step_number === activeStep ? 'text-cyan-400' : 'text-gray-300'
+                        stepData.step_number === activeStep ? 'text-white' : 'text-gray-300'
                       }`}>
                         Step {stepData.step_number}
                       </span>
                       <span className={`text-[10px] px-2 py-0.5 rounded-full font-medium ${
                         stepData.step_number === activeStep
-                          ? 'bg-cyan-500/20 text-cyan-300'
+                          ? 'bg-white/15 text-white/85'
                           : 'bg-gray-800 text-gray-500'
                     }`}>
                       {stepData.step_number === activeStep ? '현재' : stepData.theme}
@@ -1551,7 +1551,7 @@ export default function InsightMixerClient({ prospectId }: InsightMixerClientPro
                               <li className="text-[1.0625rem]" style={{ letterSpacing: '0.01em' }}>{children}</li>
                             ),
                             blockquote: ({ children }) => (
-                              <blockquote className="border-l-4 border-blue-500 pl-6 py-4 my-8 bg-blue-50/50 rounded-r-xl text-zinc-700 italic">
+                              <blockquote className="border-l-4 border-zinc-300 pl-6 py-4 my-8 bg-zinc-50/50 rounded-r-xl text-zinc-700 italic">
                                 {children}
                               </blockquote>
                             ),
@@ -1586,7 +1586,7 @@ export default function InsightMixerClient({ prospectId }: InsightMixerClientPro
                                   href={href}
                                   target="_blank"
                                   rel="noopener noreferrer"
-                                  className="text-blue-600 hover:text-blue-800 underline underline-offset-2"
+                                  className="text-zinc-600 hover:text-zinc-900 underline underline-offset-2"
                                 >
                                   {children}
                                 </a>

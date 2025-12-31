@@ -10,7 +10,7 @@ interface AnalysisTerminalProps {
 
 const logs = [
   { text: 'System Initialized...', color: 'text-zinc-500', delay: 0 },
-  { text: 'Capturing Screenshot...', color: 'text-blue-400', delay: 800 },
+  { text: 'Capturing Screenshot...', color: 'text-white/70', delay: 800 },
   { text: 'Analyzing Visual Hierarchy...', color: 'text-purple-400', delay: 1600 },
   { text: 'Extracting USP...', color: 'text-emerald-400', delay: 2400 },
   { text: 'Analysis Complete.', color: 'text-white font-bold', delay: 3200 },

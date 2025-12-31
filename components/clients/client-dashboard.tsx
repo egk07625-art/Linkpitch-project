@@ -83,8 +83,8 @@ const statusConfig: Record<CRMStatus, {
   },
   cold: {
     label: "Cold",
-    className: "bg-blue-500/10 text-blue-400 border-blue-500/20",
-    dotColor: "bg-blue-400",
+    className: "bg-zinc-500/10 text-zinc-400 border-zinc-500/20",
+    dotColor: "bg-zinc-400",
   },
 };
 
@@ -108,8 +108,8 @@ const emailStatusConfig = {
   opened: {
     label: "열람",
     icon: Eye,
-    color: "text-blue-400",
-    bgColor: "bg-blue-500/10",
+    color: "text-zinc-400",
+    bgColor: "bg-zinc-500/10",
   },
   clicked: {
     label: "클릭",
@@ -554,7 +554,7 @@ export default function ClientDashboard({
                             href={client.url}
                             target="_blank"
                             rel="noopener noreferrer"
-                            className="text-xs text-gray-500 hover:text-blue-400 truncate flex items-center gap-1 transition-colors"
+                            className="text-xs text-gray-500 hover:text-zinc-400 truncate flex items-center gap-1 transition-colors"
                             onClick={(e) => e.stopPropagation()}
                           >
                             <ExternalLink className="w-3 h-3" />
@@ -653,7 +653,7 @@ export default function ClientDashboard({
 
                         {/* 다음 일정 */}
                         <div className="flex flex-col">
-                          <span className="text-[10px] text-blue-400 uppercase tracking-wide font-bold mb-1">
+                          <span className="text-[10px] text-zinc-400 uppercase tracking-wide font-bold mb-1">
                             Next
                           </span>
                           <div className="flex items-center gap-2">
@@ -665,7 +665,7 @@ export default function ClientDashboard({
                                     {nextSchedule.date}
                                   </span>
                                   {nextSchedule.daysUntil !== null && (
-                                    <span className="text-[10px] px-1.5 py-0.5 rounded bg-blue-500/10 text-blue-400 font-medium">
+                                    <span className="text-[10px] px-1.5 py-0.5 rounded bg-zinc-500/10 text-zinc-400 font-medium">
                                       D-{nextSchedule.daysUntil}
                                     </span>
                                   )}
@@ -920,7 +920,7 @@ export default function ClientDashboard({
                           )}
                           {email.opened_at && (
                             <div className="text-xs text-zinc-600">
-                              <span className="text-blue-500">열람:</span>{" "}
+                              <span className="text-zinc-500">열람:</span>{" "}
                               {formatFullDate(email.opened_at)}
                             </div>
                           )}

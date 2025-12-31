@@ -25,12 +25,12 @@ const iconMap: Record<IconName, LucideIcon> = {
 
 const colorClasses = {
   blue: {
-    icon: 'text-blue-500',
-    container: 'shadow-blue-500/10',
+    icon: 'text-zinc-500',
+    container: 'shadow-zinc-500/10',
   },
   indigo: {
-    icon: 'text-indigo-500',
-    container: 'shadow-indigo-500/10',
+    icon: 'text-zinc-500',
+    container: 'shadow-zinc-500/10',
   },
   emerald: {
     icon: 'text-emerald-500',

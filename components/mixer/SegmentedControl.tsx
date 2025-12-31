@@ -48,14 +48,14 @@ export function SegmentedControl({
               'transition-all duration-200',
               'active:scale-[0.98]',
               isActive
-                ? 'text-blue-700'
+                ? 'text-zinc-900'
                 : 'text-zinc-500 hover:text-zinc-700 hover:bg-zinc-50'
             )}
           >
             {isActive && (
               <motion.div
                 layoutId="segmentIndicator"
-                className="absolute inset-0 bg-blue-50 border border-blue-200 rounded-lg shadow-sm"
+                className="absolute inset-0 bg-zinc-100 border border-zinc-200 rounded-lg shadow-sm"
                 transition={{ type: 'spring', bounce: 0.15, duration: 0.4 }}
               />
             )}

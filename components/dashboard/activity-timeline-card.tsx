@@ -40,7 +40,7 @@ function getActivityColor(type: ActivityItem['type']) {
       return 'text-zinc-400 bg-zinc-900';
     case 'opened':
     case 'clicked':
-      return 'text-blue-400 bg-blue-500/10';
+      return 'text-zinc-400 bg-zinc-500/10';
     case 'scroll_80':
       return 'text-emerald-400 bg-emerald-500/10';
     case 'status_changed':
@@ -85,7 +85,7 @@ function ActivityItemComponent({
       <div className="flex flex-col pt-0.5 flex-1">
         <p
           className={`text-sm font-medium ${
-            isHighlighted ? 'text-blue-400' : 'text-zinc-300'
+            isHighlighted ? 'text-zinc-400' : 'text-zinc-300'
           }`}
         >
           {activity.title}

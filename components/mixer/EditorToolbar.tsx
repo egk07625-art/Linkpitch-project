@@ -17,7 +17,7 @@ export const toolbarButtonStyles = {
   activeColor: {
     default: 'bg-zinc-900 text-white border border-zinc-900 shadow-sm',
     emerald: 'bg-emerald-500/10 text-emerald-600 border-emerald-500/30',
-    blue: 'bg-blue-600 text-white border-blue-600 hover:bg-blue-700',
+    blue: 'bg-zinc-800 text-white border-zinc-800 hover:bg-zinc-700',
   },
 };
 
@@ -104,7 +104,7 @@ export function EditorToolbar({
             className={cn(
               'flex items-center gap-1 px-2.5 py-1 rounded-md text-xs font-medium transition-all',
               viewMode === 'split'
-                ? 'bg-blue-50 text-blue-700 border border-blue-200 shadow-sm'
+                ? 'bg-zinc-100 text-zinc-900 border border-zinc-200 shadow-sm'
                 : 'text-zinc-500 hover:text-zinc-700 hover:bg-zinc-100'
             )}
           >
@@ -116,7 +116,7 @@ export function EditorToolbar({
             className={cn(
               'flex items-center gap-1 px-2.5 py-1 rounded-md text-xs font-medium transition-all',
               viewMode === 'preview'
-                ? 'bg-blue-50 text-blue-700 border border-blue-200 shadow-sm'
+                ? 'bg-zinc-100 text-zinc-900 border border-zinc-200 shadow-sm'
                 : 'text-zinc-500 hover:text-zinc-700 hover:bg-zinc-100'
             )}
           >

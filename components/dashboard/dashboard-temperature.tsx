@@ -116,15 +116,15 @@ export function DashboardTemperature({
             {/* Cold Segment (파랑) */}
             {coldPercent > 0 && (
               <div
-                className="h-full bg-blue-500/20 border-r border-black/10 flex items-center justify-center relative group transition-all duration-500"
+                className="h-full bg-zinc-500/20 border-r border-black/10 flex items-center justify-center relative group transition-all duration-500"
                 style={{ width: `${coldPercent}%` }}
               >
                 {coldPercent > 5 && (
-                  <span className="text-xs font-bold text-blue-400">
+                  <span className="text-xs font-bold text-zinc-400">
                     Cold ({Math.round(coldPercent)}%)
                   </span>
                 )}
-                <div className="absolute inset-0 bg-blue-500/10 opacity-0 group-hover:opacity-100 transition-opacity"></div>
+                <div className="absolute inset-0 bg-zinc-500/10 opacity-0 group-hover:opacity-100 transition-opacity"></div>
               </div>
             )}
             {/* Warm Segment (노랑) */}
@@ -208,9 +208,9 @@ export function DashboardTemperature({
         {/* 리스트 헤더 */}
         <div className="px-8 py-6 border-b border-[#2C2C2E] flex justify-between items-center bg-[#1C1C1E]/50">
           <h2 className="text-lg font-bold text-white">Focus Accounts</h2>
-          <Link 
-            href="/prospects" 
-            className="text-sm font-medium text-blue-400 hover:text-blue-300 transition-colors flex items-center gap-1 group"
+          <Link
+            href="/prospects"
+            className="text-sm font-medium text-zinc-400 hover:text-zinc-300 transition-colors flex items-center gap-1 group"
           >
             전체 리스트 보기
             <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />

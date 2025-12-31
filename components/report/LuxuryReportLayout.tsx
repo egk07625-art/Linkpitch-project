@@ -59,7 +59,7 @@ export function LuxuryReportLayout({
                   AI 전략 분석 리포트
                 </span>
                 {stepNumber && (
-                  <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-blue-50 text-blue-700">
+                  <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-zinc-100 text-zinc-700">
                     STEP {stepNumber}
                   </span>
                 )}
@@ -103,7 +103,7 @@ export function LuxuryReportLayout({
           <footer className="px-8 lg:px-16 py-5 bg-gray-50 border-t border-gray-100">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
-                <div className="w-6 h-6 rounded bg-blue-600 flex items-center justify-center">
+                <div className="w-6 h-6 rounded bg-zinc-800 flex items-center justify-center">
                   <span className="text-white font-bold text-[10px]">LP</span>
                 </div>
                 <span className="text-xs text-gray-500 font-medium">

@@ -329,7 +329,7 @@ export function ProspectsTable({
 
   const emailStatusConfig = {
     pending: { label: "대기 중", icon: Clock, color: "text-zinc-500" },
-    sent: { label: "발송됨", icon: Mail, color: "text-blue-500" },
+    sent: { label: "발송됨", icon: Mail, color: "text-zinc-500" },
     opened: { label: "열람됨", icon: Eye, color: "text-emerald-500" },
     clicked: { label: "클릭됨", icon: MousePointer2, color: "text-purple-500" },
     failed: { label: "실패", icon: X, color: "text-red-500" },
@@ -340,7 +340,7 @@ export function ProspectsTable({
       {/* 헤더 바 */}
       {showViewAll && (
         <div className="px-6 py-4 flex items-center justify-end border-b border-white/10 shrink-0">
-          <a href="/prospects" className="text-sm font-semibold text-blue-400 hover:text-blue-300 transition-colors flex items-center gap-1 group">
+          <a href="/prospects" className="text-sm font-semibold text-zinc-400 hover:text-zinc-300 transition-colors flex items-center gap-1 group">
             모두 보기
             <span className="group-hover:translate-x-0.5 transition-transform">→</span>
           </a>
@@ -391,7 +391,7 @@ export function ProspectsTable({
                     href={displayUrl}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="text-sm text-gray-500 hover:text-blue-400 truncate transition-colors block w-full font-medium"
+                    className="text-sm text-gray-500 hover:text-zinc-400 truncate transition-colors block w-full font-medium"
                     onClick={(e) => e.stopPropagation()}
                   >
                     {displayUrl.replace(/^https?:\/\//, "").substring(0, 40)}
@@ -450,7 +450,7 @@ export function ProspectsTable({
 
                 {/* NEXT */}
                 <div className="flex flex-col">
-                  <span className="text-[11px] text-blue-400 font-bold mb-1 tracking-wider">NEXT</span>
+                  <span className="text-[11px] text-zinc-400 font-bold mb-1 tracking-wider">NEXT</span>
                   <div className="flex items-center gap-2">
                     {stats.nextScheduleDate ? (
                       <>
@@ -458,7 +458,7 @@ export function ProspectsTable({
                           {formatDate(stats.nextScheduleDate)}
                         </span>
                         {stats.daysUntilNext !== null && (
-                          <span className="text-[10px] px-1.5 py-0.5 rounded bg-blue-500/10 text-blue-400 font-bold">
+                          <span className="text-[10px] px-1.5 py-0.5 rounded bg-zinc-500/10 text-zinc-400 font-bold">
                             D-{stats.daysUntilNext}
                           </span>
                         )}
@@ -479,7 +479,7 @@ export function ProspectsTable({
                       ? "bg-rose-500/10 text-rose-300 border-rose-500/30"
                       : statusStyle.className === "bg-amber-500/10 text-amber-500 border-amber-500/20"
                         ? "bg-amber-500/10 text-amber-300 border-amber-500/30"
-                        : "bg-blue-500/10 text-blue-300 border-blue-500/30"
+                        : "bg-zinc-500/10 text-zinc-300 border-zinc-500/30"
                   )}
                 >
                   <div
@@ -489,7 +489,7 @@ export function ProspectsTable({
                         ? "bg-rose-400 animate-pulse"
                         : statusStyle.className === "bg-amber-500/10 text-amber-500 border-amber-500/20"
                           ? "bg-amber-400 animate-pulse"
-                          : "bg-blue-400 animate-pulse"
+                          : "bg-zinc-400 animate-pulse"
                     )}
                   ></div>
                   {statusStyle.label}
@@ -707,7 +707,7 @@ export function ProspectsTable({
                           )}
                           {email.opened_at && (
                             <div className="text-xs text-zinc-600">
-                              <span className="text-blue-500">열람:</span>{" "}
+                              <span className="text-zinc-500">열람:</span>{" "}
                               {formatFullDate(email.opened_at)}
                             </div>
                           )}

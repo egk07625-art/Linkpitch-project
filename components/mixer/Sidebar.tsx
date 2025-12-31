@@ -26,7 +26,7 @@ export function Sidebar({ currentStep, onStepChange, prospectName, stepsWithData
       <div className="h-16 flex items-center justify-center border-b border-gray-800">
         <Link
           href="/prospects"
-          className="w-10 h-10 rounded-xl bg-gradient-to-br from-cyan-500 to-blue-600
+          className="w-10 h-10 rounded-xl bg-neutral-800 border border-white/10
                     flex items-center justify-center text-white font-bold text-lg
                     hover:scale-105 transition-transform"
         >
@@ -53,7 +53,7 @@ export function Sidebar({ currentStep, onStepChange, prospectName, stepsWithData
                   'relative w-full aspect-square rounded-xl flex flex-col items-center justify-center gap-1',
                   'transition-all duration-200',
                   isActive
-                    ? 'bg-gradient-to-br from-cyan-500/20 to-blue-600/20 text-cyan-400'
+                    ? 'bg-white/10 text-white border border-white/20'
                     : hasData
                       ? 'text-gray-500 hover:text-gray-300 hover:bg-gray-800/50'
                       : 'text-gray-700 cursor-not-allowed opacity-50'
@@ -63,7 +63,7 @@ export function Sidebar({ currentStep, onStepChange, prospectName, stepsWithData
                 {isActive && (
                   <motion.div
                     layoutId="activeStep"
-                    className="absolute inset-0 rounded-xl bg-gradient-to-br from-cyan-500/20 to-blue-600/20 border border-cyan-500/30"
+                    className="absolute inset-0 rounded-xl bg-white/10 border border-white/20"
                     transition={{ type: 'spring', bounce: 0.2, duration: 0.6 }}
                   />
                 )}
@@ -71,18 +71,18 @@ export function Sidebar({ currentStep, onStepChange, prospectName, stepsWithData
                 {/* 왼쪽 바 인디케이터 */}
                 <div className={cn(
                   'absolute left-0 top-1/2 -translate-y-1/2 w-1 h-8 rounded-r-full transition-all',
-                  isActive ? 'bg-cyan-400' : 'bg-transparent'
+                  isActive ? 'bg-white' : 'bg-transparent'
                 )} />
 
                 <span className={cn(
                   'relative z-10 text-lg font-bold',
-                  isActive ? 'text-cyan-400' : ''
+                  isActive ? 'text-white' : ''
                 )}>
                   {step.number}
                 </span>
                 <span className={cn(
                   'relative z-10 text-[10px] font-medium',
-                  isActive ? 'text-cyan-300' : ''
+                  isActive ? 'text-white/85' : ''
                 )}>
                   {step.label}
                 </span>
@@ -95,7 +95,7 @@ export function Sidebar({ currentStep, onStepChange, prospectName, stepsWithData
         <div className="mt-6 px-4">
           <div className="h-1 bg-gray-800 rounded-full overflow-hidden">
             <motion.div
-              className="h-full bg-gradient-to-r from-cyan-500 to-blue-500"
+              className="h-full bg-white"
               initial={{ width: '0%' }}
               animate={{ width: `${(currentStep / 3) * 100}%` }}
               transition={{ duration: 0.3 }}

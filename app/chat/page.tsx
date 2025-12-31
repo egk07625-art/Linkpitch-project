@@ -170,7 +170,7 @@ export default function ChatPage() {
   if (!isLoaded) {
     return (
       <div className="flex h-screen items-center justify-center">
-        <Loader2 className="w-8 h-8 animate-spin text-sky-500" />
+        <Loader2 className="w-8 h-8 animate-spin text-zinc-500" />
       </div>
     );
   }
@@ -179,7 +179,7 @@ export default function ChatPage() {
     return (
       <div className="flex h-screen items-center justify-center flex-col gap-4">
         <p className="text-gray-600">로그인이 필요합니다.</p>
-        <a href="/sign-in" className="text-sky-500 hover:underline">
+        <a href="/sign-in" className="text-zinc-600 hover:underline">
           로그인하기
         </a>
       </div>
@@ -205,7 +205,7 @@ export default function ChatPage() {
           </button>
         </div>
         <button className="p-2 hover:bg-gray-100 rounded-xl transition-colors mb-4">
-          <LogOut className="w-6 h-6 text-indigo-600 rotate-180" />
+          <LogOut className="w-6 h-6 text-zinc-600 rotate-180" />
         </button>
       </div>
 
@@ -239,11 +239,11 @@ export default function ChatPage() {
               key={room.id}
               onClick={() => setSelectedRoom(room)}
               className={`flex items-center px-4 py-3 cursor-pointer transition-colors ${
-                selectedRoom.id === room.id ? "bg-sky-50" : "hover:bg-gray-50"
+                selectedRoom.id === room.id ? "bg-zinc-100" : "hover:bg-gray-50"
               }`}
             >
-              <div className="w-10 h-10 rounded-full bg-sky-100 flex items-center justify-center mr-3">
-                <Users className="w-5 h-5 text-sky-600" />
+              <div className="w-10 h-10 rounded-full bg-zinc-100 flex items-center justify-center mr-3">
+                <Users className="w-5 h-5 text-zinc-600" />
               </div>
               <div className="flex-1">
                 <div className="font-bold text-sm">{room.name}</div>
@@ -267,8 +267,8 @@ export default function ChatPage() {
         {/* Chat Header */}
         <div className="h-16 flex items-center justify-between px-6 border-b border-gray-100">
           <div className="flex items-center">
-            <div className="w-10 h-10 rounded-full bg-sky-100 flex items-center justify-center mr-3">
-              <Users className="w-5 h-5 text-sky-600" />
+            <div className="w-10 h-10 rounded-full bg-zinc-100 flex items-center justify-center mr-3">
+              <Users className="w-5 h-5 text-zinc-600" />
             </div>
             <div>
               <div className="font-bold text-sm">{selectedRoom.name}</div>
@@ -286,7 +286,7 @@ export default function ChatPage() {
         <div className="flex-1 overflow-y-auto p-6 space-y-4 bg-gray-50">
           {isLoading ? (
             <div className="flex items-center justify-center h-full">
-              <Loader2 className="w-6 h-6 animate-spin text-sky-500" />
+              <Loader2 className="w-6 h-6 animate-spin text-zinc-500" />
             </div>
           ) : messages.length === 0 ? (
             <div className="flex items-center justify-center h-full text-gray-400">
@@ -311,7 +311,7 @@ export default function ChatPage() {
                     <div
                       className={`px-4 py-2 rounded-lg text-sm ${
                         isMe
-                          ? "bg-sky-500 text-white rounded-br-none"
+                          ? "bg-zinc-800 text-white rounded-br-none"
                           : "bg-white text-gray-800 rounded-bl-none shadow-sm"
                       }`}
                     >
@@ -332,7 +332,7 @@ export default function ChatPage() {
 
         {/* Input Area */}
         <div className="p-4 border-t border-gray-100 bg-white">
-          <div className="flex items-center border border-sky-500 rounded-lg overflow-hidden">
+          <div className="flex items-center border border-zinc-300 rounded-lg overflow-hidden">
             <input
               type="text"
               value={inputText}
@@ -345,7 +345,7 @@ export default function ChatPage() {
             <button
               onClick={handleSend}
               disabled={isSending || !inputText.trim()}
-              className="bg-sky-500 text-white px-6 py-3 text-sm font-medium hover:bg-sky-600 transition-colors disabled:bg-sky-300 disabled:cursor-not-allowed"
+              className="bg-zinc-800 text-white px-6 py-3 text-sm font-medium hover:bg-zinc-700 transition-colors disabled:bg-zinc-400 disabled:cursor-not-allowed"
             >
               {isSending ? (
                 <Loader2 className="w-4 h-4 animate-spin" />

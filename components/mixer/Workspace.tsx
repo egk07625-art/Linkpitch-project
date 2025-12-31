@@ -113,7 +113,7 @@ export default function Workspace() {
         h-screen & overflow-hidden ensures NO global scrollbar. 
         Everything lives inside this fixed container.
       */}
-      <div className="h-screen w-full bg-zinc-950 text-zinc-100 flex flex-col font-sans selection:bg-blue-500/30">
+      <div className="h-screen w-full bg-zinc-950 text-zinc-100 flex flex-col font-sans selection:bg-white/20">
         
         {/* 1. Header: Minimalist & Functional */}
         <Header />
@@ -221,7 +221,7 @@ export default function Workspace() {
             >
               <div className="pointer-events-auto w-full max-w-3xl mx-auto">
                 <div className="relative group">
-                  <div className="absolute -inset-1 bg-gradient-to-r from-blue-600 to-purple-600 rounded-2xl opacity-20 group-hover:opacity-40 blur transition duration-500" />
+                  <div className="absolute -inset-1 bg-gradient-to-r from-zinc-600 to-zinc-500 rounded-2xl opacity-20 group-hover:opacity-40 blur transition duration-500" />
                   <div className="relative bg-zinc-900/95 backdrop-blur-xl border border-zinc-700/50 rounded-xl shadow-2xl flex items-center p-1.5 pl-4 overflow-hidden">
                     <Bot className="w-5 h-5 text-amber-400 mr-3 animate-pulse" />
                     <input 

@@ -25,7 +25,7 @@ export function ContentTypeToggle({ activeTab, onTabChange }: ContentTypeToggleP
           {activeTab === 'email' && (
             <motion.div
               layoutId="contentToggle"
-              className="absolute inset-0 bg-cyan-500/20 border border-cyan-500/30 rounded-md"
+              className="absolute inset-0 bg-white/15 border border-white/25 rounded-md"
               transition={{ type: 'spring', bounce: 0.2, duration: 0.4 }}
             />
           )}
