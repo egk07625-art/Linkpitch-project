@@ -1,25 +1,33 @@
 'use client';
 
 import { ReactNode } from 'react';
-import { Eye, Pencil, Columns } from 'lucide-react';
+import { Eye, Pencil } from 'lucide-react';
+import { EditorToolbar, ViewMode, ContentType } from './EditorToolbar';
 
-export type ViewMode = 'split' | 'preview';
+export type { ViewMode, ContentType };
 
 interface SplitViewLayoutProps {
   // 콘텐츠
   editorContent: ReactNode;
   previewContent: ReactNode;
 
-  // 상태
+  // 뷰 모드 상태
   viewMode: ViewMode;
   onViewModeChange: (mode: ViewMode) => void;
 
-  // 툴바 버튼 (오른쪽)
-  toolbarButtons?: ReactNode;
+  // 콘텐츠 타입 (E/R 토글)
+  contentType?: ContentType;
+  onContentTypeChange?: (type: ContentType) => void;
+  showContentTypeToggle?: boolean;
 
-  // 헤더
-  title: string;
+  // 헤더 (타이틀은 SegmentedControl에 통합됨)
+  title?: string;
   icon?: ReactNode;
+  emailIcon?: ReactNode;
+  reportIcon?: ReactNode;
+
+  // 툴바 버튼 (오른쪽 그룹, E/R 토글 앞에 배치)
+  toolbarButtons?: ReactNode;
 
   // 스크롤 refs (외부에서 주입)
   editorScrollRef?: React.RefObject<HTMLDivElement>;
@@ -38,9 +46,14 @@ export function SplitViewLayout({
   previewContent,
   viewMode,
   onViewModeChange,
+  contentType = 'email',
+  onContentTypeChange,
+  showContentTypeToggle = false,
   toolbarButtons,
   title,
   icon,
+  emailIcon,
+  reportIcon,
   editorScrollRef,
   previewScrollRef,
   onEditorScroll,
@@ -52,49 +65,19 @@ export function SplitViewLayout({
 
   return (
     <div className={`flex flex-col h-full overflow-hidden ${className}`}>
-      {/* 툴바 */}
-      <div className="flex items-center justify-between px-4 py-3 border-b border-zinc-200 bg-zinc-50 shrink-0">
-        <div className="flex items-center gap-4">
-          {/* 타이틀 */}
-          <h3 className="text-sm font-bold text-zinc-500 uppercase tracking-wider flex items-center gap-2">
-            {icon}
-            {title}
-          </h3>
-
-          {/* 뷰 모드 토글 */}
-          <div className="flex items-center bg-white border border-zinc-200 rounded-lg p-1 shadow-sm">
-            <button
-              onClick={() => onViewModeChange('split')}
-              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-medium transition-all ${
-                viewMode === 'split'
-                  ? 'bg-zinc-900 text-white shadow-sm'
-                  : 'text-zinc-500 hover:text-zinc-700 hover:bg-zinc-100'
-              }`}
-            >
-              <Columns size={14} />
-              분할
-            </button>
-            <button
-              onClick={() => onViewModeChange('preview')}
-              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-medium transition-all ${
-                viewMode === 'preview'
-                  ? 'bg-zinc-900 text-white shadow-sm'
-                  : 'text-zinc-500 hover:text-zinc-700 hover:bg-zinc-100'
-              }`}
-            >
-              <Eye size={14} />
-              프리뷰
-            </button>
-          </div>
-        </div>
-
-        {/* 추가 툴바 버튼 */}
-        {toolbarButtons && (
-          <div className="flex items-center gap-2">
-            {toolbarButtons}
-          </div>
-        )}
-      </div>
+      {/* 통합 툴바 - 단일 라인 */}
+      <EditorToolbar
+        title={title}
+        icon={icon}
+        emailIcon={emailIcon}
+        reportIcon={reportIcon}
+        viewMode={viewMode}
+        onViewModeChange={onViewModeChange}
+        contentType={contentType}
+        onContentTypeChange={onContentTypeChange}
+        showContentTypeToggle={showContentTypeToggle}
+        rightButtons={toolbarButtons}
+      />
 
       {/* 콘텐츠 영역 */}
       <div className="flex-1 overflow-hidden">
@@ -103,7 +86,8 @@ export function SplitViewLayout({
           <div
             ref={previewScrollRef}
             onScroll={onPreviewScroll}
-            className="h-full overflow-y-auto bg-white"
+            className="h-full overflow-y-auto bg-white will-change-scroll"
+            style={{ scrollBehavior: 'auto' }}
           >
             {previewContent}
           </div>
@@ -114,9 +98,9 @@ export function SplitViewLayout({
           <div className="flex h-full divide-x divide-zinc-200">
             {/* 왼쪽: 에디터 */}
             <div className="flex flex-col flex-1 min-w-0">
-              <div className="px-4 py-2 bg-zinc-50 border-b border-zinc-200 shrink-0">
-                <span className="text-xs font-medium text-zinc-500 uppercase tracking-wider flex items-center gap-1.5">
-                  <Pencil className="w-3 h-3" /> {editorLabel}
+              <div className="px-4 py-1.5 bg-zinc-50 border-b border-zinc-200 shrink-0">
+                <span className="text-[10px] font-medium text-zinc-400 uppercase tracking-wider flex items-center gap-1">
+                  <Pencil className="w-2.5 h-2.5" /> {editorLabel}
                 </span>
               </div>
               <div
@@ -130,15 +114,16 @@ export function SplitViewLayout({
 
             {/* 오른쪽: 프리뷰 */}
             <div className="flex flex-col flex-1 min-w-0">
-              <div className="px-4 py-2 bg-zinc-50 border-b border-zinc-200 shrink-0">
-                <span className="text-xs font-medium text-zinc-500 uppercase tracking-wider flex items-center gap-1.5">
-                  <Eye className="w-3 h-3" /> {previewLabel}
+              <div className="px-4 py-1.5 bg-zinc-50 border-b border-zinc-200 shrink-0">
+                <span className="text-[10px] font-medium text-zinc-400 uppercase tracking-wider flex items-center gap-1">
+                  <Eye className="w-2.5 h-2.5" /> {previewLabel}
                 </span>
               </div>
               <div
                 ref={previewScrollRef}
                 onScroll={onPreviewScroll}
-                className="flex-1 overflow-y-auto bg-white"
+                className="flex-1 overflow-y-auto bg-white will-change-scroll"
+                style={{ scrollBehavior: 'auto' }}
               >
                 {previewContent}
               </div>

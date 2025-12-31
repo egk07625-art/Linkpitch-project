@@ -3,7 +3,6 @@
 import { useEffect, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { X, Copy, Mail, User } from 'lucide-react';
-import { toast } from 'sonner';
 import { convertMarkdownToEmailHtml } from '@/lib/markdown-to-email-html';
 
 interface EmailPreviewModalProps {
@@ -224,10 +223,7 @@ export function EmailPreviewModal({
                     닫기
                   </button>
                   <button
-                    onClick={() => {
-                      onCopyEmail();
-                      toast.success('이메일이 클립보드에 복사되었습니다');
-                    }}
+                    onClick={onCopyEmail}
                     className="flex items-center gap-2 px-5 py-2.5
                                bg-blue-600 hover:bg-blue-700
                                text-white text-sm font-medium

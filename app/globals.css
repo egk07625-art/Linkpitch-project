@@ -4,6 +4,10 @@
 @custom-variant dark (&:is(.dark *));
 
 @theme inline {
+  /* 워크스페이스 커스텀 브레이크포인트 */
+  --breakpoint-3xl: 1920px;
+  --breakpoint-4xl: 2560px;
+
   --color-background: var(--background);
   --color-foreground: var(--foreground);
   --font-sans: var(--font-geist-sans);
@@ -627,4 +631,81 @@
   .report-prose blockquote {
     page-break-inside: avoid;
   }
+}
+
+/* ================================================
+   Apple-style Toast Notification (Sonner)
+   ================================================ */
+.apple-toast-success,
+.apple-toast-error {
+  background: rgba(20, 20, 20, 0.8) !important;
+  backdrop-filter: blur(12px) !important;
+  -webkit-backdrop-filter: blur(12px) !important;
+  border: 1px solid rgba(255, 255, 255, 0.1) !important;
+  border-radius: 12px !important;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1), 0 0 0 1px rgba(255, 255, 255, 0.05) inset !important;
+  padding: 12px 16px !important;
+  color: #fafafa !important;
+  font-size: 14px !important;
+  font-weight: 500 !important;
+  letter-spacing: -0.01em !important;
+  animation: toast-slide-down 0.3s cubic-bezier(0.16, 1, 0.3, 1), toast-fade-in 0.3s ease-out !important;
+}
+
+.apple-toast-success {
+  color: #fafafa !important;
+}
+
+.apple-toast-error {
+  color: #fafafa !important;
+}
+
+/* Light mode support */
+@media (prefers-color-scheme: light) {
+  .apple-toast-success,
+  .apple-toast-error {
+    background: rgba(255, 255, 255, 0.8) !important;
+    border: 1px solid rgba(0, 0, 0, 0.1) !important;
+    color: #1a1a1a !important;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08), 0 0 0 1px rgba(0, 0, 0, 0.05) inset !important;
+  }
+}
+
+/* Toast animations */
+@keyframes toast-slide-down {
+  from {
+    transform: translateY(-20px);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+@keyframes toast-fade-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes toast-fade-out {
+  from {
+    opacity: 1;
+  }
+  to {
+    opacity: 0;
+  }
+}
+
+/* Sonner toast wrapper customization */
+[data-sonner-toast][data-styled="true"] {
+  animation: toast-slide-down 0.3s cubic-bezier(0.16, 1, 0.3, 1), toast-fade-in 0.3s ease-out !important;
+}
+
+[data-sonner-toast][data-styled="true"][data-expanded="false"] {
+  animation: toast-fade-out 0.2s ease-out !important;
 }
