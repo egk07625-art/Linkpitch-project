@@ -85,10 +85,10 @@ export function SegmentedControl({
             )}
             <span className="relative z-10 flex items-center gap-1.5">
               {segment.icon && isValidElement(segment.icon) ? (
-                cloneElement(segment.icon as React.ReactElement, {
+                cloneElement(segment.icon as React.ReactElement<{ className?: string }>, {
                   className: cn(
                     'flex-shrink-0',
-                    segment.icon.props?.className || '',
+                    (segment.icon as React.ReactElement<{ className?: string }>).props?.className || '',
                     isActive 
                       ? segment.id === 'email' 
                         ? 'text-cyan-700' 
