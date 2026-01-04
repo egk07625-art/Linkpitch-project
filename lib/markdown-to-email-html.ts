@@ -15,7 +15,7 @@
  */
 
 // ===== 인라인 스타일 정의 (Gmail/Outlook 호환) =====
-const STYLES = {
+export const STYLES = {
   // 기본 텍스트
   paragraph: `
     margin: 0 0 16px 0;
@@ -377,18 +377,31 @@ export function convertHtmlToEmailHtml(html: string, applyBoldOptimization = fal
     result = convertBold(result);
   }
 
-  // <br> 태그 정규화
-  result = result.replace(/<br\s*\/?>/gi, '<br>');
+  // <br> 태그 정규화 및 스타일 보장 (이메일 클라이언트 호환)
+  result = result.replace(/<br\s*\/?>/gi, '<br style="line-height: 1.7;">');
 
   // <div> 태그를 <p>로 변환 (contentEditable의 기본 동작)
   result = result.replace(/<div>/gi, '<p style="' + STYLES.paragraph + '">');
   result = result.replace(/<\/div>/gi, '</p>');
 
-  // 기존 <p> 태그에 스타일 추가
-  result = result.replace(/<p>/gi, '<p style="' + STYLES.paragraph + '">');
+  // 기존 <p> 태그에 스타일 추가 (스타일이 없는 경우만)
+  result = result.replace(/<p(?![^>]*style)/gi, '<p style="' + STYLES.paragraph + '"');
 
   // <strong> 태그에 스타일 추가 (이미 스타일이 없는 경우)
-  result = result.replace(/<strong>([^<]+)<\/strong>/gi, `<strong style="${STYLES.strong}">$1</strong>`);
+  result = result.replace(/<strong(?![^>]*style)([^>]*)>/gi, `<strong style="${STYLES.strong}"$1>`);
+
+  // <blockquote> 태그에 스타일 추가 (이미 스타일이 없는 경우)
+  result = result.replace(/<blockquote(?![^>]*style)([^>]*)>/gi, `<blockquote style="${STYLES.blockquote}"$1>`);
+
+  // <h1>, <h2>, <h3> 태그에 스타일 추가 (이미 스타일이 없는 경우)
+  result = result.replace(/<h1(?![^>]*style)([^>]*)>/gi, `<h1 style="${STYLES.h1}"$1>`);
+  result = result.replace(/<h2(?![^>]*style)([^>]*)>/gi, `<h2 style="${STYLES.h2}"$1>`);
+  result = result.replace(/<h3(?![^>]*style)([^>]*)>/gi, `<h3 style="${STYLES.h3}"$1>`);
+
+  // <ul>, <ol>, <li> 태그에 스타일 추가 (이미 스타일이 없는 경우)
+  result = result.replace(/<ul(?![^>]*style)([^>]*)>/gi, `<ul style="${STYLES.ul}"$1>`);
+  result = result.replace(/<ol(?![^>]*style)([^>]*)>/gi, `<ol style="${STYLES.ol}"$1>`);
+  result = result.replace(/<li(?![^>]*style)([^>]*)>/gi, `<li style="${STYLES.li}"$1>`);
 
   return result;
 }

@@ -13,6 +13,8 @@ import {
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import Editor from '@monaco-editor/react';
+import EmailEditor from '@/components/EmailEditor';
+import ReportEditor from '@/components/ReportEditor';
 import { toast } from 'sonner';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
@@ -310,6 +312,7 @@ export default function InsightMixerClient({ prospectId }: InsightMixerClientPro
     return rawBody.replace(/\n\n/g, '<br><br>').replace(/\n/g, '<br>');
   };
 
+
   // ===== 마크다운 볼드 → HTML 변환 함수 (프리뷰용) =====
 
   /**
@@ -446,7 +449,7 @@ export default function InsightMixerClient({ prospectId }: InsightMixerClientPro
     if ((isStepChanged || isInitialLoad) && currentStepData) {
       console.log(`[Editor] Step changed or initial load: ${prevStepRef.current} → ${activeStep}`);
 
-      // 이메일 본문 초기화
+      // 이메일 본문 초기화 (HTML 형식으로 저장)
       const cleanBody = getCleanBody();
       setEmailBody(cleanBody);
       emailBodyRef.current = cleanBody;
@@ -472,16 +475,18 @@ export default function InsightMixerClient({ prospectId }: InsightMixerClientPro
   }, [activeStep, currentStepData]);
 
   const reportHtml = currentStepData?.report_html_editable || "<p class='text-zinc-500 text-sm'>생성된 리포트가 없습니다.</p>";
+  // Step 변경 시에만 선택된 제목 초기화
   useEffect(() => {
     if (activeStep) {
       const stepCategories = STEP_SUBJECT_CATEGORIES[activeStep];
       if (stepCategories) {
         const firstCategoryKey = Object.keys(stepCategories)[0];
         setActiveSubjectCategory(firstCategoryKey);
+        // Step 변경 시 선택 상태 초기화 (아무것도 선택 안됨)
         setSelectedSubjectText('');
       }
     }
-  }, [activeStep]);
+  }, [activeStep]); // activeStep만 의존성으로 사용하여 Step 변경 시에만 실행
 
   const currentCategorySubjects = subjectOptions?.[activeSubjectCategory] || [];
 
@@ -496,11 +501,28 @@ export default function InsightMixerClient({ prospectId }: InsightMixerClientPro
     setSubjectEdits(prev => ({ ...prev, [editKey]: newText }));
   };
 
-  useEffect(() => {
-    if (currentCategorySubjects.length > 0 && !selectedSubjectText) {
-      setSelectedSubjectText(getDisplaySubject(0, currentCategorySubjects[0]));
+  // 카테고리 변경 핸들러 - 현재 선택된 제목이 새 카테고리에 있으면 유지, 없으면 클리어
+  const handleCategoryChange = useCallback((category: string) => {
+    setActiveSubjectCategory(category);
+    const newCategorySubjects = subjectOptions?.[category] || [];
+    
+    if (newCategorySubjects.length > 0) {
+      // 현재 선택된 제목이 새 카테고리에 있는지 확인
+      // 함수형 업데이트를 사용하여 최신 selectedSubjectText 값을 확인
+      setSelectedSubjectText((currentSelected) => {
+        const isCurrentSelectedInNewCategory = newCategorySubjects.some((subj, idx) => {
+          const editKey = `${activeStep}_${category}_${idx}`;
+          const displayText = subjectEdits[editKey] || subj;
+          return displayText === currentSelected;
+        });
+        
+        // 현재 선택된 제목이 새 카테고리에 있으면 유지, 없으면 클리어
+        return isCurrentSelectedInNewCategory ? currentSelected : '';
+      });
+    } else {
+      setSelectedSubjectText('');
     }
-  }, [currentCategorySubjects, selectedSubjectText]);
+  }, [activeStep, subjectOptions, subjectEdits]);
 
   // [제거됨] 기존 reportMarkdown 초기화 로직 - 위의 통합 useEffect에서 처리
   // Race Condition 방지를 위해 currentStepData 변경 시 자동 덮어쓰기 제거
@@ -867,6 +889,34 @@ export default function InsightMixerClient({ prospectId }: InsightMixerClientPro
     const content = emailBody || getCleanBody();
     if (!content) return '';
 
+    // Tiptap이 생성한 HTML인 경우 (blockquote, strong, h1-h6, ul, ol, li, table, code, pre 등 HTML 태그가 이미 있음)
+    // Tiptap은 <p>, <div> 같은 기본 태그도 생성하므로, 더 구체적인 블록 요소로 판단
+    const hasBlockHtmlTags = /<(blockquote|h[1-6]|ul|ol|li|table|thead|tbody|tr|td|th|code|pre|strong|em)/i.test(content);
+    
+    if (hasBlockHtmlTags) {
+      // 이미 HTML이므로 스타일만 추가하여 반환
+      // Tiptap이 생성한 HTML은 이미 구조화되어 있으므로 그대로 사용
+      let html = convertHtmlToEmailHtml(content, true);
+      
+      // Tiptap HTML 내부에 `>` 기호로 시작하는 텍스트가 있는 경우 blockquote로 변환
+      // <p> 태그 내부의 `> ` 패턴을 찾아서 blockquote로 변환
+      const blockquoteStyle = 'margin: 16px 0; padding: 12px 16px; border-left: 4px solid #3b82f6; background-color: #eff6ff; border-radius: 0 8px 8px 0; font-style: italic; color: #374151;';
+      html = html.replace(/<p[^>]*>(\s*)&gt;\s*\[?([^\]]+)\]?\s*([^<]*?)<\/p>/gi, 
+        (match, space, label, text) => {
+          const content = label ? `[${label}]${text ? ' ' + text : ''}` : text;
+          return `<blockquote style="${blockquoteStyle}">${space}${content}</blockquote>`;
+        });
+      
+      // <p> 태그 내부의 `> 텍스트` 패턴을 blockquote로 변환
+      html = html.replace(/<p[^>]*>(\s*)&gt;\s*([^<]+?)<\/p>/gi, 
+        (match, space, text) => {
+          return `<blockquote style="${blockquoteStyle}">${space}${text.trim()}</blockquote>`;
+        });
+      
+      return html;
+    }
+
+    // 마크다운인 경우 (기존 로직)
     // HTML 태그를 줄바꿈으로 복원
     let cleanedContent = content
       .replace(/<br\s*\/?>/gi, '\n')
@@ -1532,8 +1582,6 @@ export default function InsightMixerClient({ prospectId }: InsightMixerClientPro
         isSaving={isSaving}
         onSave={() => handleSaveDraft()}
         onSend={() => toast.info('발송 기능 준비 중...')}
-        onHistoryToggle={() => setIsHistoryOpen(!isHistoryOpen)}
-        isHistoryOpen={isHistoryOpen}
       />
 
       {/* ===== User Assets Drawer (Apple Style Overlay) ===== */}
@@ -1585,10 +1633,10 @@ export default function InsightMixerClient({ prospectId }: InsightMixerClientPro
               </div>
             ) : userAssets.length === 0 ? (
               <div className="text-center py-12">
-                <p className="text-sm text-[#1d1d1f]/50 mb-4">User Asset이 없습니다.</p>
+                <p className="text-base font-medium text-[#1d1d1f]/80 mb-4">User Asset이 없습니다.</p>
                 <button
                   onClick={() => setIsAddAssetOpen(true)}
-                  className="px-4 py-2 bg-[#1d1d1f] text-white rounded-lg text-sm font-medium hover:bg-[#1d1d1f]/90 transition-colors"
+                  className="px-4 py-2 bg-[#1d1d1f] text-white rounded-lg text-base font-semibold hover:bg-[#1d1d1f]/90 transition-colors"
                 >
                   첫 번째 Asset 추가하기
                 </button>
@@ -1614,22 +1662,22 @@ export default function InsightMixerClient({ prospectId }: InsightMixerClientPro
                     <div className="flex items-start justify-between gap-4 mb-3">
                       <div className="flex-1">
                         <div className="flex items-center gap-2 mb-2">
-                          <span className="px-2.5 py-1 rounded-lg bg-[#1d1d1f]/10 text-xs font-semibold text-[#1d1d1f]">
+                          <span className="px-2.5 py-1 rounded-lg bg-[#1d1d1f]/10 text-sm font-semibold text-[#1d1d1f]">
                             {parsedData.category}
                           </span>
                           {parsedData.tags && parsedData.tags.map((tag) => (
-                            <span key={tag} className="px-2 py-0.5 rounded text-[10px] text-[#1d1d1f]/50">
+                            <span key={tag} className="px-2 py-0.5 rounded text-xs font-medium text-[#1d1d1f]/80">
                               {tag}
                             </span>
                           ))}
                         </div>
-                        <h3 className="text-base font-bold text-[#1d1d1f] leading-tight" style={{ letterSpacing: '-0.01em' }}>
+                        <h3 className="text-lg font-bold text-[#1d1d1f] leading-tight" style={{ letterSpacing: '-0.01em' }}>
                           {asset.file_name}
                         </h3>
                       </div>
                     </div>
                     <div className="mt-4 pt-4 border-t border-black/8">
-                      <p className="text-sm text-[#1d1d1f]/70 line-clamp-4 leading-relaxed">
+                      <p className="text-base font-medium text-[#1d1d1f]/85 line-clamp-4 leading-relaxed">
                         {parsedData.content.split('\n\n')[0].replace(/\*\*/g, '').substring(0, 150)}...
                       </p>
                     </div>
@@ -1656,12 +1704,12 @@ export default function InsightMixerClient({ prospectId }: InsightMixerClientPro
             {/* 기존 폴더 목록 (하위 호환성) */}
             {folders.length > 0 && (
               <div className="pt-6 border-t border-black/8">
-                <h3 className="text-sm font-semibold text-[#1d1d1f]/60 mb-4 uppercase tracking-wider">기존 자료</h3>
+                <h3 className="text-base font-bold text-[#1d1d1f]/85 mb-4 uppercase tracking-wider">기존 자료</h3>
                 {folders.map((folder) => (
-              <div key={folder.id} className="mb-4 p-4 bg-white/30 rounded-xl border border-black/8 overflow-hidden">
+              <div key={folder.id} className="mb-4 p-4 bg-white/60 rounded-xl border border-[#1d1d1f]/15 overflow-hidden" style={{ boxShadow: '0 2px 8px rgba(0, 0, 0, 0.06)' }}>
                 {/* 폴더 헤더 */}
                 <div 
-                  className="px-4 py-3 bg-white/50 hover:bg-white/70 transition-colors flex items-center justify-between cursor-pointer rounded-lg"
+                  className="px-4 py-3 bg-white/70 hover:bg-white/90 transition-colors flex items-center justify-between cursor-pointer rounded-lg border border-[#1d1d1f]/8"
                   onClick={() => setFolders(folders.map(f => f.id === folder.id ? { ...f, isOpen: !f.isOpen } : f))}
                 >
                   <div className="flex items-center gap-3 flex-1 min-w-0">
@@ -1677,13 +1725,13 @@ export default function InsightMixerClient({ prospectId }: InsightMixerClientPro
                         onChange={(e) => setTempFolderName(e.target.value)}
                         onBlur={saveFolderName}
                         onKeyDown={(e) => e.key === 'Enter' && saveFolderName()}
-                        className="flex-1 bg-white border border-black/20 rounded-lg px-3 py-1.5 text-sm text-[#1d1d1f] outline-none min-w-0"
+                        className="flex-1 bg-white border border-black/20 rounded-lg px-3 py-1.5 text-base text-[#1d1d1f] outline-none min-w-0"
                         autoFocus
                         onClick={(e) => e.stopPropagation()}
                       />
                     ) : (
                       <span 
-                        className="text-sm font-medium text-[#1d1d1f] truncate"
+                        className="text-base font-semibold text-[#1d1d1f] truncate"
                         onDoubleClick={(e) => {
                           e.stopPropagation();
                           setEditingFolderId(folder.id);
@@ -1716,7 +1764,7 @@ export default function InsightMixerClient({ prospectId }: InsightMixerClientPro
                 {folder.isOpen && (
                   <div className="mt-3 space-y-2">
                     {folder.assets.length === 0 ? (
-                      <div className="text-center py-6 text-sm text-[#1d1d1f]/50">
+                      <div className="text-center py-6 text-base font-medium text-[#1d1d1f]/75">
                         파일이 없습니다
                       </div>
                     ) : (
@@ -1725,7 +1773,8 @@ export default function InsightMixerClient({ prospectId }: InsightMixerClientPro
                           key={asset.id}
                           draggable
                           onDragStart={(e) => handleDragStart(e, asset)}
-                          className="group relative p-3 bg-white/40 hover:bg-white/60 rounded-lg border border-black/8 hover:border-black/12 transition-all cursor-grab active:cursor-grabbing"
+                          className="group relative p-3 bg-white/60 hover:bg-white/80 rounded-lg border border-[#1d1d1f]/12 hover:border-[#1d1d1f]/20 transition-all cursor-grab active:cursor-grabbing"
+                          style={{ boxShadow: '0 1px 4px rgba(0, 0, 0, 0.05)' }}
                         >
                           <div className="flex items-start gap-3">
                             {asset.type === 'image' && (
@@ -1744,9 +1793,9 @@ export default function InsightMixerClient({ prospectId }: InsightMixerClientPro
                               </div>
                             )}
                             <div className="flex-1 min-w-0">
-                              <p className="text-sm font-medium text-[#1d1d1f] truncate">{asset.name}</p>
+                              <p className="text-base font-semibold text-[#1d1d1f] truncate">{asset.name}</p>
                               {asset.type === 'text' && asset.content && (
-                                <p className="text-xs text-[#1d1d1f]/50 mt-1 line-clamp-2">{asset.content.substring(0, 50)}...</p>
+                                <p className="text-sm font-medium text-[#1d1d1f]/75 mt-1 line-clamp-2">{asset.content.substring(0, 50)}...</p>
                               )}
                             </div>
                             <button
@@ -1775,7 +1824,8 @@ export default function InsightMixerClient({ prospectId }: InsightMixerClientPro
             {/* 새 폴더 추가 버튼 */}
             <button
               onClick={addFolder}
-              className="w-full py-3 px-4 border border-dashed border-black/20 hover:border-black/30 rounded-xl text-sm text-[#1d1d1f]/60 hover:text-[#1d1d1f] transition-colors flex items-center justify-center gap-2 bg-white/30 hover:bg-white/50"
+              className="w-full py-3 px-4 border border-dashed border-[#1d1d1f]/25 hover:border-[#1d1d1f]/35 rounded-xl text-base font-semibold text-[#1d1d1f]/85 hover:text-[#1d1d1f] transition-colors flex items-center justify-center gap-2 bg-white/60 hover:bg-white/80"
+              style={{ boxShadow: '0 2px 8px rgba(0, 0, 0, 0.06)' }}
             >
               <Plus className="w-4 h-4" />
               새 폴더 추가
@@ -1911,25 +1961,38 @@ export default function InsightMixerClient({ prospectId }: InsightMixerClientPro
                   onStepChange={setActiveStep}
                   stepsWithData={stepsWithData}
                 />
-                {/* Library 버튼 */}
+                {/* User Assets 버튼 */}
                 <nav className="inline-flex p-1 bg-white rounded-xl border border-zinc-200 shadow-sm">
                   <button
                     onClick={() => setIsLibraryOpen(!isLibraryOpen)}
                     className={`relative px-5 py-1.5 rounded-lg text-sm font-medium tracking-tight transition-all duration-200 flex items-center gap-2 ${
                       isLibraryOpen
-                        ? 'bg-zinc-100 text-zinc-900 border border-zinc-300 shadow-sm'
-                        : 'text-zinc-600 hover:text-zinc-700 hover:bg-zinc-50'
+                        ? 'bg-blue-50 text-blue-700 border border-blue-200 shadow-sm'
+                        : 'text-blue-600 hover:text-blue-700 hover:bg-blue-50'
                     }`}
                   >
                     <BookOpen className="w-4 h-4" />
-                    <span>Library</span>
+                    <span>User Assets</span>
                   </button>
                 </nav>
               </div>
-              {/* 우측 여백 또는 추가 액션 공간 */}
-              <div className="text-xs text-zinc-500 font-medium">
-                {stepsWithData.length}/3 생성됨
-            </div>
+              {/* 우측: History 버튼 */}
+              <div className="flex items-center gap-3">
+                {/* 히스토리 버튼 */}
+                <nav className="inline-flex p-1 bg-white rounded-xl border border-zinc-200 shadow-sm">
+                  <button
+                    onClick={() => setIsHistoryOpen(!isHistoryOpen)}
+                    className={`relative px-5 py-1.5 rounded-lg text-sm font-medium tracking-tight transition-all duration-200 flex items-center gap-2 ${
+                      isHistoryOpen
+                        ? 'bg-violet-50 text-violet-700 border border-violet-200 shadow-sm'
+                        : 'text-violet-600 hover:text-violet-700 hover:bg-violet-50'
+                    }`}
+                  >
+                    <Clock className="w-4 h-4" />
+                    <span>History</span>
+                  </button>
+                </nav>
+              </div>
             </div>
 
             {/* 제목 옵션 (컴팩트) */}
@@ -1937,7 +2000,7 @@ export default function InsightMixerClient({ prospectId }: InsightMixerClientPro
                 categories={STEP_SUBJECT_CATEGORIES[activeStep] || {}}
                 subjectsByCategory={subjectOptions}
                 activeCategory={activeSubjectCategory}
-                onCategoryChange={setActiveSubjectCategory}
+                onCategoryChange={handleCategoryChange}
                 selectedSubject={selectedSubjectText}
                 onSubjectSelect={setSelectedSubjectText}
                 getDisplaySubject={getDisplaySubject}
@@ -2027,58 +2090,25 @@ export default function InsightMixerClient({ prospectId }: InsightMixerClientPro
                   }
 
                   // 에디터 콘텐츠 (모드에 따라 다름)
-                      editorContent={
+                  editorContent={
                     activeTab === 'email' ? (
-                        <Editor
-                          height="100%"
-                          language="markdown"
-                          theme="light"
-                          value={emailBody || (() => {
-                            const raw = getCleanBody();
-                            return raw
-                              .replace(/<br\s*\/?>/gi, '\n')
-                              .replace(/<\/p>/gi, '\n\n')
-                              .replace(/<p[^>]*>/gi, '')
-                              .replace(/<[^>]+>/gi, '');
-                          })()}
-                          onChange={handleEmailMonacoChange}
-                          onMount={handleEmailEditorMount}
-                          options={{
-                            minimap: { enabled: false },
-                            fontSize: 15,
-                            wordWrap: 'on',
-                            lineNumbers: 'on',
-                            scrollBeyondLastLine: false,
-                            automaticLayout: true,
-                          padding: { top: 20, bottom: 80 },
-                            renderLineHighlight: 'line',
-                          lineHeight: 26,
-                        }}
-                      />
-                    ) : (
-                      <div ref={editorContainerRef} className="h-full relative">
-                        <FloatingToolbar
-                          editorInstance={editorInstance}
-                          containerRef={editorContainerRef}
+                      <div className="h-full overflow-auto">
+                        <EmailEditor
+                          content={emailBody || getCleanBody()}
+                          onChange={handleEmailBodyChange}
+                          onImageUpload={uploadImageToStorageClient}
+                          placeholder="이메일 내용을 작성하세요..."
+                          editable={true}
                         />
-                        <Editor
-                          height="100%"
-                          language="markdown"
-                          theme="light"
-                          value={reportMarkdown || currentStepData?.report_markdown || '# 리포트 작성\n\n여기에 마크다운으로 리포트를 작성하세요...'}
-                          onChange={(value) => handleReportMarkdownChange(value || '')}
-                          onMount={handleEditorMount}
-                          options={{
-                            minimap: { enabled: false },
-                            fontSize: 15,
-                            wordWrap: 'on',
-                            lineNumbers: 'on',
-                            scrollBeyondLastLine: false,
-                            automaticLayout: true,
-                            padding: { top: 20, bottom: 80 },
-                            renderLineHighlight: 'line',
-                            lineHeight: 26,
-                          }}
+                      </div>
+                    ) : (
+                      <div className="h-full overflow-auto">
+                        <ReportEditor
+                          content={reportMarkdown || currentStepData?.report_markdown || '# 리포트 작성\n\n여기에 마크다운으로 리포트를 작성하세요...'}
+                          onChange={handleReportMarkdownChange}
+                          onImageUpload={uploadImageToStorageClient}
+                          placeholder="리포트 내용을 작성하세요..."
+                          editable={true}
                         />
                       </div>
                     )
@@ -2090,8 +2120,8 @@ export default function InsightMixerClient({ prospectId }: InsightMixerClientPro
                       <div className="p-6 lg:p-8" style={{ paddingBottom: '100px' }}>
                           {/* 이메일 본문 프리뷰 */}
                           <div
-                            className="prose prose-slate max-w-none"
-                          style={{ fontSize: '15px', lineHeight: '1.8' }}
+                            className="prose prose-slate max-w-none prose-blockquote:border-l-4 prose-blockquote:border-blue-500 prose-blockquote:bg-blue-50 prose-blockquote:pl-4 prose-blockquote:py-3 prose-blockquote:my-6 prose-blockquote:rounded-r-lg prose-blockquote:italic prose-blockquote:text-gray-700"
+                          style={{ fontSize: '15px', lineHeight: '1.8', wordWrap: 'break-word', overflowWrap: 'break-word', color: '#1e293b' }}
                             dangerouslySetInnerHTML={{ __html: getEmailPreviewHtml() }}
                           />
 
@@ -2249,71 +2279,94 @@ export default function InsightMixerClient({ prospectId }: InsightMixerClientPro
           </div>
         </div>
 
-        {/* [Right Panel] History & Preview */}
-        <aside
-            className={`border-l border-gray-800 bg-gray-900 flex flex-col shrink-0 transition-all duration-300 ease-in-out overflow-hidden ${isHistoryOpen ? 'w-[300px] translate-x-0' : 'w-0 translate-x-full border-none'}`}
-        >
-            <div className="px-4 py-4 border-b border-gray-800 flex justify-between items-center whitespace-nowrap overflow-hidden">
-              <h2 className="text-xs font-bold text-gray-400 flex items-center gap-2 uppercase tracking-wider">
-              <Clock className="w-3.5 h-3.5" /> 히스토리
+        {/* [Right Panel] History & Preview - 기존 사이드바 제거됨, 아래 오버레이로 이동 */}
+      </main>
+
+      {/* ===== 히스토리 Drawer (Apple Style Overlay - 우측) ===== */}
+      <div
+        className={`fixed top-14 right-0 h-[calc(100vh-56px)] w-[400px] z-[1100] transition-transform ${
+          isHistoryOpen ? 'translate-x-0' : 'translate-x-[400px]'
+        }`}
+        style={{
+          transitionDuration: '600ms',
+          transitionTimingFunction: 'cubic-bezier(0.19, 1, 0.22, 1)',
+          background: 'rgba(255, 255, 255, 0.75)',
+          backdropFilter: 'blur(40px) saturate(180%) contrast(90%)',
+          WebkitBackdropFilter: 'blur(40px) saturate(180%)',
+          borderLeft: '1px solid rgba(0, 0, 0, 0.08)',
+          borderRadius: '20px 0 0 20px',
+          boxShadow: '-20px 0 50px rgba(0, 0, 0, 0.05)',
+        }}
+      >
+        <div className="h-full flex flex-col overflow-hidden">
+          {/* Header */}
+          <div className="px-8 py-6 border-b border-black/8 flex justify-between items-center shrink-0">
+            <h2 className="text-[22px] font-bold text-[#1d1d1f]" style={{ letterSpacing: '-0.03em' }}>
+              History
             </h2>
-              <button onClick={() => setIsHistoryOpen(false)} className="p-1 text-gray-500 hover:text-white transition-colors rounded hover:bg-gray-800" title="닫기">
-              <X className="w-4 h-4" />
+            <button 
+              onClick={() => setIsHistoryOpen(false)} 
+              className="p-2 hover:bg-black/5 rounded-lg transition-colors" 
+              title="닫기"
+            >
+              <X className="w-5 h-5 text-[#1d1d1f]/60" />
             </button>
           </div>
 
-            <div className="flex-1 overflow-y-auto p-4 space-y-4">
-              {/* Report Preview Button */}
-              <div className="p-4 border border-gray-800 rounded-xl bg-gray-800/30">
+          {/* Content */}
+          <div className="flex-1 overflow-y-auto px-8 py-6 space-y-6">
+            {/* Report Preview Button */}
+            <div className="p-6 bg-white/50 hover:bg-white/80 rounded-2xl border border-black/8 transition-all" style={{ boxShadow: '0 2px 8px rgba(0, 0, 0, 0.04)' }}>
               <button
                 onClick={() => window.open(generateStepReportUrl(activeStep), '_blank')}
-                  className="w-full h-10 rounded-lg bg-neutral-800 hover:bg-neutral-700 text-white text-sm font-bold transition-colors flex items-center justify-center gap-2"
+                className="w-full h-12 rounded-lg bg-[#1d1d1f] hover:bg-[#1d1d1f]/90 text-white text-base font-bold transition-colors flex items-center justify-center gap-2"
               >
-                  <FileText className="w-4 h-4" />
-                  Step {activeStep} 리포트 보기
+                <FileText className="w-4 h-4" />
+                Step {activeStep} 리포트 보기
               </button>
-                <p className="text-[10px] text-gray-500 mt-2 text-center">
-                  고객이 보게 될 리포트 확인
+              <p className="text-base font-medium text-[#1d1d1f]/75 mt-3 text-center">
+                고객이 보게 될 리포트 확인
               </p>
             </div>
 
             {/* History List */}
             <div>
-                <h3 className="text-xs font-bold text-gray-500 mb-3 uppercase tracking-wider">발송 내역</h3>
+              <h3 className="text-base font-bold text-[#1d1d1f]/85 mb-4 uppercase tracking-wider">발송 내역</h3>
               
-                {allStepsData.map((stepData) => (
-                  <div
-                    key={stepData.id}
-                    onClick={() => setActiveStep(stepData.step_number)}
-                    className={`mb-2 p-3 border rounded-lg transition-colors cursor-pointer ${
+              {allStepsData.map((stepData) => (
+                <div
+                  key={stepData.id}
+                  onClick={() => setActiveStep(stepData.step_number)}
+                  className={`mb-3 p-4 rounded-xl border transition-colors cursor-pointer ${
+                    stepData.step_number === activeStep
+                      ? 'border-[#1d1d1f]/25 bg-[#1d1d1f]/12'
+                      : 'border-[#1d1d1f]/15 bg-white/70 hover:bg-white/90'
+                  }`}
+                  style={{ boxShadow: '0 2px 8px rgba(0, 0, 0, 0.08)' }}
+                >
+                  <div className="flex items-center justify-between mb-2">
+                    <span className={`text-base font-bold ${
+                      stepData.step_number === activeStep ? 'text-[#1d1d1f]' : 'text-[#1d1d1f]/85'
+                    }`}>
+                      Step {stepData.step_number}
+                    </span>
+                    <span className={`text-sm px-2.5 py-1 rounded-full font-semibold ${
                       stepData.step_number === activeStep
-                        ? 'border-white/20 bg-white/10'
-                        : 'border-gray-800 bg-gray-800/20 hover:bg-gray-800/40'
-                    }`}
-                  >
-                    <div className="flex items-center justify-between mb-1">
-                      <span className={`text-sm font-semibold ${
-                        stepData.step_number === activeStep ? 'text-white' : 'text-gray-300'
-                      }`}>
-                        Step {stepData.step_number}
-                      </span>
-                      <span className={`text-[10px] px-2 py-0.5 rounded-full font-medium ${
-                        stepData.step_number === activeStep
-                          ? 'bg-white/15 text-white/85'
-                          : 'bg-gray-800 text-gray-500'
+                        ? 'bg-[#1d1d1f]/15 text-[#1d1d1f]'
+                        : 'bg-black/5 text-[#1d1d1f]/75'
                     }`}>
                       {stepData.step_number === activeStep ? '현재' : stepData.theme}
                     </span>
                   </div>
-                    <div className="text-[10px] text-gray-600">
+                  <div className="text-sm font-medium text-[#1d1d1f]/75">
                     {new Date(stepData.created_at).toLocaleDateString('ko-KR')} 생성
                   </div>
                 </div>
               ))}
             </div>
           </div>
-        </aside>
-      </main>
+        </div>
+      </div>
 
       {/* ============================================
           럭셔리 리포트 프리뷰 모달 (몰입형)

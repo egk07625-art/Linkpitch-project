@@ -1,0 +1,23 @@
+/* Tiptap 에디터 텍스트 선택 활성화 */
+.ProseMirror {
+  user-select: text !important;
+  -webkit-user-select: text !important;
+  -moz-user-select: text !important;
+  -ms-user-select: text !important;
+}
+
+.ProseMirror * {
+  user-select: text !important;
+  -webkit-user-select: text !important;
+  -moz-user-select: text !important;
+  -ms-user-select: text !important;
+}
+
+/* Tiptap 에디터 컨테이너 */
+.ProseMirror-focused {
+  user-select: text !important;
+  -webkit-user-select: text !important;
+  -moz-user-select: text !important;
+  -ms-user-select: text !important;
+}
+

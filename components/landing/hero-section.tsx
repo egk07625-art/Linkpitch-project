@@ -18,17 +18,22 @@ function RedAlertTimer() {
   });
 
   useEffect(() => {
-    const targetDate = new Date('2025-12-31T23:59:59').getTime();
+    // 현재 날짜로부터 18일 후로 설정
+    const targetDate = new Date();
+    targetDate.setDate(targetDate.getDate() + 18);
+    targetDate.setHours(23, 59, 59, 999);
+    const targetTime = targetDate.getTime();
 
     const updateTimer = () => {
       const now = new Date().getTime();
-      const difference = targetDate - now;
+      const difference = targetTime - now;
 
       if (difference > 0) {
-        const days = Math.floor(difference / (1000 * 60 * 60 * 24));
-        const hours = Math.floor((difference % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
-        const minutes = Math.floor((difference % (1000 * 60 * 60)) / (1000 * 60));
-        const seconds = Math.floor((difference % (1000 * 60)) / 1000);
+        const totalSeconds = Math.floor(difference / 1000);
+        const days = Math.floor(totalSeconds / (60 * 60 * 24));
+        const hours = Math.floor((totalSeconds % (60 * 60 * 24)) / (60 * 60));
+        const minutes = Math.floor((totalSeconds % (60 * 60)) / 60);
+        const seconds = totalSeconds % 60;
 
         setTimeLeft({ days, hours, minutes, seconds });
       } else {
@@ -36,10 +41,18 @@ function RedAlertTimer() {
       }
     };
 
+    // 즉시 한 번 실행하여 초기값 설정
     updateTimer();
-    const interval = setInterval(updateTimer, 1000);
+    
+    // 1초마다 업데이트 (정확한 간격 보장)
+    const interval = setInterval(() => {
+      updateTimer();
+    }, 1000);
 
-    return () => clearInterval(interval);
+    // 클린업 함수
+    return () => {
+      clearInterval(interval);
+    };
   }, []);
 
   return (
